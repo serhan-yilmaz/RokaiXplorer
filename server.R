@@ -33,6 +33,8 @@ foList <- function(...){
 # Define server logic required to draw a histogram
 shinyServer(function(input, output, session) {
 
+    observe_helpers(withMathJax = TRUE, help_dir = "helpfiles")
+    
     session_id <- reactiveVal(random_id(n = 1, byte = 8))
     network_value <- reactiveVal("uniprot.human")
     upload_name <- reactiveVal("")
