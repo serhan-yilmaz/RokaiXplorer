@@ -332,15 +332,17 @@ shinyServer(function(input, output, session) {
            need(metadata_ready(), "")
         )
         x <- current_metadata()
-        
+        # tags$div(
+        #     style = "margin-top: 8px; ", 
+        #     tags$b("Select Subgroup: "), 
+        #     tags$div(
+        #         style = "padding-left: 8px; padding-top: 6px; margin-top: 4px; padding-bottom: 4px; border-style: inset;", 
+        #         
+        #     )
+        # )
         tags$div(
-            style = "margin-top: 8px; ", 
-            tags$b("Select Subgroup: "), 
-        tags$div(
-            style = "padding-left: 8px; padding-top: 6px; margin-top: 4px; padding-bottom: 4px; border-style: inset;", 
             lapply(1:nrow(x$Tsample_metadata), 
                    function(i) {foSubgoupSelectInput(i, x$Tsample_metadata)})
-        )
         )
     })
     
@@ -350,16 +352,22 @@ shinyServer(function(input, output, session) {
         )
         x <- current_metadata()
         groups <- rownames(x$Tsample_metadata)
+        # tags$div(
+        #     style = "margin-top: 8px; ", 
+        #     tags$b("Investigate Group Differences: "), 
+        #     tags$div(
+        #         style = "padding-left: 8px; padding-top: 6px; margin-top: 4px; padding-bottom: 4px; border-style: inset;", 
+        #         selectInput("select_group_differences" , "Select Group:", 
+        #                     choices = c("None", groups), 
+        #                     selected = 1, selectize = F, width = 170),
+        #         uiOutput("select_subgroups_for_difference"),
+        #     )
+        # )
         tags$div(
-            style = "margin-top: 8px; ", 
-            tags$b("Investigate Group Differences: "), 
-            tags$div(
-                style = "padding-left: 8px; padding-top: 6px; margin-top: 4px; padding-bottom: 4px; border-style: inset;", 
-                selectInput("select_group_differences" , "Select Group:", 
-                            choices = c("None", groups), 
-                            selected = 1, selectize = F, width = 170),
-                uiOutput("select_subgroups_for_difference"),
-            )
+            selectInput("select_group_differences" , "Select Group:", 
+                        choices = c("None", groups), 
+                        selected = 1, selectize = F, width = 170),
+            uiOutput("select_subgroups_for_difference")
         )
     })
     
@@ -625,6 +633,7 @@ shinyServer(function(input, output, session) {
         ST$ZScore = Zx
         ST$PValue = res$PValues
         ST$FDR = res$QValues
+        ST$isSignificant = (ST$FDR <= 0.1) & (abs(ST$Phos) >= log2(1.25))
         
         validate(
             need(nrow(ST) > 0, "There are no sites identified in the selected subgroup. Please make sure there are no conflicts in the subgroup selection.")
@@ -674,6 +683,7 @@ shinyServer(function(input, output, session) {
         res = compute_pvalues(as.matrix(PT$ZScore))
         PT$PValue = res$PValues
         PT$FDR = res$QValues
+        PT$isSignificant = (PT$FDR <= 0.1) & (abs(PT$Phos) >= log2(1.25))
         
         return (PT)
     })
@@ -682,7 +692,6 @@ shinyServer(function(input, output, session) {
         req(site_table())
         ST <- site_table()
         ST$logP = pmin(-log10(ST$PValue), 10)
-        ST$isSignificant= (ST$FDR <= 0.1) & (abs(ST$Phos) >= log2(1.25))
         
         thr = min(ST$logP[ST$isSignificant]);
         xMax = round(max(abs(ST$Phos)), digits = 0)
@@ -709,7 +718,6 @@ shinyServer(function(input, output, session) {
         req(protein_table())
         PT <- protein_table()
         PT$logP = pmin(-log10(PT$PValue), 10)
-        PT$isSignificant = (PT$FDR <= 0.1) & (abs(PT$Phos) >= log2(1.25))
         
         thr = min(PT$logP[PT$isSignificant]);
         xMax = round(max(abs(PT$Phos)), digits = 0)
@@ -752,6 +760,133 @@ shinyServer(function(input, output, session) {
             theme(plot.title = element_text(hjust = 0.5)) 
     })
     
+    barplot <- function(K, minzscore, topk, yaxis, coloring, yaxistxt_main){
+        Ks <- K[!is.na(K$Phos),]
+        Ks <- Ks[abs(Ks$ZScore) >= minzscore,]
+        
+        si <- order(abs(Ks$Phos) - max(minzscore, 3)*Ks$StdErr, decreasing = TRUE)
+        #si <- order(abs(Ks$ZScore), decreasing = TRUE)
+        
+        valids <- si[1:min(topk, length(si))]
+        Ks <- Ks[valids, ]
+        
+        si <- order(Ks$Phos, decreasing = TRUE)
+        Ks <- Ks[si,]
+        
+        c_limit = 4
+        Ks$ColoringVar = Ks$ZScore
+        Ks$ColoringVar = pmax( -1*c_limit, pmin(Ks$ColoringVar, c_limit))
+        
+        significanceColoring = FALSE
+        if(coloring == "Significance"){
+            Ks$ColoringVar <- !Ks$isSignificant
+            #Ks$ColoringVar <- ifelse(!Ks$isSignificant, "NotSig", ifelse(Ks$Phos > 0, "SigPos", "SigNeg"))
+            significanceColoring = TRUE
+        }
+        
+        ## Add custom color scaling - If needed
+        ## Add XLabel Coloring - If needed
+        
+        Ks$Sorting = -1*Ks$Phos
+        Ks$Yaxis = Ks$Phos
+        yaxisText = yaxistxt_main
+        showErrorBars = TRUE
+        if(yaxis == "Z-Score"){
+            Ks$Yaxis = Ks$ZScore
+            Ks$Sorting = -1*Ks$ZScore
+            yaxisText = "Z-Score"
+            showErrorBars = FALSE
+        }
+        
+        p <- ggplot(data=Ks, aes(x=reorder(ID, Sorting), y=Yaxis, fill = ColoringVar)) +
+            geom_bar(stat="identity", width=0.8, col="#333333", size = 0.75) +
+            theme_minimal() +
+            theme(text = element_text(size=18),
+                  axis.text.x = element_text(size = 16, angle=90, hjust=1, face = "bold"),
+                  legend.key.height = unit(1.25, "cm"))
+        
+        if(showErrorBars){ # Show errorabars
+            p <- p + geom_errorbar(aes(ymin=Phos-1.96*StdErr, ymax=Phos+1.96*StdErr), width=.5, size = 0.95)
+        }
+        
+        #  defaultcolors <- c('#0072BD', '#D95319', '#EDB120', '#77AC30', '#4DBEEE')
+        #clr <- c('#F10000', '#CCCCCC')
+        clr <- c('#E69F00', '#CCCCCC')
+        #clr <- c('#F10000', '#0000F1', '#CCCCCC')
+       # clr <- c('#CCCCCC', '#F10000', '#0000F1')
+       # , labels = c("Not Significant", "Significant Neg", "Significant Pos")
+        
+        if(significanceColoring){
+            p <- p + scale_fill_manual(name = "", values=clr, labels = c("Significant", "Not Significant"))
+        } else {
+            p <- p + scale_fill_distiller(palette = "RdYlBu", type = "div", limit = c_limit * c(-1, 1))
+        }
+        
+        p <- p + labs(fill = "Z-Score", x = "", y = yaxisText)
+        return (p)
+    }
+    
+    downloadPlotDLHandler <- function(plot, file_name, file_type){
+        downloadHandler(
+            filename = function() { paste(file_name, file_type, sep='.') },
+            content = function(file) {
+                h = 4.6
+                ggsave(file, plot = plot, device = file_type, width=3*h, height=h)
+            }
+        )
+    }
+    
+    siteBarPlot <- reactive({
+        req(site_table())
+        ST <- site_table()
+        ST$NameX = ST$ProteinName
+        ST$NameX[is.na(ST$NameX)] = ST$Protein[is.na(ST$NameX)]
+        ST$ID <- str_c(ST$NameX, ST$Position, sep = "-")
+        minzscore = input$site_barplot_minzscore
+        topk = input$site_barplot_maxitems
+        yaxis = input$site_barplot_yaxis
+        coloring = input$site_barplot_coloring
+        yaxistxt_main = "Site Phosphorylation"
+        barplot(ST, minzscore, topk, yaxis, coloring, yaxistxt_main)
+    })
+    
+    output$site_barplot_plot <- renderPlot({
+        siteBarPlot()
+    })
+    
+    output$site_barplot_downloadPlotPNG <- downloadPlotDLHandler(
+        siteBarPlot(),file_name = "site-barplot", file_type = "png")
+    
+    output$site_barplot_downloadPlotPDF <- downloadPlotDLHandler(
+        siteBarPlot(),file_name = "site-barplot", file_type = "pdf")
+    
+    
+    ## Protein Bar Plots
+    
+    proteinBarPlot <- reactive({
+        req(protein_table())
+        PT <- protein_table()
+        PT$NameX = PT$Name
+        PT$NameX[is.na(PT$NameX)] = PT$ID[is.na(PT$NameX)]
+        PT$ID <- PT$NameX
+        minzscore = input$protein_barplot_minzscore
+        topk = input$protein_barplot_maxitems
+        yaxis = input$protein_barplot_yaxis
+        coloring = input$protein_barplot_coloring
+        yaxistxt_main = "Protein Phosphorylation"
+        barplot(PT, minzscore, topk, yaxis, coloring, yaxistxt_main)
+    })
+    
+    output$protein_barplot_plot <- renderPlot({
+        proteinBarPlot()
+    })
+    
+    output$protein_barplot_downloadPlotPNG <- downloadPlotDLHandler(
+        proteinBarPlot(), file_name = "protein-barplot", file_type = "png")
+    
+    output$protein_barplot_downloadPlotPDF <- downloadPlotDLHandler(
+        proteinBarPlot(),file_name = "protein-barplot", file_type = "pdf")
+    
     
     output$siteTable <- DT::renderDataTable(server = FALSE, {
         req(site_table())
@@ -786,8 +921,6 @@ shinyServer(function(input, output, session) {
                                      paging = TRUE, searching = TRUE, pageLength = 10, dom = 'Bfrtip', buttons = list(list(extend = 'csv', filename = fn), list(extend = 'excel', filename = fn)))) %>% 
             formatSignif('PValue', 3) %>% formatSignif('FDR', 3) 
     })
-    
-    
     
     output$buttonDownloadSampleData <- downloadHandler(
         filename = function() { paste('sample_data.csv', sep='') },

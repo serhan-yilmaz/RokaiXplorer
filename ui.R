@@ -14,7 +14,7 @@ library(shinyBS)
 library(shinyhelper)
 library(tippy)
 
-version_text <- function(){"v0.1.1"}
+version_text <- function(){"v0.1.2"}
 version_style <- function(){"font-size: 14px; color:#93A3A3;"}
 version_style_additional <- function(){
     "-webkit-user-select: none;
@@ -41,6 +41,31 @@ multiChoicePicker <- function(id, label, choices, selected = choices[1], isInlin
            )
     )
     return (R)
+}
+
+barplot_ui <- function(identifier, yaxis_mainoption){
+    #"site_barplot"
+    tags$div(
+        shinycssloaders::withSpinner(plotOutput(paste(identifier, "plot", sep = "_"), height = "340px")), 
+        fluidRow(
+            column(width = 6, style = "padding: 8px;", fluidRow(id = paste(identifier, "sliders_div", sep = "_"), 
+                                                                column(width = 6, style = "padding: 8px;", sliderInput(paste(identifier, "maxitems", sep = "_"), "Number of items shown", 5, 50, 20, step = 1, width = "220px")), 
+                                                                column(width= 6, style = "padding: 8px;", sliderInput(paste(identifier, "minzscore", sep = "_"), "Min. absolute z-score", 0, 4, 2, step = 0.05, width = "220px"))
+            )),
+            column(width = 3, style = "padding: 8px; padding-left: 16px;", 
+                   multiChoicePicker(paste(identifier, "yaxis", sep = "_"), "Plot Y-Axis:", c(yaxis_mainoption, "Z-Score"), isInline = "F"),
+                   tags$div(
+                       style = "margin-top: 4px;", 
+                       multiChoicePicker(paste(identifier, "coloring", sep = "_"), "Coloring:", c("Z-Score", "Significance"), isInline = "F")
+                   )
+                   ),
+            column(width = 3, style = "padding: 8px;", tags$div(downloadButton(paste(identifier, "downloadPlotPNG", sep = "_"), 'Download PNG'),
+                                                                tags$br(), 
+                                                                downloadButton(paste(identifier, "downloadPlotPDF", sep = "_"), 'Download PDF')
+            )
+            )
+        )
+    )
 }
 
 # input_data_modal_content <- function (){
@@ -124,8 +149,25 @@ shinyUI(fluidPage(
                           )
                           #tags$hr(style = "margin: 8px 0px 8px 0px;")
                  ),
-                 uiOutput("subgroup_controls"),
-                 uiOutput("group_difference_controls")
+                 helper(tags$div(
+                     style = "margin-top: 8px; ", 
+                     tags$b("Select Subgroup: "), 
+                     tags$div(
+                         style = "min-height:30px; max-height:194px; overflow-y:auto; padding-left: 8px; padding-top: 6px; margin-top: 4px; padding-bottom: 4px; border-style: inset;", 
+                         uiOutput("subgroup_controls")
+                     )
+                 ), type = "inline", id = "select_subgroup_tooltip_icon"),
+                 tippy_this("select_subgroup_tooltip_icon", "<span style='font-size:14px; margin: 0px;'>Select a subgroup to focus on a subset of samples. Groups are specified in metadata. <span>", allowHTML = TRUE), 
+                 helper(tags$div(
+                         style = "margin-top: 8px; ", 
+                         tags$b("Investigate Group Differences: "), 
+                         tags$div(
+                             style = "min-height:30px; padding-left: 8px; padding-top: 6px; margin-top: 4px; padding-bottom: 4px; border-style: inset;", 
+                             uiOutput("group_difference_controls")
+                         )
+                ), type = "inline", id = "group_differences_tooltip_icon"),
+                tippy_this("group_differences_tooltip_icon", "<span style='font-size:14px; margin: 0px;'>Select two subgroups to perform a differential analysis. (A vs B) <span>", allowHTML = TRUE), 
+                
                    )
             ),
             # mainPanel(
@@ -140,6 +182,10 @@ shinyUI(fluidPage(
                   tabPanel(
                       "Volcano Plot",
                       shinycssloaders::withSpinner(plotOutput("sitelevel_volcano"))
+                  ),
+                  tabPanel(
+                      "Bar Plot",
+                      barplot_ui("site_barplot", "Site Phosphorylation")
                   )
                   
               )),
@@ -152,6 +198,10 @@ shinyUI(fluidPage(
                     tabPanel(
                         "Volcano Plot",
                         shinycssloaders::withSpinner(plotOutput("proteinlevel_volcano"))
+                    ),
+                    tabPanel(
+                        "Bar Plot",
+                        barplot_ui("protein_barplot", "Protein Phosphorylation")
                     )
               )),
               tabPanel("Diagnostics", tabsetPanel(id = "diagnosticsTabset", 
