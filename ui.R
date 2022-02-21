@@ -2,6 +2,7 @@ library(shiny)
 library(magrittr)
 library(DT)
 library(cicerone)
+library(visNetwork)
 
 # For javascript
 library(shinyjs)
@@ -14,7 +15,7 @@ library(shinyBS)
 library(shinyhelper)
 library(tippy)
 
-version_text <- function(){"v0.1.2"}
+version_text <- function(){"v0.2.0"}
 version_style <- function(){"font-size: 14px; color:#93A3A3;"}
 version_style_additional <- function(){
     "-webkit-user-select: none;
@@ -66,6 +67,45 @@ barplot_ui <- function(identifier, yaxis_mainoption){
             )
         )
     )
+}
+
+
+# network_ks_ui <- function(identifier, yaxis_mainoption, defaultSingleKinases = F){
+#   tags$div(
+#     shinycssloaders::withSpinner(visNetworkOutput(identifier, height = "340px")), 
+#     fluidRow(
+#       column(width = 6, style = "padding: 8px;", fluidRow(id = paste(identifier, "sliders_div", sep = "_"), 
+#                                                           column(width = 6, style = "padding: 8px;", sliderInput(paste(identifier, "maxitems", sep = "_"), "Number of items shown", 5, 50, 20, step = 1, width = "220px")), 
+#                                                           column(width= 6, style = "padding: 8px;", sliderInput(paste(identifier, "minzscore", sep = "_"), "Min. absolute z-score", 0, 4, 2, step = 0.05, width = "220px"))
+#       )),
+#        column(width = 3, style = "padding: 8px; padding-left: 16px;", 
+#               tags$div(
+#                 style = "margin-top: 8px;", 
+#                 tags$b("Single Kinases"), 
+#                 shinyWidgets::materialSwitch(inputId = paste(identifier, "single_kinases", sep = "_"), label = "", status = "danger", value = defaultSingleKinases, inline = T)
+#                 )
+#        )
+#     )
+#   )
+# }
+
+network_ks_ui <- function(identifier, yaxis_mainoption, defaultSingleKinases = F){
+  tags$div(
+    fluidRow(
+      column(width = 9, shinycssloaders::withSpinner(visNetworkOutput(identifier, height = "480px"))), 
+    
+      column(width = 3, style = "padding: 8px;", 
+             fluidRow(id = paste(identifier, "sliders_div", sep = "_"), 
+            sliderInput(paste(identifier, "maxitems", sep = "_"), "Number of items shown", 5, 50, 20, step = 1, width = "220px"), 
+            sliderInput(paste(identifier, "minzscore", sep = "_"), "Min. absolute z-score", 0, 4, 2, step = 0.05, width = "220px"),
+             tags$div(
+               style = "margin-top: 8px;", 
+               tags$b("Single Kinases"), 
+               shinyWidgets::materialSwitch(inputId = paste(identifier, "single_kinases", sep = "_"), label = "", status = "danger", value = defaultSingleKinases, inline = T)
+             )
+      ))
+    )
+  )
 }
 
 # input_data_modal_content <- function (){
@@ -186,6 +226,10 @@ shinyUI(fluidPage(
                   tabPanel(
                       "Bar Plot",
                       barplot_ui("site_barplot", "Site Phosphorylation")
+                  ), 
+                  tabPanel(
+                    "Network", 
+                    network_ks_ui("site_kinase_network", defaultSingleKinases = T)
                   )
                   
               )),
@@ -202,6 +246,10 @@ shinyUI(fluidPage(
                     tabPanel(
                         "Bar Plot",
                         barplot_ui("protein_barplot", "Protein Phosphorylation")
+                    ),
+                    tabPanel(
+                      "Network", 
+                      network_ks_ui("protein_kinase_network")
                     )
               )),
               tabPanel("Diagnostics", tabsetPanel(id = "diagnosticsTabset", 

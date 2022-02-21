@@ -7,6 +7,8 @@ library(cicerone)
 library(shinyjs)
 library(shinytoastr)
 library(shinylogs)
+library(visNetwork)
+#library(igraph)
 
 library(ids)
 
@@ -85,13 +87,29 @@ shinyServer(function(input, output, session) {
         indices = match(proteins, NetworkData$Site$Protein)
         names <- NetworkData$Site$Gene[indices]
         NetworkData$Protein <- data.frame(ID = proteins, Name = names)
-        # indices = match(NetworkData$Site$Protein, proteins)
-        # NetworkData$Wsite2protein <- sparseMatrix(
-        #     i = 1:nrow(NetworkData$Site),
-        #     j = indices, 
-        #     x = 1,
-        #     dims = c(nrow(NetworkData$Site), nrow(NetworkData$Protein))
-        # )
+        NetworkData$Site$Identifier <- str_c(NetworkData$Site$Gene, NetworkData$Site$Position, sep = "-")
+        
+        indices = match(NetworkData$Site$Protein, proteins)
+        NetworkData$Wsite2protein <- sparseMatrix(
+            i = 1:nrow(NetworkData$Site),
+            j = indices,
+            x = T,
+            dims = c(nrow(NetworkData$Site), nrow(NetworkData$Protein))
+        )
+        
+        indices = match(NetworkData$Kinase$KinaseID, proteins)
+        rowindices = 1:nrow(NetworkData$Kinase)
+        rowindices = rowindices[!is.na(indices)]
+        indices = indices[!is.na(indices)]
+        NetworkData$Wkinase2protein <- sparseMatrix(
+            i = rowindices,
+            j = indices,
+            x = T,
+            dims = c(nrow(NetworkData$Kinase), nrow(NetworkData$Protein))
+        )
+        NetworkData$Wkinase2site <- as(NetworkData$Wkinase2protein %*% t(NetworkData$Wsite2protein), "lgCMatrix")
+        
+        NetworkData$Wkin2protein <- as(NetworkData$Wkin2site %*% (NetworkData$Wsite2protein), "lgCMatrix")
         
         return (NetworkData)
     })
@@ -642,7 +660,6 @@ shinyServer(function(input, output, session) {
         return (ST)
     })
     
-    
     protein_table <- reactive({
         req(site_table())
         #req(reactive_network())
@@ -676,7 +693,7 @@ shinyServer(function(input, output, session) {
         Z = as.numeric(A / SE)
         valids = !is.na(Z)
         
-        PT = Protein[valids, ]
+        PT = Protein[valids, c("ID", "Name")]
         PT$Phos = A[valids]
         PT$StdErr = SE[valids]
         PT$ZScore = Z[valids]
@@ -887,6 +904,182 @@ shinyServer(function(input, output, session) {
     output$protein_barplot_downloadPlotPDF <- downloadPlotDLHandler(
         proteinBarPlot(),file_name = "protein-barplot", file_type = "pdf")
     
+    
+    foKinaseNetworkSubset <- function(ST, NetworkData, indices, Wkin2site, Wkin2onsite){
+        ST = ST[!is.na(indices), ]
+        indices = indices[!is.na(indices)]
+        Wk2s = Wkin2site[, indices]
+        Wk2os = Wkin2onsite[, indices]
+        validKins = (rowSums(Wk2s) + rowSums(Wk2os)) > 0
+        validSites = (colSums(Wk2s) + colSums(Wk2os)) > 0
+        KT = NetworkData$Kinase[validKins, ]
+        ST = ST[validSites, ]
+        Wk2s = Wk2s[validKins, validSites]
+        Wk2os = Wk2os[validKins, validSites]
+        return(list(KT = KT, ST = ST, Wk2s = Wk2s, Wk2os = Wk2os))
+    }
+    
+    foKinaseNetworkDraw <- function(K, KT, Wk2s, Wk2os, minzscore, topk, keepsinglekinases, items_txt, footer_txt){
+        thereAreNoItemsError = paste("There are no", items_txt, "that can pass the specified threshold.")
+        valids = abs(K$ZScore) >= minzscore
+        validate(
+            need(nnzero(valids) > 0, thereAreNoItemsError)
+        )
+        
+        Ks <- K[valids,]
+        Wk2s = Wk2s[, valids]
+        Wk2os = Wk2os[, valids]
+        
+        si <- order(abs(Ks$Phos) - max(minzscore, 3)*Ks$StdErr, decreasing = TRUE)
+        valids <- si[1:min(topk, length(si))]
+        Ks <- Ks[valids, ]
+        Wk2s <- Wk2s[, valids]
+        Wk2os <- Wk2os[, valids]
+        
+        #validKins = (rowSums(Wk2s) + rowSums(Wk2os)) > !keepsinglekinases
+        validKins = (rowSums(Wk2s) > !keepsinglekinases) | (rowSums(Wk2os) > 0)
+        
+        KT = KT[validKins, ]
+        Wk2s = Wk2s[validKins, ]
+        Wk2os = Wk2os[validKins, ]
+        
+        validSites = (colSums(Wk2s) + colSums(Wk2os)) > 0
+        Ks = Ks[validSites, ]
+        Wk2s = Wk2s[, validSites]
+        Wk2os = Wk2os[, validSites]
+        validate(
+            need(nnzero(validSites) > 0, thereAreNoItemsError)
+        )
+        
+        nItem = nrow(Ks)
+        nKinase = nrow(KT)
+        
+        c_limit = 4
+        coloringVar = Ks$ZScore
+        #Ks$ColoringVar = pmax( -1*c_limit, pmin(Ks$ColoringVar, c_limit))
+        
+        aconst = 1.4;
+        fq <- function(x) 1 - 2/(1+2^(x/aconst));
+        qScaled = as.matrix(fq(coloringVar))
+        n = nrow(qScaled)
+        fc <- function(a,b,c) t(as.matrix(c(a,b,c)))
+        mA = (as.matrix(pmax(qScaled, 0)) %*% fc(+0.04, -0.96, -0.96))
+        mB = (as.matrix(abs(pmin(qScaled, 0))) %*% fc(-0.96, -0.96, +0.04))
+        clx <- matrix(0.96, nrow = n, ncol = 3) + mA + mB
+        
+        color_hex = apply(clx, 1, function(x) rgb(x[1], x[2], x[3]))
+        
+        # color_hex = sapply(colors, function(x) rgb(x[1], x[2], x[3], maxColorValue=255))
+        
+        
+        siteIds = nKinase + (1:nItem)
+        kinaseIds = 1:nKinase
+        phosConf = paste0(round(Ks$Phos, digits = 2), 
+                          " [", round(Ks$Phos - 1.96*Ks$StdErr * sign(Ks$Phos), digits = 2), 
+                          ", ", round(Ks$Phos + 1.96*Ks$StdErr * sign(Ks$Phos), digits = 2), "]", sep = "")
+        
+        item_txt = paste(toupper(substr(items_txt, 1, 1)), substr(items_txt, 2, nchar(items_txt) - 1), sep = "")
+        
+        line1 = c(rep("", nKinase), paste0("<br> ZScore: ", round(Ks$ZScore, digits = 3), sep = ""))
+        line2 = c(rep("", nKinase), paste0("<br> log2-FC: ", phosConf, sep = ""))
+        line3 = c(rep("", nKinase), paste0("<br> FDR: ", round(Ks$FDR, digits = 3), sep = ""))
+        
+        
+        names = c(KT$KinaseName, Ks$ID)
+        nodes = data.frame(id = c(kinaseIds, siteIds), label = names,
+                           group = c(rep("Kinase", nKinase), rep(item_txt, nItem)),
+                           color = c(rep("orange", nKinase), color_hex),
+                           title = paste0("<b>", names, "</b>", line1, line2, line3))
+        
+        a <- which(Wk2s, arr.ind = T)
+        a[, 2] =  a[, 2] + nKinase
+        b <- which(t(Wk2os), arr.ind = T)
+        b[, 1] =  b[, 1] + nKinase
+        C = rbind(a, b)
+        
+        edges = data.frame(from = C[, 1], to = C[, 2], 
+                           width = c(rep(6, nrow(a)), rep(10, nrow(b))),
+                           color = c(rep("black", nrow(a)), rep("#EE9900", nrow(b))),
+                           arrows = c(rep("to", nrow(a)), rep("", nrow(b)))
+        )
+        
+        ledges = data.frame(width = c(20, 30), 
+                            color = c("black", "EE9900"),
+                            label = c("Phosphorylates", "Is on the kinase"), 
+                            arrows = c("", ""),
+                            shadow = c(F, F))
+        
+        visNetwork(nodes, edges, width = "100%",
+                   main = paste("Kinases connected to the identified", items_txt),
+                   footer = footer_txt) %>%
+            visEdges(shadow = FALSE,
+                     arrows =list(to = list(enabled = TRUE, scaleFactor = 0.5)),
+                     color = list(color = "black", highlight = "red")) %>%
+            visGroups(groupname = "Kinase", color = "orange", shape = "rectangle", 
+                      shadow = list(enabled = TRUE), font = list(size = 30)) %>% 
+            visGroups(groupname = item_txt, color = "darkred", shape = "square", font = list(size = 26)) %>%
+            visLegend(width = 0.13, position = "right") %>%
+            visEdges(smooth = FALSE) %>%
+            visInteraction(hideEdgesOnDrag = TRUE) %>%
+            visInteraction(navigationButtons = TRUE) %>%
+            visPhysics(stabilization = T) 
+    }
+    
+    site_kinase_network <- reactive({
+        req(site_table())
+        req(reactive_network())
+        ST <- site_table()
+        ST$NameX = ST$ProteinName
+        ST$NameX[is.na(ST$NameX)] = ST$Protein[is.na(ST$NameX)]
+        ST$ID <- str_c(ST$NameX, ST$Position, sep = "-")
+        NetworkData <- reactive_network()
+        ST = ST[!is.na(ST$Phos), ]
+        indices = match(ST$ID, NetworkData$Site$Identifier)
+        return(foKinaseNetworkSubset(ST, NetworkData, indices, 
+                                     NetworkData$Wkin2site, 
+                                     NetworkData$Wkinase2site))
+    })
+    
+    output$site_kinase_network <- renderVisNetwork({
+        req(site_kinase_network())
+        ds <- site_kinase_network()
+        minzscore = input$site_kinase_network_minzscore
+        topk = input$site_kinase_network_maxitems
+        keepsinglekinases = input$site_kinase_network_single_kinases
+        footer_txt = "Orange edges indicate the site is on the kinase."
+        return(foKinaseNetworkDraw(ds$ST, ds$KT, ds$Wk2s, 
+                                   ds$Wk2os, minzscore, topk, 
+                                   keepsinglekinases, "sites", 
+                                   footer_txt))
+    })
+    
+    protein_kinase_network <- reactive({
+        req(protein_table())
+        req(reactive_network())
+        PT <- protein_table()
+        PT$NameX = PT$Name
+        PT$NameX[is.na(PT$NameX)] = PT$ID[is.na(PT$NameX)]
+        PT$ID <- PT$NameX
+        NetworkData <- reactive_network()
+        PT = PT[!is.na(PT$Phos), ]
+        indices = match(PT$Name, NetworkData$Protein$Name)
+        return(foKinaseNetworkSubset(PT, NetworkData, indices, 
+                                     NetworkData$Wkin2protein, 
+                                     NetworkData$Wkinase2protein))
+    })
+    
+    output$protein_kinase_network <- renderVisNetwork({
+        req(protein_kinase_network())
+        ds <- protein_kinase_network()
+        minzscore = input$protein_kinase_network_minzscore
+        topk = input$protein_kinase_network_maxitems
+        keepsinglekinases = input$protein_kinase_network_single_kinases
+        footer_txt = "Orange edges indicate that protein is a kinase. Black edges indicate the kinase phosphorylates a site on that protein. "
+        return(foKinaseNetworkDraw(ds$ST, ds$KT, ds$Wk2s, 
+                                   ds$Wk2os, minzscore, topk, 
+                                   keepsinglekinases, "proteins", 
+                                   footer_txt))
+    })
     
     output$siteTable <- DT::renderDataTable(server = FALSE, {
         req(site_table())
