@@ -736,7 +736,7 @@ shinyServer(function(input, output, session) {
         clr <- defaultcolors[1:2]
         ggplot(ST, aes(x=Phos, y=logP, color = isSignificant)) + 
             theme_bw() +
-            geom_point(size=4) + 
+            geom_point(size=3.5) + 
             geom_hline(yintercept=(thr), linetype="dashed", color = '#555555') + 
             geom_vline(xintercept=c(-min_logfc, min_logfc), linetype="dashed", color = '#333333') + 
             
@@ -790,7 +790,9 @@ shinyServer(function(input, output, session) {
             Ks <- Ks[Ks$isSignificant, ]
         }
         
-        si <- order(abs(Ks$Phos) - max(minzscore, 3)*Ks$StdErr, decreasing = TRUE)
+        #zstar = max(minzscore, 3)
+        zstar = 3
+        si <- order(abs(Ks$Phos) - zstar*Ks$StdErr, decreasing = TRUE)
         #si <- order(abs(Ks$ZScore), decreasing = TRUE)
         
         valids <- si[1:min(topk, length(si))]
@@ -944,7 +946,8 @@ shinyServer(function(input, output, session) {
         Wk2s = Wk2s[, valids]
         Wk2os = Wk2os[, valids]
         
-        si <- order(abs(Ks$Phos) - max(minzscore, 3)*Ks$StdErr, decreasing = TRUE)
+        zstar = 3
+        si <- order(abs(Ks$Phos) - zstar*Ks$StdErr, decreasing = TRUE)
         valids <- si[1:min(topk, length(si))]
         Ks <- Ks[valids, ]
         Wk2s <- Wk2s[, valids]

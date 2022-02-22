@@ -17,7 +17,7 @@ library(tippy)
 
 #library(plotly)
 
-version_text <- function(){"v0.2.1"}
+version_text <- function(){"v0.2.2"}
 version_style <- function(){"font-size: 14px; color:#93A3A3;"}
 version_style_additional <- function(){
     "-webkit-user-select: none;
@@ -46,6 +46,29 @@ multiChoicePicker <- function(id, label, choices, selected = choices[1], isInlin
     return (R)
 }
 
+
+foAddHelper <- function(el, helper_id = "", tooltip = "", helper_file = NA){
+  if(is.na(helper_file)){
+    helper_content = ""
+    helper_type = "inline"
+  } else {
+    helper_content = helper_file
+    helper_type = "markdown"
+  }
+  tooltip_txt = paste("<span style='font-size:14px; margin: 0px;'>", tooltip, "<span>")
+  tags$div(
+    helper(el, id = helper_id, type = helper_type, content = helper_content),
+    tippy_this(helper_id, tooltip_txt, allowHTML = TRUE), 
+  )
+}
+
+foMaxItemsHelper <- function(el, base_id){
+  maxitems_helper_id = paste(base_id, "maxitems_helper", sep = "_")
+  maxitems_tooltip = "Click to learn how top items are selected."
+  maxitems_helper_file = "how_top_items_selected"
+  foAddHelper(el, maxitems_helper_id, maxitems_tooltip, maxitems_helper_file)
+}
+
 barplot_ui <- function(identifier, yaxis_mainoption){
     #"site_barplot"
     item_txt = strsplit(identifier, "_",)[[1]][1]
@@ -54,9 +77,12 @@ barplot_ui <- function(identifier, yaxis_mainoption){
         fluidRow(
             column(width = 6, style = "padding: 8px;", 
                    fluidRow(id = paste(identifier, "sliders_div", sep = "_"), 
+                    
                     column(width = 6, style = "padding: 8px;", 
-                              sliderInput(paste(identifier, "maxitems", sep = "_"), "Number of items shown", 5, 50, 20, step = 1, width = "220px")
-                           ), 
+                             foMaxItemsHelper(
+                                  sliderInput(paste(identifier, "maxitems", sep = "_"), "Number of items shown", 5, 50, 20, step = 1, width = "220px")
+                                , identifier),
+                             ),
                     column(width= 6, style = "padding: 8px;", 
                               sliderInput(paste(identifier, "minzscore", sep = "_"), "Min. absolute z-score", 0, 4, 2, step = 0.05, width = "220px"),
                              tags$div(
@@ -82,7 +108,6 @@ barplot_ui <- function(identifier, yaxis_mainoption){
     )
 }
 
-
 # network_ks_ui <- function(identifier, yaxis_mainoption, defaultSingleKinases = F){
 #   tags$div(
 #     shinycssloaders::withSpinner(visNetworkOutput(identifier, height = "340px")), 
@@ -102,15 +127,17 @@ barplot_ui <- function(identifier, yaxis_mainoption){
 #   )
 # }
 
+
 network_ks_ui <- function(identifier, defaultSingleKinases = F){
   item_txt = strsplit(identifier, "_",)[[1]][1]
   tags$div(
     fluidRow(
       column(width = 9, shinycssloaders::withSpinner(visNetworkOutput(identifier, height = "480px"))), 
     
-      column(width = 3, style = "padding: 8px;", 
+      column(width = 3, style = "padding: 8px; padding-right:24px;", 
              fluidRow(id = paste(identifier, "sliders_div", sep = "_"), 
-            sliderInput(paste(identifier, "maxitems", sep = "_"), "Number of items shown", 5, 50, 20, step = 1, width = "220px"), 
+                      foMaxItemsHelper(sliderInput(paste(identifier, "maxitems", sep = "_"), "Number of items shown", 5, 50, 20, step = 1, width = "220px")
+                                       , identifier),
             sliderInput(paste(identifier, "minzscore", sep = "_"), "Min. absolute z-score", 0, 4, 2, step = 0.05, width = "220px"),
             tags$div(
               style = "margin-top: 8px;", 
@@ -130,16 +157,16 @@ network_ks_ui <- function(identifier, defaultSingleKinases = F){
 volcanoplot_ui <- function(identifier){
   tags$div(
     fluidRow(
-      column(width = 9, shinycssloaders::withSpinner(plotOutput(identifier, height = "440px"))), 
+      column(width = 9, shinycssloaders::withSpinner(plotOutput(identifier, height = "445px"))), 
       column(width = 3, style = "padding: 8px;", 
              fluidRow(id = paste(identifier, "sliders_div", sep = "_"), 
                       sliderInput(paste(identifier, "maxfdr", sep = "_"), "Max. FDR", 0.01, 0.25, 0.1, step = 0.01, width = "220px"),
                       #sliderInput(paste(identifier, "minzscore", sep = "_"), "Min. absolute z-score", 0, 4, 2, step = 0.05, width = "220px"),
                       sliderInput(paste(identifier, "minlogfc", sep = "_"), "Min. absolute log2-FC", 0, 1, 0.32, step = 0.01, width = "220px"), 
                       # tags$div(
-                      #   style = "margin-top: 8px;", 
-                      #   tags$b("Single Kinases"), 
-                      #   shinyWidgets::materialSwitch(inputId = paste(identifier, "single_kinases", sep = "_"), label = "", status = "danger", value = defaultSingleKinases, inline = T)
+                      #   style = "margin-top: 8px;",
+                      #   tags$b("Single Kinases"),
+                      #   shinyWidgets::materialSwitch(inputId = paste(identifier, "single_kinases", sep = "_"), label = "", status = "danger", value = F, inline = T)
                       # )
              ))
     )
@@ -234,7 +261,7 @@ shinyUI(fluidPage(
                          style = "min-height:30px; max-height:194px; overflow-y:auto; padding-left: 8px; padding-top: 6px; margin-top: 4px; padding-bottom: 4px; border-style: inset;", 
                          uiOutput("subgroup_controls")
                      )
-                 ), type = "inline", id = "select_subgroup_tooltip_icon"),
+                 ), type = "markdown", id = "select_subgroup_tooltip_icon", content = "select_subgroup_helper"),
                  tippy_this("select_subgroup_tooltip_icon", "<span style='font-size:14px; margin: 0px;'>Select a subgroup to focus on a subset of samples. Groups are specified in metadata. <span>", allowHTML = TRUE), 
                  helper(tags$div(
                          style = "margin-top: 8px; ", 
@@ -243,7 +270,7 @@ shinyUI(fluidPage(
                              style = "min-height:30px; padding-left: 8px; padding-top: 6px; margin-top: 4px; padding-bottom: 4px; border-style: inset;", 
                              uiOutput("group_difference_controls")
                          )
-                ), type = "inline", id = "group_differences_tooltip_icon"),
+                ), type = "markdown", id = "group_differences_tooltip_icon", content = "group_difference_helper"),
                 tippy_this("group_differences_tooltip_icon", "<span style='font-size:14px; margin: 0px;'>Select two subgroups to perform a differential analysis. (A vs B) <span>", allowHTML = TRUE), 
                 
                    )
