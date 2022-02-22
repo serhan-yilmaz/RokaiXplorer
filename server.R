@@ -12,6 +12,8 @@ library(visNetwork)
 
 library(ids)
 
+#library(plotly)
+
 source("compute_pvalues.R")
 
 ## Update Sample Data
@@ -651,13 +653,21 @@ shinyServer(function(input, output, session) {
         ST$ZScore = Zx
         ST$PValue = res$PValues
         ST$FDR = res$QValues
-        ST$isSignificant = (ST$FDR <= 0.1) & (abs(ST$Phos) >= log2(1.25))
         
         validate(
             need(nrow(ST) > 0, "There are no sites identified in the selected subgroup. Please make sure there are no conflicts in the subgroup selection.")
         )
         
         return (ST)
+    })
+    
+    site_table_processed <- reactive({
+        req(site_table())
+        ST <- site_table()
+        max_fdr = input$sitelevel_volcano_maxfdr
+        min_logfc = input$sitelevel_volcano_minlogfc
+        ST$isSignificant = (ST$FDR <= max_fdr) & (abs(ST$Phos) >= min_logfc)
+        return(ST)
     })
     
     protein_table <- reactive({
@@ -705,9 +715,16 @@ shinyServer(function(input, output, session) {
         return (PT)
     })
     
-    output$sitelevel_volcano <- renderPlot({
-        req(site_table())
-        ST <- site_table()
+    protein_table_processed <- reactive({
+        req(protein_table())
+        PT <- protein_table()
+        max_fdr = input$proteinlevel_volcano_maxfdr
+        min_logfc = input$proteinlevel_volcano_minlogfc
+        PT$isSignificant = (PT$FDR <= max_fdr) & (abs(PT$Phos) >= min_logfc)
+        return(PT)
+    })
+    
+    main_volcanoplot <- function(ST, min_logfc){
         ST$logP = pmin(-log10(ST$PValue), 10)
         
         thr = min(ST$logP[ST$isSignificant]);
@@ -715,45 +732,34 @@ shinyServer(function(input, output, session) {
         
         defaultcolors <- c('#0072BD', '#D95319', '#EDB120', '#77AC30', '#4DBEEE')
         
-       # clr <- c('#0072BD','#E69F00')
+        # clr <- c('#0072BD','#E69F00')
         clr <- defaultcolors[1:2]
         ggplot(ST, aes(x=Phos, y=logP, color = isSignificant)) + 
             theme_bw() +
-            geom_point(size=3) + 
+            geom_point(size=4) + 
             geom_hline(yintercept=(thr), linetype="dashed", color = '#555555') + 
-            geom_vline(xintercept=c(-log2(1.25), log2(1.25)), linetype="dashed", color = '#333333') + 
+            geom_vline(xintercept=c(-min_logfc, min_logfc), linetype="dashed", color = '#333333') + 
             
-            theme(text = element_text(size = 16)) + 
+            theme(text = element_text(size = 18)) + 
             labs(x = "Log2-FC", y = "-log10(P-Value)") + 
             scale_color_manual(name = "", values=clr, labels = c("Not Significant", "Significant")) +
             ylim(0, 10) + 
             xlim(-xMax, xMax)
-            #+ theme(legend.position="top") 
+        #+ theme(legend.position="top") 
+    }
+    
+    output$sitelevel_volcano <- renderPlot({
+        req(site_table_processed())
+        ST <- site_table_processed()
+        minlogfc = input$sitelevel_volcano_minlogfc
+        main_volcanoplot(ST, minlogfc)
     })
     
     output$proteinlevel_volcano <- renderPlot({
-        req(protein_table())
-        PT <- protein_table()
-        PT$logP = pmin(-log10(PT$PValue), 10)
-        
-        thr = min(PT$logP[PT$isSignificant]);
-        xMax = round(max(abs(PT$Phos)), digits = 0)
-        
-        defaultcolors <- c('#0072BD', '#D95319', '#EDB120', '#77AC30', '#4DBEEE')
-        
-        # clr <- c('#0072BD','#E69F00')
-        clr <- defaultcolors[1:2]
-        ggplot(PT, aes(x=Phos, y=logP, color = isSignificant)) + 
-            theme_bw() +
-            geom_point(size=3) + 
-            geom_hline(yintercept=(thr), linetype="dashed", color = '#555555') + 
-            geom_vline(xintercept=c(-log2(1.25), log2(1.25)), linetype="dashed", color = '#333333') + 
-            
-            theme(text = element_text(size = 16)) + 
-            labs(x = "Log2-FC", y = "-log10(P-Value)") + 
-            scale_color_manual(name = "", values=clr, labels = c("Not Significant", "Significant")) +
-            ylim(0, 10) + 
-            xlim(-xMax, xMax)
+        req(protein_table_processed())
+        PT <- protein_table_processed()
+        minlogfc = input$proteinlevel_volcano_minlogfc
+        main_volcanoplot(PT, minlogfc)
     })
     
     
@@ -777,9 +783,12 @@ shinyServer(function(input, output, session) {
             theme(plot.title = element_text(hjust = 0.5)) 
     })
     
-    barplot <- function(K, minzscore, topk, yaxis, coloring, yaxistxt_main){
+    barplot <- function(K, minzscore, topk, yaxis, coloring, yaxistxt_main, show_significant_only){
         Ks <- K[!is.na(K$Phos),]
         Ks <- Ks[abs(Ks$ZScore) >= minzscore,]
+        if(show_significant_only == T){
+            Ks <- Ks[Ks$isSignificant, ]
+        }
         
         si <- order(abs(Ks$Phos) - max(minzscore, 3)*Ks$StdErr, decreasing = TRUE)
         #si <- order(abs(Ks$ZScore), decreasing = TRUE)
@@ -854,8 +863,8 @@ shinyServer(function(input, output, session) {
     }
     
     siteBarPlot <- reactive({
-        req(site_table())
-        ST <- site_table()
+        req(site_table_processed())
+        ST <- site_table_processed()
         ST$NameX = ST$ProteinName
         ST$NameX[is.na(ST$NameX)] = ST$Protein[is.na(ST$NameX)]
         ST$ID <- str_c(ST$NameX, ST$Position, sep = "-")
@@ -864,7 +873,8 @@ shinyServer(function(input, output, session) {
         yaxis = input$site_barplot_yaxis
         coloring = input$site_barplot_coloring
         yaxistxt_main = "Site Phosphorylation"
-        barplot(ST, minzscore, topk, yaxis, coloring, yaxistxt_main)
+        show_significant_only = input$site_barplot_significant_only
+        barplot(ST, minzscore, topk, yaxis, coloring, yaxistxt_main, show_significant_only)
     })
     
     output$site_barplot_plot <- renderPlot({
@@ -881,8 +891,8 @@ shinyServer(function(input, output, session) {
     ## Protein Bar Plots
     
     proteinBarPlot <- reactive({
-        req(protein_table())
-        PT <- protein_table()
+        req(protein_table_processed())
+        PT <- protein_table_processed()
         PT$NameX = PT$Name
         PT$NameX[is.na(PT$NameX)] = PT$ID[is.na(PT$NameX)]
         PT$ID <- PT$NameX
@@ -891,7 +901,8 @@ shinyServer(function(input, output, session) {
         yaxis = input$protein_barplot_yaxis
         coloring = input$protein_barplot_coloring
         yaxistxt_main = "Protein Phosphorylation"
-        barplot(PT, minzscore, topk, yaxis, coloring, yaxistxt_main)
+        show_significant_only = input$protein_barplot_significant_only
+        barplot(PT, minzscore, topk, yaxis, coloring, yaxistxt_main, show_significant_only)
     })
     
     output$protein_barplot_plot <- renderPlot({
@@ -919,9 +930,12 @@ shinyServer(function(input, output, session) {
         return(list(KT = KT, ST = ST, Wk2s = Wk2s, Wk2os = Wk2os))
     }
     
-    foKinaseNetworkDraw <- function(K, KT, Wk2s, Wk2os, minzscore, topk, keepsinglekinases, items_txt, footer_txt){
+    foKinaseNetworkDraw <- function(K, KT, Wk2s, Wk2os, minzscore, topk, keepsinglekinases, items_txt, footer_txt, show_significant_only){
         thereAreNoItemsError = paste("There are no", items_txt, "that can pass the specified threshold.")
-        valids = abs(K$ZScore) >= minzscore
+        valids = (abs(K$ZScore) >= minzscore)
+        if(show_significant_only == T){
+            valids = valids & K$isSignificant
+        }
         validate(
             need(nnzero(valids) > 0, thereAreNoItemsError)
         )
@@ -1026,9 +1040,9 @@ shinyServer(function(input, output, session) {
     }
     
     site_kinase_network <- reactive({
-        req(site_table())
+        req(site_table_processed())
         req(reactive_network())
-        ST <- site_table()
+        ST <- site_table_processed()
         ST$NameX = ST$ProteinName
         ST$NameX[is.na(ST$NameX)] = ST$Protein[is.na(ST$NameX)]
         ST$ID <- str_c(ST$NameX, ST$Position, sep = "-")
@@ -1046,17 +1060,18 @@ shinyServer(function(input, output, session) {
         minzscore = input$site_kinase_network_minzscore
         topk = input$site_kinase_network_maxitems
         keepsinglekinases = input$site_kinase_network_single_kinases
+        show_significant_only = input$site_kinase_network_significant_only
         footer_txt = "Orange edges indicate the site is on the kinase."
         return(foKinaseNetworkDraw(ds$ST, ds$KT, ds$Wk2s, 
                                    ds$Wk2os, minzscore, topk, 
                                    keepsinglekinases, "sites", 
-                                   footer_txt))
+                                   footer_txt, show_significant_only))
     })
     
     protein_kinase_network <- reactive({
-        req(protein_table())
+        req(protein_table_processed())
         req(reactive_network())
-        PT <- protein_table()
+        PT <- protein_table_processed()
         PT$NameX = PT$Name
         PT$NameX[is.na(PT$NameX)] = PT$ID[is.na(PT$NameX)]
         PT$ID <- PT$NameX
@@ -1074,16 +1089,17 @@ shinyServer(function(input, output, session) {
         minzscore = input$protein_kinase_network_minzscore
         topk = input$protein_kinase_network_maxitems
         keepsinglekinases = input$protein_kinase_network_single_kinases
+        show_significant_only = input$protein_kinase_network_significant_only
         footer_txt = "Orange edges indicate that protein is a kinase. Black edges indicate the kinase phosphorylates a site on that protein. "
         return(foKinaseNetworkDraw(ds$ST, ds$KT, ds$Wk2s, 
                                    ds$Wk2os, minzscore, topk, 
                                    keepsinglekinases, "proteins", 
-                                   footer_txt))
+                                   footer_txt, show_significant_only))
     })
     
     output$siteTable <- DT::renderDataTable(server = FALSE, {
-        req(site_table())
-        ST <- site_table();
+        req(site_table_processed())
+        ST <- site_table_processed();
         ST$Phos = round(ST$Phos, digits = 3)
         ST$StdErr = round(ST$StdErr, digits = 3)
         ST$ZScore = round(ST$ZScore, digits = 3)
@@ -1099,8 +1115,8 @@ shinyServer(function(input, output, session) {
     })
     
     output$proteinTable <- DT::renderDataTable(server = FALSE, {
-        req(protein_table())
-        PT <- protein_table();
+        req(protein_table_processed())
+        PT <- protein_table_processed();
         PT$Phos = round(PT$Phos, digits = 3)
         PT$StdErr = round(PT$StdErr, digits = 3)
         PT$ZScore = round(PT$ZScore, digits = 3)

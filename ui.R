@@ -15,7 +15,9 @@ library(shinyBS)
 library(shinyhelper)
 library(tippy)
 
-version_text <- function(){"v0.2.0"}
+#library(plotly)
+
+version_text <- function(){"v0.2.1"}
 version_style <- function(){"font-size: 14px; color:#93A3A3;"}
 version_style_additional <- function(){
     "-webkit-user-select: none;
@@ -46,12 +48,23 @@ multiChoicePicker <- function(id, label, choices, selected = choices[1], isInlin
 
 barplot_ui <- function(identifier, yaxis_mainoption){
     #"site_barplot"
+    item_txt = strsplit(identifier, "_",)[[1]][1]
     tags$div(
         shinycssloaders::withSpinner(plotOutput(paste(identifier, "plot", sep = "_"), height = "340px")), 
         fluidRow(
-            column(width = 6, style = "padding: 8px;", fluidRow(id = paste(identifier, "sliders_div", sep = "_"), 
-                                                                column(width = 6, style = "padding: 8px;", sliderInput(paste(identifier, "maxitems", sep = "_"), "Number of items shown", 5, 50, 20, step = 1, width = "220px")), 
-                                                                column(width= 6, style = "padding: 8px;", sliderInput(paste(identifier, "minzscore", sep = "_"), "Min. absolute z-score", 0, 4, 2, step = 0.05, width = "220px"))
+            column(width = 6, style = "padding: 8px;", 
+                   fluidRow(id = paste(identifier, "sliders_div", sep = "_"), 
+                    column(width = 6, style = "padding: 8px;", 
+                              sliderInput(paste(identifier, "maxitems", sep = "_"), "Number of items shown", 5, 50, 20, step = 1, width = "220px")
+                           ), 
+                    column(width= 6, style = "padding: 8px;", 
+                              sliderInput(paste(identifier, "minzscore", sep = "_"), "Min. absolute z-score", 0, 4, 2, step = 0.05, width = "220px"),
+                             tags$div(
+                               style = "margin-top: 8px;", 
+                               tags$b(paste("Significant ", item_txt, "s only", sep = "")), 
+                               shinyWidgets::materialSwitch(inputId = paste(identifier, "significant_only", sep = "_"), label = "", status = "warning", value = F, inline = T)
+                             )
+                           )
             )),
             column(width = 3, style = "padding: 8px; padding-left: 16px;", 
                    multiChoicePicker(paste(identifier, "yaxis", sep = "_"), "Plot Y-Axis:", c(yaxis_mainoption, "Z-Score"), isInline = "F"),
@@ -89,7 +102,8 @@ barplot_ui <- function(identifier, yaxis_mainoption){
 #   )
 # }
 
-network_ks_ui <- function(identifier, yaxis_mainoption, defaultSingleKinases = F){
+network_ks_ui <- function(identifier, defaultSingleKinases = F){
+  item_txt = strsplit(identifier, "_",)[[1]][1]
   tags$div(
     fluidRow(
       column(width = 9, shinycssloaders::withSpinner(visNetworkOutput(identifier, height = "480px"))), 
@@ -98,12 +112,36 @@ network_ks_ui <- function(identifier, yaxis_mainoption, defaultSingleKinases = F
              fluidRow(id = paste(identifier, "sliders_div", sep = "_"), 
             sliderInput(paste(identifier, "maxitems", sep = "_"), "Number of items shown", 5, 50, 20, step = 1, width = "220px"), 
             sliderInput(paste(identifier, "minzscore", sep = "_"), "Min. absolute z-score", 0, 4, 2, step = 0.05, width = "220px"),
+            tags$div(
+              style = "margin-top: 8px;", 
+              tags$b(paste("Significant ", item_txt, "s only", sep = "")), 
+              shinyWidgets::materialSwitch(inputId = paste(identifier, "significant_only", sep = "_"), label = "", status = "warning", value = F, inline = T)
+            ),
              tags$div(
-               style = "margin-top: 8px;", 
+               style = "margin-top: 13px;", 
                tags$b("Single Kinases"), 
                shinyWidgets::materialSwitch(inputId = paste(identifier, "single_kinases", sep = "_"), label = "", status = "danger", value = defaultSingleKinases, inline = T)
              )
       ))
+    )
+  )
+}
+
+volcanoplot_ui <- function(identifier){
+  tags$div(
+    fluidRow(
+      column(width = 9, shinycssloaders::withSpinner(plotOutput(identifier, height = "440px"))), 
+      column(width = 3, style = "padding: 8px;", 
+             fluidRow(id = paste(identifier, "sliders_div", sep = "_"), 
+                      sliderInput(paste(identifier, "maxfdr", sep = "_"), "Max. FDR", 0.01, 0.25, 0.1, step = 0.01, width = "220px"),
+                      #sliderInput(paste(identifier, "minzscore", sep = "_"), "Min. absolute z-score", 0, 4, 2, step = 0.05, width = "220px"),
+                      sliderInput(paste(identifier, "minlogfc", sep = "_"), "Min. absolute log2-FC", 0, 1, 0.32, step = 0.01, width = "220px"), 
+                      # tags$div(
+                      #   style = "margin-top: 8px;", 
+                      #   tags$b("Single Kinases"), 
+                      #   shinyWidgets::materialSwitch(inputId = paste(identifier, "single_kinases", sep = "_"), label = "", status = "danger", value = defaultSingleKinases, inline = T)
+                      # )
+             ))
     )
   )
 }
@@ -214,19 +252,19 @@ shinyUI(fluidPage(
             column(width = 8,
              tabsetPanel(id = "mainTabset",
               tabPanel("Site", tabsetPanel(id = "siteTabset", 
+                  tabPanel(
+                      "Volcano Plot",
+                      volcanoplot_ui("sitelevel_volcano")
+                  ),
+                  tabPanel(
+                    "Bar Plot",
+                    barplot_ui("site_barplot", "Site Phosphorylation")
+                  ), 
                   tabPanel("Table", 
                         tags$div(id = "site_table_div", 
                             shinycssloaders::withSpinner(DT::dataTableOutput("siteTable"))
                         )
                   ),
-                  tabPanel(
-                      "Volcano Plot",
-                      shinycssloaders::withSpinner(plotOutput("sitelevel_volcano"))
-                  ),
-                  tabPanel(
-                      "Bar Plot",
-                      barplot_ui("site_barplot", "Site Phosphorylation")
-                  ), 
                   tabPanel(
                     "Network", 
                     network_ks_ui("site_kinase_network", defaultSingleKinases = T)
@@ -234,18 +272,18 @@ shinyUI(fluidPage(
                   
               )),
               tabPanel("Protein", tabsetPanel(id = "proteinTabset", 
+                    tabPanel(
+                      "Volcano Plot",
+                      volcanoplot_ui("proteinlevel_volcano")
+                    ),
+                    tabPanel(
+                      "Bar Plot",
+                      barplot_ui("protein_barplot", "Protein Phosphorylation")
+                    ),
                     tabPanel("Table", 
                        tags$div(id = "protein_table_div", 
                                 shinycssloaders::withSpinner(DT::dataTableOutput("proteinTable"))
                        )
-                    ),
-                    tabPanel(
-                        "Volcano Plot",
-                        shinycssloaders::withSpinner(plotOutput("proteinlevel_volcano"))
-                    ),
-                    tabPanel(
-                        "Bar Plot",
-                        barplot_ui("protein_barplot", "Protein Phosphorylation")
                     ),
                     tabPanel(
                       "Network", 
