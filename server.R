@@ -2,12 +2,21 @@
 library(Matrix)
 library(shiny)
 library(DT)
+library(reshape) 
 library(ggplot2)
 library(cicerone)
 library(shinyjs)
 library(shinytoastr)
 library(shinylogs)
 library(visNetwork)
+library(preprocessCore)
+
+# if (!require("BiocManager", quietly = TRUE))
+#     install.packages("BiocManager")
+# 
+# BiocManager::install("preprocessCore")
+
+
 #library(igraph)
 
 library(ids)
@@ -18,8 +27,8 @@ source("compute_pvalues.R")
 
 ## Update Sample Data
 folder = "data/"
-Tsample <- read.csv(paste(folder, "combined_alz_explorer_data.csv", sep=""))
-Tsample_metadata <- read.csv(paste(folder, "combined_alz_explorer_metadata.csv", sep=""))
+Tsample <- read.csv(paste(folder, "rokaiXplorer_sample_data.csv", sep=""))
+Tsample_metadata <- read.csv(paste(folder, "rokaiXplorer_sample_metadata.csv", sep=""))
 
 foList <- function(...){
     x <- list(...)
@@ -538,6 +547,9 @@ shinyServer(function(input, output, session) {
         
         ## Sample Mean Balancing
         
+        
+        w_s = 1
+        
         if(analyze_group_differences()){
           #  gd <- selected_group_differences()
             TcaseA = as.matrix(Tcase[, Tmeta$samplesA[caseSamples]])
@@ -570,9 +582,9 @@ shinyServer(function(input, output, session) {
             
             if((nCaseA >= 2) & (nControlA >= 2)){
                 ScaseA <- apply(TcaseA, 1, function(x) sd(x, na.rm=T))
-                SEcaseA <- ScaseA / sqrt(NcaseA)
+                SEcaseA <- ScaseA / sqrt(NcaseA - w_s)
                 ScontrolA <- apply(TcontrolA, 1, function(x) sd(x, na.rm=T))
-                SEcontrolA <- ScontrolA / sqrt(NcontrolA)
+                SEcontrolA <- ScontrolA / sqrt(NcontrolA - w_s)
                 SE_A <- sqrt(SEcaseA^2 + SEcontrolA^2)
                 validsA <- (NcaseA >= 2) & (NcontrolA >= 2)
             } else {
@@ -582,9 +594,9 @@ shinyServer(function(input, output, session) {
             
             if((nCaseB >= 2) & (nControlB >= 2)){
                 ScaseB <- apply(TcaseB, 1, function(x) sd(x, na.rm=T))
-                SEcaseB <- ScaseB / sqrt(NcaseB)
+                SEcaseB <- ScaseB / sqrt(NcaseB - w_s)
                 ScontrolB <- apply(TcontrolB, 1, function(x) sd(x, na.rm=T))
-                SEcontrolB <- ScontrolB / sqrt(NcontrolB)
+                SEcontrolB <- ScontrolB / sqrt(NcontrolB - w_s)
                 SE_B <- sqrt(SEcaseB^2 + SEcontrolB^2)
                 validsB <- (NcaseB >= 2) & (NcontrolB >= 2)
             } else {
@@ -607,9 +619,9 @@ shinyServer(function(input, output, session) {
             
             if((nCase >= 2) & (nControl >= 2)){
                 Scase <- apply(Tcase, 1, function(x) sd(x, na.rm=T))
-                SEcase <- Scase / sqrt(Ncase)
+                SEcase <- Scase / sqrt(Ncase - w_s)
                 Scontrol <- apply(Tcontrol, 1, function(x) sd(x, na.rm=T))
-                SEcontrol <- Scontrol / sqrt(Ncontrol)
+                SEcontrol <- Scontrol / sqrt(Ncontrol - w_s)
                 SE <- sqrt(SEcase^2 + SEcontrol^2)
                 valids <- (Ncase >= 2) & (Ncontrol >= 2)
             } else {
@@ -627,6 +639,46 @@ shinyServer(function(input, output, session) {
         return (list("Xv" = Xv, "Sx" = Sx, "ST"= ST,"validSites" = validSites))
     })
     
+    processed_data_bysample <- reactive({
+        req(filtered_dataset())
+        req(filtered_metadata())
+        ds <- filtered_dataset()
+        Ts <- ds$Ts
+        ST <- ds$ST
+        Tmeta <- filtered_metadata()
+        caseSamples <- Tmeta$caseSamples
+        
+        Tcase <- as.matrix(log2(Ts[, caseSamples]))
+        Tcontrol <- as.matrix(log2(Ts[, !caseSamples]))
+        
+        nCase = ncol(Tcase)
+        nControl = ncol(Tcontrol)
+        
+        validate(
+            need((nCase+nControl)>0, "There are no samples in the selected subgroup."), 
+            need((nCase)>0, "There are no case samples in the selected subgroup."), 
+            need((nControl)>0, "There are no control samples in the selected subgroup.")
+        )
+        
+        Mcontrol <- apply(Tcontrol, 1, function(x) mean(x, na.rm=T))
+        
+        Q <- Tcase - Mcontrol;
+        SE <-apply(Q, 2, function(x) rep(sd(x, na.rm = T), length(x)))
+        
+        Ncase <- apply(Tcase, 1, function(x) nnzero(!is.na(x)))
+        Ncontrol <- apply(Tcontrol, 1, function(x) nnzero(!is.na(x)))
+        
+        valids <- (Ncase >= 1) & (Ncontrol >= 1)
+        validSites = valids
+        
+        Xv = Q[validSites, ]
+        Sx = SE[validSites, ]
+        ST = ST[validSites, ]
+        Ts = Ts[validSites, ]
+        
+        return (list("Xv" = Xv, "Sx" = Sx, "ST"= ST, "Ts" = Ts, "validSites" = validSites))
+    })
+    
     
     preprocessed_dataset <- reactive({
         req(processed_dataset())
@@ -638,6 +690,7 @@ shinyServer(function(input, output, session) {
     
     site_table <- reactive({
         req(preprocessed_dataset())
+    #    req(processed_data_bysample())
         ds <- preprocessed_dataset();
         
         validSites = ds$validSites
@@ -653,6 +706,7 @@ shinyServer(function(input, output, session) {
         ST$ZScore = Zx
         ST$PValue = res$PValues
         ST$FDR = res$QValues
+        ST$MagnitudeAdj <- abs(Xv) - 3 * Sx;
         
         validate(
             need(nrow(ST) > 0, "There are no sites identified in the selected subgroup. Please make sure there are no conflicts in the subgroup selection.")
@@ -710,7 +764,8 @@ shinyServer(function(input, output, session) {
         res = compute_pvalues(as.matrix(PT$ZScore))
         PT$PValue = res$PValues
         PT$FDR = res$QValues
-        PT$isSignificant = (PT$FDR <= 0.1) & (abs(PT$Phos) >= log2(1.25))
+        PT$MagnitudeAdj <- abs(PT$Phos) - 3 * PT$StdErr;
+        #PT$isSignificant = (PT$FDR <= 0.1) & (abs(PT$Phos) >= log2(1.25))
         
         return (PT)
     })
@@ -762,6 +817,17 @@ shinyServer(function(input, output, session) {
         main_volcanoplot(PT, minlogfc)
     })
     
+    output$sitelevel_volcano_summary <- renderText({
+        req(site_table_processed())
+        ST <- site_table_processed()
+        return(paste("Number of significant sites:", nnzero(ST$isSignificant)))
+    })
+    
+    output$proteinlevel_volcano_summary <- renderText({
+        req(protein_table_processed())
+        PT <- protein_table_processed()
+        return(paste("Number of significant proteins:", nnzero(PT$isSignificant)))
+    })
     
     output$histogram_sitecentering <- renderPlot({
         req(processed_dataset())
@@ -854,13 +920,27 @@ shinyServer(function(input, output, session) {
         return (p)
     }
     
-    downloadPlotDLHandler <- function(plot, file_name, file_type){
+    siteDownloadPlotDLHandler <- function(plot, file_name, file_type){
         downloadHandler(
             filename = function() { paste(file_name, file_type, sep='.') },
             content = function(file) {
                 h = 4.6
-                ggsave(file, plot = plot, device = file_type, width=3*h, height=h)
-            }
+                message("fjjf")
+                ggsave(file, plot = siteBarPlot(), device = file_type, width=3*h, height=h)
+            },
+            contentType = paste("application/", file_type, sep = "")
+        )
+    }
+    
+    proteinDownloadPlotDLHandler <- function(plot, file_name, file_type){
+        downloadHandler(
+            filename = function() { paste(file_name, file_type, sep='.') },
+            content = function(file) {
+                h = 4.6
+                message("fjjf")
+                ggsave(file, plot = proteinBarPlot(), device = file_type, width=3*h, height=h)
+            },
+            contentType = paste("application/", file_type, sep = "")
         )
     }
     
@@ -883,11 +963,193 @@ shinyServer(function(input, output, session) {
         siteBarPlot()
     })
     
-    output$site_barplot_downloadPlotPNG <- downloadPlotDLHandler(
-        siteBarPlot(),file_name = "site-barplot", file_type = "png")
+    output$site_barplot_downloadPlotPNG <- siteDownloadPlotDLHandler(
+        siteBarPlot(), file_name = "site-barplot", file_type = "png")
     
-    output$site_barplot_downloadPlotPDF <- downloadPlotDLHandler(
-        siteBarPlot(),file_name = "site-barplot", file_type = "pdf")
+    output$site_barplot_downloadPlotPDF <- siteDownloadPlotDLHandler(
+        siteBarPlot(), file_name = "site-barplot", file_type = "pdf")
+    
+    heatmapMain <- function(ST, STx, ds, minzscore, topk, show_significant_only, intensity_fc_style, items_txt){
+        show_intensity = intensity_fc_style == "Both case and control"
+
+        #Z = ds$Xv/ds$Sx
+        Z = ds$Xv
+        Ts <- ds$Ts
+        Ts <- log2(Ts)
+
+        indices = match(ST$ID, STx$ID)
+        valids = !is.na(indices)
+        error_no_items_txt <- paste("There are no", items_txt, "to show for the specified options.")
+        validate(
+            need(nnzero(valids) > 1, error_no_items_txt)
+        )
+        Z <- Z[valids, ]
+        ST <- ST[valids, ]
+        Ts <- Ts[valids, ]
+        indices <- indices[valids]
+
+        STv = STx[indices, ]
+
+        Ts = Ts - apply(Ts, 2, function(x) mean(x, na.rm=T))
+        Ts = Ts - apply(Ts, 1, function(x) mean(x, na.rm=T))
+
+        #Ts <- as.data.frame(normalize.quantiles(as.matrix(Ts)))
+        #Z[is.na(Z)] = 0
+
+
+        rownames(Z) <- ST$ID
+        colnames(Ts) <- colnames(ds$Ts)
+        rownames(Ts) <- ST$ID
+
+        avgZ = apply(Z, 1, function(x) mean(x, na.rm=T))
+        avgAbsZ = apply(Z, 1, function(x) mean(abs(x), na.rm=T))
+        sumAbsZ = apply(Z, 1, function(x) sum(abs(x), na.rm=T))
+        #valids = (abs(sumAbsZ) >= (2 * ncol(Z))) & (abs(avgZ) >= 1)
+        # valids = STv$isSignificant
+        #valids = rep(T, nrow(STv), 1) & (abs(STv$ZScore) >= minzscore)
+        valids = rep(T, nrow(STv), 1) & (abs(avgAbsZ) >= minzscore)
+        if(show_significant_only){
+            valids = valids & (STv$isSignificant)
+        }
+        #& (abs(STv$ZScore) >= 3.5)
+
+        validate(
+            need(nnzero(valids) > 1, error_no_items_txt)
+        )
+        Z <- as.matrix(Z[valids, ])
+        ST <- ST[valids, ]
+        Ts <- Ts[valids, ]
+        STv <- STv[valids, ]
+
+        sort_score = abs(STv$Phos) - 3 * STv$StdErr
+        #avgZ = apply(Z, 1, function(x) mean(x, na.rm=T))
+        si <- order(sort_score, decreasing = TRUE)
+        # topk = length(Z)
+        valids <- si[1:min(topk, length(si))]
+
+        Z <- as.matrix(Z[valids, ])
+        ST <- ST[valids, ]
+        STv <- STv[valids, ]
+        Ts <- Ts[valids, ]
+
+        valids <- order(STv$Phos, decreasing = TRUE)
+        Z <- as.matrix(Z[valids, ])
+        ST <- ST[valids, ]
+        Ts <- Ts[valids, ]
+
+        if(show_intensity){
+            data_melt <- melt(Ts)
+            fill_txt = "Log2-Intensity"
+        } else {
+            data_melt <- melt(Z)
+            fill_txt = "Log2-FC"
+        }
+        # data_melt[data_melt < -4] = -4
+        # data_melt[data_melt > 4] = 4
+
+        ggp <- ggplot(data_melt, aes(X1, X2)) +                           # Create heatmap with ggplot2
+            geom_tile(aes(fill = value))
+        ggp = ggp + scale_fill_gradient2(name = fill_txt, low = "blue", mid = "white", high = "red", na.value = "#336633")
+        #ggp = ggp + scale_fill_gradientn(colours = c("blue", "white", "red"))
+
+        #ggp = ggp + scale_fill_gradient(low = "white", high = "red", na.value = "#336633")
+        ggp = ggp + theme(axis.text.x=element_text(angle =- 90, vjust = 0.5, hjust = 0, size=15))
+        ggp = ggp + theme(axis.text.y=element_text(vjust = 0, hjust = 0.5, size=11))
+        ggp = ggp + labs(x = "", y = "")
+
+        return(ggp)
+    }
+    
+    siteDownloadHeatmapDLHandler <- function(plot, file_name, file_type){
+        downloadHandler(
+            filename = function() { paste(file_name, file_type, sep='.') },
+            content = function(file) {
+                h = 4.6
+                message("fjjf")
+                ggsave(file, plot = siteHeatmap(), device = file_type, width=3*h, height=h)
+            },
+            contentType = paste("application/", file_type, sep = "")
+        )
+    }
+    
+    output$site_heatmap_downloadPlotPNG <- siteDownloadHeatmapDLHandler(
+        siteHeatmap(), file_name = "site-heatmap", file_type = "png")
+    
+    output$site_heatmap_downloadPlotPDF <- siteDownloadHeatmapDLHandler(
+        siteHeatmap(), file_name = "site-heatmap", file_type = "pdf")
+    
+    siteHeatmap <- reactive({
+        req(processed_data_bysample())
+        ds <- processed_data_bysample()
+        
+        STx <- site_table_processed()
+        STx$NameX = STx$ProteinName
+        STx$NameX[is.na(STx$NameX)] = STx$Protein[is.na(STx$NameX)]
+        STx$ID <- str_c(STx$NameX, STx$Position, sep = "-")
+        
+        ST <- ds$ST
+        ST$NameX = ST$ProteinName
+        ST$NameX[is.na(ST$NameX)] = ST$Protein[is.na(ST$NameX)]
+        ST$ID <- str_c(ST$NameX, ST$Position, sep = "-")
+        
+        minzscore = input$site_heatmap_minzscore
+        topk = input$site_heatmap_maxitems
+        show_significant_only = input$site_heatmap_significant_only
+        intensity_fc_style = input$site_heatmap_intensity_fc_style
+        heatmapMain(ST, STx, ds, minzscore, topk, 
+                    show_significant_only, intensity_fc_style, "sites")
+    })
+    
+    output$site_heatmap <- renderPlot({
+        siteHeatmap()
+    })
+    
+    ## Protein heatmaps
+    
+    proteinHeatmap <- reactive({
+        req(processed_data_bysample())
+        ds <- processed_data_bysample()
+        
+        STx <- site_table_processed()
+        STx$NameX = STx$ProteinName
+        STx$NameX[is.na(STx$NameX)] = STx$Protein[is.na(STx$NameX)]
+        STx$ID <- str_c(STx$NameX, STx$Position, sep = "-")
+        
+        ST <- ds$ST
+        ST$NameX = ST$ProteinName
+        ST$NameX[is.na(ST$NameX)] = ST$Protein[is.na(ST$NameX)]
+        ST$ID <- str_c(ST$NameX, ST$Position, sep = "-")
+        
+        minzscore = input$site_heatmap_minzscore
+        topk = input$site_heatmap_maxitems
+        show_significant_only = input$site_heatmap_significant_only
+        intensity_fc_style = input$site_heatmap_intensity_fc_style
+        heatmapMain(ST, STx, ds, minzscore, topk, 
+                    show_significant_only, intensity_fc_style, "sites")
+    })
+    
+    output$protein_heatmap <- renderPlot({
+        proteinHeatmap()
+    })
+    
+    proteinDownloadHeatmapDLHandler <- function(plot, file_name, file_type){
+        downloadHandler(
+            filename = function() { paste(file_name, file_type, sep='.') },
+            content = function(file) {
+                h = 4.6
+                message("fjjf")
+                ggsave(file, plot = siteHeatmap(), device = file_type, width=3*h, height=h)
+            },
+            contentType = paste("application/", file_type, sep = "")
+        )
+    }
+    
+    
+    output$protein_heatmap_downloadPlotPNG <- proteinDownloadHeatmapDLHandler(
+        proteinHeatmap(), file_name = "protein-heatmap", file_type = "png")
+    
+    output$protein_heatmap_downloadPlotPDF <- proteinDownloadHeatmapDLHandler(
+        proteinHeatmap(), file_name = "protein-heatmap", file_type = "pdf")
     
     
     ## Protein Bar Plots
@@ -911,11 +1173,11 @@ shinyServer(function(input, output, session) {
         proteinBarPlot()
     })
     
-    output$protein_barplot_downloadPlotPNG <- downloadPlotDLHandler(
+    output$protein_barplot_downloadPlotPNG <- proteinDownloadPlotDLHandler(
         proteinBarPlot(), file_name = "protein-barplot", file_type = "png")
     
-    output$protein_barplot_downloadPlotPDF <- downloadPlotDLHandler(
-        proteinBarPlot(),file_name = "protein-barplot", file_type = "pdf")
+    output$protein_barplot_downloadPlotPDF <- proteinDownloadPlotDLHandler(
+        proteinBarPlot(), file_name = "protein-barplot", file_type = "pdf")
     
     
     foKinaseNetworkSubset <- function(ST, NetworkData, indices, Wkin2site, Wkin2onsite){
@@ -956,14 +1218,25 @@ shinyServer(function(input, output, session) {
         #validKins = (rowSums(Wk2s) + rowSums(Wk2os)) > !keepsinglekinases
         validKins = (rowSums(Wk2s) > !keepsinglekinases) | (rowSums(Wk2os) > 0)
         
+        validate(
+            need(nnzero(validKins) > 0, "There are no kinases to show for the specified options.")
+        )
+        
         KT = KT[validKins, ]
-        Wk2s = Wk2s[validKins, ]
-        Wk2os = Wk2os[validKins, ]
+        
+        if(nnzero(validKins)  == 1){
+            Wk2s = t(as.matrix(Wk2s[validKins, ]))
+            Wk2os = t(as.matrix(Wk2os[validKins, ]))
+        } else {
+            Wk2s =(Wk2s[validKins, ])
+            Wk2os = (Wk2os[validKins, ])
+        }
         
         validSites = (colSums(Wk2s) + colSums(Wk2os)) > 0
         Ks = Ks[validSites, ]
         Wk2s = Wk2s[, validSites]
         Wk2os = Wk2os[, validSites]
+        
         validate(
             need(nnzero(validSites) > 0, thereAreNoItemsError)
         )
@@ -1009,15 +1282,25 @@ shinyServer(function(input, output, session) {
                            title = paste0("<b>", names, "</b>", line1, line2, line3))
         
         a <- which(Wk2s, arr.ind = T)
-        a[, 2] =  a[, 2] + nKinase
+        nRowA = nrow(a)
+        if(length(a) > 0){
+            a[, 2] =  a[, 2] + nKinase
+        } else {
+            nRowA = 0
+        }
         b <- which(t(Wk2os), arr.ind = T)
-        b[, 1] =  b[, 1] + nKinase
+        nRowB = nrow(b)
+        if(length(b) > 0){
+            b[, 1] =  b[, 1] + nKinase
+        } else {
+            nRowB =0
+        }
         C = rbind(a, b)
         
         edges = data.frame(from = C[, 1], to = C[, 2], 
-                           width = c(rep(6, nrow(a)), rep(10, nrow(b))),
-                           color = c(rep("black", nrow(a)), rep("#EE9900", nrow(b))),
-                           arrows = c(rep("to", nrow(a)), rep("", nrow(b)))
+                           width = c(rep(6, nRowA), rep(10, nRowB)),
+                           color = c(rep("black", nRowA), rep("#EE9900", nRowB)),
+                           arrows = c(rep("to", nRowA), rep("", nRowB))
         )
         
         ledges = data.frame(width = c(20, 30), 
@@ -1106,6 +1389,7 @@ shinyServer(function(input, output, session) {
         ST$Phos = round(ST$Phos, digits = 3)
         ST$StdErr = round(ST$StdErr, digits = 3)
         ST$ZScore = round(ST$ZScore, digits = 3)
+        ST$MagnitudeAdj = round(ST$MagnitudeAdj, digits = 3)
         
         si <- order(abs(ST$ZScore), decreasing = TRUE)
         ST <- ST[si,]
@@ -1123,6 +1407,7 @@ shinyServer(function(input, output, session) {
         PT$Phos = round(PT$Phos, digits = 3)
         PT$StdErr = round(PT$StdErr, digits = 3)
         PT$ZScore = round(PT$ZScore, digits = 3)
+        PT$MagnitudeAdj = round(PT$MagnitudeAdj, digits = 3)
         
         si <- order(abs(PT$ZScore), decreasing = TRUE)
         PT <- PT[si,]
