@@ -17,7 +17,7 @@ library(tippy)
 
 #library(plotly)
 
-version_text <- function(){"v0.3.0"}
+version_text <- function(){"v0.3.1"}
 version_style <- function(){"font-size: 14px; color:#93A3A3;"}
 version_style_additional <- function(){
     "-webkit-user-select: none;
@@ -28,52 +28,13 @@ version_style_additional <- function(){
   user-select: none;"
 }
 
-multiChoicePicker <- function(id, label, choices, selected = choices[1], isInline = "T") {
-    switch(isInline, 
-           "T" = R <- tags$div(
-               class = "inline-block", id = paste(id, "_div", sep = ""), 
-               style = "justify-content: space-between;", 
-               tags$b(label),
-               shinyWidgets::pickerInput(id, "", choices, selected = selected, width = "fit", inline = T)
-           ),
-           "F" = R <- tags$div(
-               id = paste(id, "_div", sep = ""), 
-               tags$b(label),
-               #selectInput(id, label, choices, selected = selected, width = "auto")
-               shinyWidgets::pickerInput(id, "", choices, selected = selected, width = "fit", inline = F)
-           )
-    )
-    return (R)
-}
+source("ui_util.R")
 
-
-foAddHelper <- function(el, helper_id = "", tooltip = "", helper_file = NA){
-  if(is.na(helper_file)){
-    helper_content = ""
-    helper_type = "inline"
-  } else {
-    helper_content = helper_file
-    helper_type = "markdown"
-  }
-  tooltip_txt = paste("<span style='font-size:14px; margin: 0px;'>", tooltip, "<span>")
-  tags$div(
-    helper(el, id = helper_id, type = helper_type, content = helper_content),
-    tippy_this(helper_id, tooltip_txt, allowHTML = TRUE), 
-  )
-}
-
-foMaxItemsHelper <- function(el, base_id){
-  maxitems_helper_id = paste(base_id, "maxitems_helper", sep = "_")
-  maxitems_tooltip = "Click to learn how top items are selected."
-  maxitems_helper_file = "how_top_items_selected"
-  foAddHelper(el, maxitems_helper_id, maxitems_tooltip, maxitems_helper_file)
-}
-
-barplot_ui <- function(identifier, yaxis_mainoption){
+barplot_ui <- function(identifier){
     #"site_barplot"
     item_txt = strsplit(identifier, "_",)[[1]][1]
     tags$div(
-        shinycssloaders::withSpinner(plotOutput(paste(identifier, "plot", sep = "_"), height = "340px")), 
+        shinycssloaders::withSpinner(plotOutput(paste(identifier, "plot", sep = "_"), height = "360px")), 
         fluidRow(
             column(width = 6, style = "padding: 8px;", 
                    fluidRow(id = paste(identifier, "sliders_div", sep = "_"), 
@@ -93,9 +54,10 @@ barplot_ui <- function(identifier, yaxis_mainoption){
                            )
             )),
             column(width = 3, style = "padding: 8px; padding-left: 16px;", 
-                   multiChoicePicker(paste(identifier, "yaxis", sep = "_"), "Plot Y-Axis:", c(yaxis_mainoption, "Z-Score"), isInline = "F"),
+                   multiChoicePicker(paste(identifier, "yaxis", sep = "_"), "Plot Y-Axis:", c("Log2-FC", "Z-Score"), isInline = "F"),
                    tags$div(
                        style = "margin-top: 4px;", 
+                       #uiOutput("site_heatmap_select_group_ui"), 
                        multiChoicePicker(paste(identifier, "coloring", sep = "_"), "Coloring:", c("Z-Score", "Significance"), isInline = "F")
                    )
                    ),
@@ -112,7 +74,7 @@ heatmap_ui <- function(identifier){
   #"site_barplot"
   item_txt = strsplit(identifier, "_",)[[1]][1]
   tags$div(
-    shinycssloaders::withSpinner(plotOutput(paste(identifier, "", sep = ""), height = "340px")), 
+    shinycssloaders::withSpinner(plotOutput(paste(identifier, "", sep = ""), height = "360px")), 
     fluidRow(
       column(width = 6, style = "padding: 8px;", 
              fluidRow(id = paste(identifier, "sliders_div", sep = "_"), 
@@ -133,11 +95,11 @@ heatmap_ui <- function(identifier){
              )),
       column(width = 3, style = "padding: 8px; padding-left: 16px; padding-top: 12px;",
              multiChoicePicker(paste(identifier, "intensity_fc_style", sep = "_"), "Show:", c("Case samples", "Both case and control"), isInline = "F"),
-             #multiChoicePicker(paste(identifier, "intensity_fc_style", sep = "_"), "Show:", c("log2-FC (Case)", "log2-Intensity"), isInline = "F"),
-             # tags$div(
-             #   style = "margin-top: 4px;",
-             #   multiChoicePicker(paste(identifier, "coloring", sep = "_"), "Coloring:", c("Z-Score", "Significance"), isInline = "F")
-             # )
+             tags$div(
+               style = "margin-top: 6px;",
+               uiOutput(paste(identifier, "select_group_ui", sep = "_")), 
+             #  multiChoicePicker(paste(identifier, "coloring", sep = "_"), "Coloring:", c("Z-Score", "Significance"), isInline = "F", multiple = T)
+             )
       ),
       column(width = 3, style = "padding: 8px; padding-top: 12px;", tags$div(downloadButton(paste(identifier, "downloadPlotPNG", sep = "_"), 'Download PNG'),
                                                           tags$br(), 
@@ -329,7 +291,7 @@ shinyUI(fluidPage(
                   ),
                   tabPanel(
                     "Bar Plot",
-                    barplot_ui("site_barplot", "Site Phosphorylation")
+                    barplot_ui("site_barplot")
                   ), 
                   tabPanel(
                     "Heatmap",
@@ -353,12 +315,12 @@ shinyUI(fluidPage(
                     ),
                     tabPanel(
                       "Bar Plot",
-                      barplot_ui("protein_barplot", "Protein Phosphorylation")
+                      barplot_ui("protein_barplot")
                     ),
-                    # tabPanel(
-                    #   "Heatmap",
-                    #   heatmap_ui("protein_heatmap")
-                    # ), 
+                    tabPanel(
+                      "Heatmap",
+                      heatmap_ui("protein_heatmap")
+                    ),
                     tabPanel("Table", 
                        tags$div(id = "protein_table_div", 
                                 shinycssloaders::withSpinner(DT::dataTableOutput("proteinTable"))

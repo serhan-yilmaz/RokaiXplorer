@@ -16,6 +16,10 @@ library(preprocessCore)
 # 
 # BiocManager::install("preprocessCore")
 
+##
+#library(BiocManager)
+#options(repos = BiocManager::repositories())
+
 
 #library(igraph)
 
@@ -24,6 +28,7 @@ library(ids)
 #library(plotly)
 
 source("compute_pvalues.R")
+source("ui_util.R")
 
 ## Update Sample Data
 folder = "data/"
@@ -675,8 +680,41 @@ shinyServer(function(input, output, session) {
         Sx = SE[validSites, ]
         ST = ST[validSites, ]
         Ts = Ts[validSites, ]
+        Ts <- log2(Ts)
         
-        return (list("Xv" = Xv, "Sx" = Sx, "ST"= ST, "Ts" = Ts, "validSites" = validSites))
+        return (list("Xv" = Xv, "Sx" = Sx, "ST"= ST, "Ts" = Ts, "validSites" = validSites, "Tmeta" = Tmeta))
+    })
+    
+    processed_protein_data_bysample <- reactive({
+        req(processed_data_bysample())
+        ds <- processed_data_bysample()
+        ST <- ds$ST
+        Xv <- ds$Xv
+        Sx <- ds$Sx
+        Ts <- ds$Ts
+        Tmeta = ds$Tmeta
+        proteins = unique(ST$Protein)
+        indices = match(proteins, ST$Protein)
+        names <- ST$ProteinName[indices]
+        Protein <- data.frame(ID = proteins, Name = names)
+        
+        indices = match(ST$Protein, Protein$ID)
+        Wprotein2site <- sparseMatrix(
+            i = indices,
+            j = 1:nrow(ST), 
+            x = TRUE,
+            dims = c(nrow(Protein), nrow(ST))
+        )
+        
+        A <- as.matrix((Wprotein2site %*% Xv) / rowSums(Wprotein2site))
+        SE = as.matrix(sqrt((Wprotein2site^2)%*%(Sx^2)) / rowSums(Wprotein2site))
+        Z = as.matrix(A / SE)
+        Tp <- as.matrix((Wprotein2site %*% Ts) / rowSums(Wprotein2site))
+        
+        Navailable <- apply(A, 1, function(x) nnzero(!is.na(x)))
+        
+        
+        return (list("Xv" = A, "Sx" = SE, "Ts" = Tp, "PT"= Protein, "Tmeta" = Tmeta))
     })
     
     
@@ -690,6 +728,7 @@ shinyServer(function(input, output, session) {
     
     site_table <- reactive({
         req(preprocessed_dataset())
+    #    req(processed_protein_data_bysample())
     #    req(processed_data_bysample())
         ds <- preprocessed_dataset();
         
@@ -849,7 +888,7 @@ shinyServer(function(input, output, session) {
             theme(plot.title = element_text(hjust = 0.5)) 
     })
     
-    barplot <- function(K, minzscore, topk, yaxis, coloring, yaxistxt_main, show_significant_only){
+    barplot <- function(K, minzscore, topk, yaxis, coloring, show_significant_only){
         Ks <- K[!is.na(K$Phos),]
         Ks <- Ks[abs(Ks$ZScore) >= minzscore,]
         if(show_significant_only == T){
@@ -883,7 +922,8 @@ shinyServer(function(input, output, session) {
         
         Ks$Sorting = -1*Ks$Phos
         Ks$Yaxis = Ks$Phos
-        yaxisText = yaxistxt_main
+        yaxisText = "Log2-FC"
+       # yaxisText = yaxistxt_main
         showErrorBars = TRUE
         if(yaxis == "Z-Score"){
             Ks$Yaxis = Ks$ZScore
@@ -954,9 +994,9 @@ shinyServer(function(input, output, session) {
         topk = input$site_barplot_maxitems
         yaxis = input$site_barplot_yaxis
         coloring = input$site_barplot_coloring
-        yaxistxt_main = "Site Phosphorylation"
+      #  yaxistxt_main = "Site Phosphorylation"
         show_significant_only = input$site_barplot_significant_only
-        barplot(ST, minzscore, topk, yaxis, coloring, yaxistxt_main, show_significant_only)
+        barplot(ST, minzscore, topk, yaxis, coloring, show_significant_only)
     })
     
     output$site_barplot_plot <- renderPlot({
@@ -969,13 +1009,13 @@ shinyServer(function(input, output, session) {
     output$site_barplot_downloadPlotPDF <- siteDownloadPlotDLHandler(
         siteBarPlot(), file_name = "site-barplot", file_type = "pdf")
     
-    heatmapMain <- function(ST, STx, ds, minzscore, topk, show_significant_only, intensity_fc_style, items_txt){
+    heatmapMain <- function(ST, STx, ds, minzscore, topk, show_significant_only, intensity_fc_style, items_txt, groupings = c()){
         show_intensity = intensity_fc_style == "Both case and control"
 
         #Z = ds$Xv/ds$Sx
         Z = ds$Xv
         Ts <- ds$Ts
-        Ts <- log2(Ts)
+        Tmeta <- ds$Tmeta
 
         indices = match(ST$ID, STx$ID)
         valids = !is.na(indices)
@@ -1003,11 +1043,13 @@ shinyServer(function(input, output, session) {
 
         avgZ = apply(Z, 1, function(x) mean(x, na.rm=T))
         avgAbsZ = apply(Z, 1, function(x) mean(abs(x), na.rm=T))
-        sumAbsZ = apply(Z, 1, function(x) sum(abs(x), na.rm=T))
+        sumAbsZ = apply(Z, 1, function(x) sum(abs(x), na.rm=T)) / ncol(Z)
+        #message(ncol(Z))
         #valids = (abs(sumAbsZ) >= (2 * ncol(Z))) & (abs(avgZ) >= 1)
         # valids = STv$isSignificant
         #valids = rep(T, nrow(STv), 1) & (abs(STv$ZScore) >= minzscore)
-        valids = rep(T, nrow(STv), 1) & (abs(avgAbsZ) >= minzscore)
+        valids = !is.na(sumAbsZ) & (abs(sumAbsZ) >= minzscore)
+        #valids = !is.na(avgAbsZ) & (abs(avgAbsZ) >= minzscore)
         if(show_significant_only){
             valids = valids & (STv$isSignificant)
         }
@@ -1037,18 +1079,63 @@ shinyServer(function(input, output, session) {
         ST <- ST[valids, ]
         Ts <- Ts[valids, ]
 
+        #caseSamples = !is.na(match(colnames(Ts), colnames(Z)))
+      #  message(nnzero(caseSamples))
+        
+        #groupings = c("Timepoint", "Gender")
         if(show_intensity){
+            Tq <- Ts
+           # Tq$caseSamples = caseSamples
             data_melt <- melt(Ts)
+            data_melt$caseSamples <- ifelse(!is.na(match(data_melt$X2, colnames(Z))), "Case", "Control")
+
+            #data_melt$Grouping = t(Tmeta$Tsample_metadata["Gender", indices])
+            
             fill_txt = "Log2-Intensity"
         } else {
             data_melt <- melt(Z)
             fill_txt = "Log2-FC"
         }
+        indices = match(data_melt$X2, colnames(Tmeta$Tsample_metadata))
+        nGrouping = length(groupings)
+        for(iGroup in range(1, nGrouping)){
+          grp_txt = paste("Grouping", iGroup, sep = "")
+          data_melt[[grp_txt]] = t(Tmeta$Tsample_metadata[groupings[iGroup], indices])
+        }
+        
+        
         # data_melt[data_melt < -4] = -4
         # data_melt[data_melt > 4] = 4
 
+       # defaultcolors <- c('#0072BD', '#D95319', '#EDB120', '#77AC30', '#4DBEEE')
+        
         ggp <- ggplot(data_melt, aes(X1, X2)) +                           # Create heatmap with ggplot2
             geom_tile(aes(fill = value))
+        if(show_intensity){
+            #ggp = ggp + facet_grid(caseSamples+Grouping~., scales='free', switch = "y")
+           # ggp = ggp + facet_grid(caseSamples~., scales='free', switch = "y")
+            
+            if(nGrouping <= 0){
+              ggp = ggp + facet_grid(rows = vars(caseSamples), scales='free', switch = "y")
+            }
+            if(nGrouping == 1){
+              ggp = ggp + facet_grid(rows = vars(caseSamples, Grouping1), scales='free', switch = "y")
+            }
+            if(nGrouping >= 2){
+              ggp = ggp + facet_grid(rows = vars(caseSamples, Grouping1, Grouping2), scales='free', switch = "y")
+            }
+        } else {
+          if(nGrouping == 1){
+            ggp = ggp + facet_grid(rows = vars(Grouping1), scales='free', switch = "y")
+          }
+          if(nGrouping >= 2){
+            ggp = ggp + facet_grid(rows = vars(Grouping1, Grouping2), scales='free', switch = "y")
+          }
+        }
+        
+        ggp = ggp + theme(strip.text.y = element_text(size = 16))
+        ggp = ggp + theme(strip.background = element_rect(color = "#000000", fill = "#F9F9B7"))
+        
         ggp = ggp + scale_fill_gradient2(name = fill_txt, low = "blue", mid = "white", high = "red", na.value = "#336633")
         #ggp = ggp + scale_fill_gradientn(colours = c("blue", "white", "red"))
 
@@ -1071,6 +1158,17 @@ shinyServer(function(input, output, session) {
             contentType = paste("application/", file_type, sep = "")
         )
     }
+    
+    output$site_heatmap_select_group_ui <- renderUI({
+        validate(
+            need(metadata_ready(), "")
+        )
+        x <- current_metadata()
+        groups <- rownames(x$Tsample_metadata)
+        tags$div(
+            multiChoicePicker("site_heatmap_select_group", "Grouping:", groups, isInline = "F", multiple = T, max_opts = 1)
+        )
+    })
     
     output$site_heatmap_downloadPlotPNG <- siteDownloadHeatmapDLHandler(
         siteHeatmap(), file_name = "site-heatmap", file_type = "png")
@@ -1096,8 +1194,13 @@ shinyServer(function(input, output, session) {
         topk = input$site_heatmap_maxitems
         show_significant_only = input$site_heatmap_significant_only
         intensity_fc_style = input$site_heatmap_intensity_fc_style
+        groupings = input$site_heatmap_select_group
+        
+        message(input$site_heatmap_coloring)
+        message(class(input$site_heatmap_coloring))
         heatmapMain(ST, STx, ds, minzscore, topk, 
-                    show_significant_only, intensity_fc_style, "sites")
+                    show_significant_only, intensity_fc_style, "sites",
+                    groupings = groupings)
     })
     
     output$site_heatmap <- renderPlot({
@@ -1106,26 +1209,39 @@ shinyServer(function(input, output, session) {
     
     ## Protein heatmaps
     
+    output$protein_heatmap_select_group_ui <- renderUI({
+      validate(
+        need(metadata_ready(), "")
+      )
+      x <- current_metadata()
+      groups <- rownames(x$Tsample_metadata)
+      tags$div(
+        multiChoicePicker("protein_heatmap_select_group", "Grouping:", groups, isInline = "F", multiple = T, max_opts = 1)
+      )
+    })
+    
     proteinHeatmap <- reactive({
-        req(processed_data_bysample())
-        ds <- processed_data_bysample()
+        req(processed_protein_data_bysample())
+        ds <- processed_protein_data_bysample()
         
-        STx <- site_table_processed()
-        STx$NameX = STx$ProteinName
-        STx$NameX[is.na(STx$NameX)] = STx$Protein[is.na(STx$NameX)]
-        STx$ID <- str_c(STx$NameX, STx$Position, sep = "-")
+        PTx <- protein_table_processed()
+        PTx$NameX = PTx$Name
+        PTx$NameX[is.na(PTx$NameX)] = PTx$ID[is.na(PTx$NameX)]
+        PTx$ID <- PTx$NameX
         
-        ST <- ds$ST
-        ST$NameX = ST$ProteinName
-        ST$NameX[is.na(ST$NameX)] = ST$Protein[is.na(ST$NameX)]
-        ST$ID <- str_c(ST$NameX, ST$Position, sep = "-")
+        PT <- ds$PT
+        PT$NameX = PT$Name
+        PT$NameX[is.na(PT$NameX)] = PT$ID[is.na(PT$NameX)]
+        PT$ID <- PT$NameX
         
-        minzscore = input$site_heatmap_minzscore
-        topk = input$site_heatmap_maxitems
-        show_significant_only = input$site_heatmap_significant_only
-        intensity_fc_style = input$site_heatmap_intensity_fc_style
-        heatmapMain(ST, STx, ds, minzscore, topk, 
-                    show_significant_only, intensity_fc_style, "sites")
+        minzscore = input$protein_heatmap_minzscore
+        topk = input$protein_heatmap_maxitems
+        show_significant_only = input$protein_heatmap_significant_only
+        intensity_fc_style = input$protein_heatmap_intensity_fc_style
+        groupings = input$protein_heatmap_select_group
+        heatmapMain(PT, PTx, ds, minzscore, topk, 
+                    show_significant_only, intensity_fc_style, "proteins",
+                    groupings = groupings)
     })
     
     output$protein_heatmap <- renderPlot({
@@ -1143,7 +1259,6 @@ shinyServer(function(input, output, session) {
             contentType = paste("application/", file_type, sep = "")
         )
     }
-    
     
     output$protein_heatmap_downloadPlotPNG <- proteinDownloadHeatmapDLHandler(
         proteinHeatmap(), file_name = "protein-heatmap", file_type = "png")
@@ -1164,9 +1279,9 @@ shinyServer(function(input, output, session) {
         topk = input$protein_barplot_maxitems
         yaxis = input$protein_barplot_yaxis
         coloring = input$protein_barplot_coloring
-        yaxistxt_main = "Protein Phosphorylation"
+      #  yaxistxt_main = "Protein Phosphorylation"
         show_significant_only = input$protein_barplot_significant_only
-        barplot(PT, minzscore, topk, yaxis, coloring, yaxistxt_main, show_significant_only)
+        barplot(PT, minzscore, topk, yaxis, coloring, show_significant_only)
     })
     
     output$protein_barplot_plot <- renderPlot({
