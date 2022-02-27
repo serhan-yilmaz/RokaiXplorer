@@ -116,6 +116,9 @@ shinyServer(function(input, output, session) {
         indices = match(NetworkData$Kinase$KinaseID, proteins)
         rowindices = 1:nrow(NetworkData$Kinase)
         rowindices = rowindices[!is.na(indices)]
+        NetworkData$Kinase$Protein <- NetworkData$Protein$Name[indices]
+        NetworkData$Kinase$Protein[is.na(indices)] = NetworkData$Kinase$Gene[is.na(indices)]
+        
         indices = indices[!is.na(indices)]
         NetworkData$Wkinase2protein <- sparseMatrix(
             i = rowindices,
@@ -208,6 +211,9 @@ shinyServer(function(input, output, session) {
          #   need(x$Position, "File format error: Position column is missing."),
             # need(x$Quantification, "File format error: Quantification column is missing.")
         )
+        
+        message("metadata_ready")
+        
         # validate(
         #     need(class(x$Quantification) == "numeric", "File format error: Quantification column must be numeric.")
         # )
@@ -255,6 +261,9 @@ shinyServer(function(input, output, session) {
         Tx <- reactive_dataset()
         Ts <- as.matrix(Tx %>% select(3:ncol(Tx)))
         ST <- (Tx %>% select(1:2))
+        
+        message("current_dataset")
+        
         #T$ID = paste(T$Protein, T$Position, sep="_")
         return (list("Ts" = Ts, "ST" = ST))
     })
@@ -302,14 +311,25 @@ shinyServer(function(input, output, session) {
         x <- list()
         x$nSample <- nSample
         x$caseSamples <- caseSamples
-        x$Tsample_metadata <- T_metadata[2:nrow(T_metadata), ]
+        if(nrow(T_metadata) >= 2){
+            x$Tsample_metadata <- T_metadata[2:nrow(T_metadata), ]
+        } else {
+            x$Tsample_metadata <- T_metadata[0, ]
+        }
+        
         metadata_ready(TRUE)
+        
+        message("metadata_ready")
+        
         return(x)
     })
     
     current_dataset_mapped <- reactive({
         req(current_dataset())
+        message(paste("Current dataset: ", metadata_ready()))
         req(metadata_ready())
+        
+        message("current_dataset_mapped")
         
         ds <- current_dataset()
         x <- current_metadata()
@@ -329,6 +349,9 @@ shinyServer(function(input, output, session) {
         proteins = ds$ST$Protein
         indices = match(proteins, NetworkData$Protein$ID)
         ds$ST$ProteinName <- NetworkData$Protein$Name[indices]
+        nameX = ds$ST$ProteinName
+        nameX[is.na(nameX)] = ds$ST$Protein[is.na(nameX)]
+        ds$ST$Identifier <- str_c(nameX, ds$ST$Position, sep = "-")
         
         ## Check the sample match
         
@@ -374,10 +397,14 @@ shinyServer(function(input, output, session) {
         #         
         #     )
         # )
-        tags$div(
-            lapply(1:nrow(x$Tsample_metadata), 
-                   function(i) {foSubgoupSelectInput(i, x$Tsample_metadata)})
-        )
+        if(nrow(x$Tsample_metadata) > 0){
+            rdiv <- tags$div(
+                lapply(1:nrow(x$Tsample_metadata), 
+                       function(i) {foSubgoupSelectInput(i, x$Tsample_metadata)})
+            )
+            return(rdiv)
+        }
+        return(tags$div())
     })
     
     output$group_difference_controls <- renderUI({
@@ -440,16 +467,18 @@ shinyServer(function(input, output, session) {
         req(current_metadata())
         x <- current_metadata()
         validSamples = rep(TRUE, x$nSample)
-        for (i in 1:nrow(x$Tsample_metadata)){
-            q <- input[[paste("subgroup_select", i, sep="")]]
-            if(is.null(q)){ validate(need(FALSE, "")); }
-            qv <- as.numeric(q)
-            if(qv > 1){
-                subgroups = x$Tsample_metadata[i,]
-                values <- unique(as.character(subgroups))
-                values = sort(values, decreasing =F)
-                #message((subgroups == values[qv - 1]))
-                validSamples = validSamples & (subgroups == values[qv - 1])
+        if(nrow(x$Tsample_metadata) > 0){
+            for (i in 1:nrow(x$Tsample_metadata)){
+                q <- input[[paste("subgroup_select", i, sep="")]]
+                if(is.null(q)){ validate(need(FALSE, "")); }
+                qv <- as.numeric(q)
+                if(qv > 1){
+                    subgroups = x$Tsample_metadata[i,]
+                    values <- unique(as.character(subgroups))
+                    values = sort(values, decreasing =F)
+                    #message((subgroups == values[qv - 1]))
+                    validSamples = validSamples & (subgroups == values[qv - 1])
+                }
             }
         }
         return(validSamples)
@@ -644,13 +673,10 @@ shinyServer(function(input, output, session) {
         return (list("Xv" = Xv, "Sx" = Sx, "ST"= ST,"validSites" = validSites))
     })
     
-    processed_data_bysample <- reactive({
-        req(filtered_dataset())
-        req(filtered_metadata())
-        ds <- filtered_dataset()
+    
+    fo_process_data_bysample <- function(ds, Tmeta){
         Ts <- ds$Ts
         ST <- ds$ST
-        Tmeta <- filtered_metadata()
         caseSamples <- Tmeta$caseSamples
         
         Tcase <- as.matrix(log2(Ts[, caseSamples]))
@@ -683,11 +709,26 @@ shinyServer(function(input, output, session) {
         Ts <- log2(Ts)
         
         return (list("Xv" = Xv, "Sx" = Sx, "ST"= ST, "Ts" = Ts, "validSites" = validSites, "Tmeta" = Tmeta))
+    }
+    
+    processed_data_bysample <- reactive({
+        req(filtered_dataset())
+        req(filtered_metadata())
+        ds <- filtered_dataset()
+        Tmeta <- filtered_metadata()
+        fo_process_data_bysample(ds, Tmeta)
     })
     
-    processed_protein_data_bysample <- reactive({
-        req(processed_data_bysample())
-        ds <- processed_data_bysample()
+    processed_data_bysample_unfiltered <- reactive({
+        req(current_dataset_mapped())
+        req(current_metadata())
+        ds <- current_dataset_mapped()
+        Tmeta <- current_metadata()
+        fo_process_data_bysample(ds, Tmeta)
+    })
+    
+    
+    fo_process_protein_data_bysample <- function(ds){
         ST <- ds$ST
         Xv <- ds$Xv
         Sx <- ds$Sx
@@ -697,6 +738,10 @@ shinyServer(function(input, output, session) {
         indices = match(proteins, ST$Protein)
         names <- ST$ProteinName[indices]
         Protein <- data.frame(ID = proteins, Name = names)
+        nameX = Protein$Name
+        nameX[is.na(nameX)] = Protein$ID[is.na(nameX)]
+        Protein$Identifier = nameX
+        
         
         indices = match(ST$Protein, Protein$ID)
         Wprotein2site <- sparseMatrix(
@@ -706,17 +751,42 @@ shinyServer(function(input, output, session) {
             dims = c(nrow(Protein), nrow(ST))
         )
         
-        A <- as.matrix((Wprotein2site %*% Xv) / rowSums(Wprotein2site))
-        SE = as.matrix(sqrt((Wprotein2site^2)%*%(Sx^2)) / rowSums(Wprotein2site))
+        Xvp = Xv
+        Xvp[is.na(Xvp)] = 0
+        Ina = !is.na(Xv)
+        Sxp = Sx
+        Sxp[is.na(Sxp)] = 0
+        
+        
+        # A <- as.matrix((Wprotein2site %*% Xv) / rowSums(Wprotein2site))
+        A <- as.matrix((Wprotein2site %*% Xvp) / (Wprotein2site %*% Ina))
+        #SE = as.matrix(sqrt((Wprotein2site^2)%*%(Sx^2)) / rowSums(Wprotein2site))
+        SE = as.matrix(sqrt((Wprotein2site^2)%*%(Sxp^2)) / (Wprotein2site %*% Ina))
         Z = as.matrix(A / SE)
-        Tp <- as.matrix((Wprotein2site %*% Ts) / rowSums(Wprotein2site))
+        
+        Tsp = Ts
+        Tsp[is.na(Tsp)] = 0
+        Ina_ts = !is.na(Ts)
+        
+        #Tp <- as.matrix((Wprotein2site %*% Ts) / rowSums(Wprotein2site))
+        Tp <- as.matrix((Wprotein2site %*% Tsp) / (Wprotein2site %*% Ina_ts))
         
         Navailable <- apply(A, 1, function(x) nnzero(!is.na(x)))
         
-        
         return (list("Xv" = A, "Sx" = SE, "Ts" = Tp, "PT"= Protein, "Tmeta" = Tmeta))
+    }
+    
+    processed_protein_data_bysample <- reactive({
+        req(processed_data_bysample())
+        ds <- processed_data_bysample()
+        return(fo_process_protein_data_bysample(ds))
     })
     
+    processed_protein_data_bysample_unfiltered <- reactive({
+        req(processed_data_bysample_unfiltered())
+        ds <- processed_data_bysample_unfiltered()
+        return(fo_process_protein_data_bysample(ds))
+    })
     
     preprocessed_dataset <- reactive({
         req(processed_dataset())
@@ -739,7 +809,7 @@ shinyServer(function(input, output, session) {
         res = compute_pvalues(as.matrix(Zx))
         
         NetworkData <- reactive_network()
-        ST = ds$ST[, c("Protein", "ProteinName", "Position")]
+        ST = ds$ST[, c("Protein", "ProteinName", "Position", "Identifier")]
         ST$Phos = Xv
         ST$StdErr = Sx
         ST$ZScore = Zx
@@ -804,6 +874,11 @@ shinyServer(function(input, output, session) {
         PT$PValue = res$PValues
         PT$FDR = res$QValues
         PT$MagnitudeAdj <- abs(PT$Phos) - 3 * PT$StdErr;
+        
+        nameX = PT$Name
+        nameX[is.na(nameX)] = PT$ID[is.na(nameX)]
+        PT$Identifier = nameX
+        
         #PT$isSignificant = (PT$FDR <= 0.1) & (abs(PT$Phos) >= log2(1.25))
         
         return (PT)
@@ -1142,7 +1217,9 @@ shinyServer(function(input, output, session) {
         #ggp = ggp + scale_fill_gradient(low = "white", high = "red", na.value = "#336633")
         ggp = ggp + theme(axis.text.x=element_text(angle =- 90, vjust = 0.5, hjust = 0, size=15))
         ggp = ggp + theme(axis.text.y=element_text(vjust = 0, hjust = 0.5, size=11))
+        ggp = ggp + theme(legend.title = element_text(size = 16), legend.text = element_text(size = 14))
         ggp = ggp + labs(x = "", y = "")
+        
 
         return(ggp)
     }
@@ -1385,7 +1462,7 @@ shinyServer(function(input, output, session) {
         
         item_txt = paste(toupper(substr(items_txt, 1, 1)), substr(items_txt, 2, nchar(items_txt) - 1), sep = "")
         
-        line1 = c(rep("", nKinase), paste0("<br> ZScore: ", round(Ks$ZScore, digits = 3), sep = ""))
+        line1 = c(rep("", nKinase), paste0("<br> Z-Score: ", round(Ks$ZScore, digits = 3), sep = ""))
         line2 = c(rep("", nKinase), paste0("<br> log2-FC: ", phosConf, sep = ""))
         line3 = c(rep("", nKinase), paste0("<br> FDR: ", round(Ks$FDR, digits = 3), sep = ""))
         
@@ -1426,7 +1503,7 @@ shinyServer(function(input, output, session) {
         
         visNetwork(nodes, edges, width = "100%",
                    main = paste("Kinases connected to the identified", items_txt),
-                   footer = footer_txt) %>%
+                   footer = list(text = footer_txt, style = "font-size:13px;")) %>%
             visEdges(shadow = FALSE,
                      arrows =list(to = list(enabled = TRUE, scaleFactor = 0.5)),
                      color = list(color = "black", highlight = "red")) %>%
@@ -1437,8 +1514,240 @@ shinyServer(function(input, output, session) {
             visEdges(smooth = FALSE) %>%
             visInteraction(hideEdgesOnDrag = TRUE) %>%
             visInteraction(navigationButtons = TRUE) %>%
+            visEvents(doubleClick = c("function(properties) {",
+                                     " label = this.body.data.nodes.get(properties.nodes[0]).label", 
+                                     " group = this.body.data.nodes.get(properties.nodes[0]).group", 
+                                     " txt = label.concat('_', group)", 
+                                     " Shiny.setInputValue('site_kinase_network_doubleclick', txt, {priority: 'event'});",
+                                     "}")) %>%
+            # visEvents(doubleClick = "function(properties) {
+            # alert('selected nodes ' + this.body.data.nodes.get(properties.nodes[0]).id);}") %>%
             visPhysics(stabilization = T) 
     }
+
+    # output$abcd <- renderPlot({
+    #   proteinHeatmap()
+    # })
+    
+    modal_box_selection <- reactive({
+        current_selection <- abcd()
+        parts <- str_split(current_selection, "_")
+        # message(parts)
+        valid <- (length(parts) > 0) & (length(parts[[1]]) > 1)
+        validate(need(valid, "Item category is missing."))
+        identifier = parts[[1]][[1]]
+        category = parts[[1]][[2]]
+        isSite = category == "Site"
+        isProtein = category == "Protein"
+        isKinase = category == "Kinase"
+        if(isSite){
+            siteidentifier = parts[[1]][[1]]
+            site_parts <- str_split(siteidentifier, "-")
+            protein = site_parts[[1]][[1]]
+            site = site_parts[[1]][[2]]
+        } else {
+            protein = ""
+            site = ""
+        }
+        return(list("main_identifier" = current_selection, 
+                    "identifier" = identifier, "category" = category, 
+                    "isSite" = isSite, "isProtein" = isProtein, 
+                    "isKinase" = isKinase, "protein" = protein, 
+                    "site" = site))
+    })
+    
+    modal_box_selection_mapped <- reactive({
+        ds <- modal_box_selection()
+        
+        ds$isMapped = FALSE
+        if(ds$isKinase){
+            net <- reactive_network()
+            ds$index = match(ds$identifier, NetworkData$Kinase$KinaseName)
+            ds$table = NetworkData$Kinase[ds$index, ]
+            ds$isMapped = !is.na(ds$index)
+        }
+        if(ds$isProtein){
+            PT <- protein_table_processed()
+            ds$index = match(ds$identifier, PT$Identifier)
+            ds$table = PT[ds$index, ]
+            ds$isMapped = !is.na(ds$index)
+        }
+        if(ds$isSite){
+            ST <- protein_table_processed()
+            ds$index = match(ds$identifier, ST$Identifier)
+            ds$table = ST[ds$index, ]
+            ds$isMapped = !is.na(ds$index)
+        }
+        
+        return(ds)
+    })
+    
+    output$abcd_title <- renderUI({
+        ds <- modal_box_selection()
+        #paste(ds$identifier, " (", ds$category, ")", sep = "")
+        #return(ds$main_identifier)
+        
+        tags$div(
+            style = "display: flex; justify-content: space-between;", 
+            ds$main_identifier, 
+            uiOutput("modal_box_nav_protein_button", inline = T), 
+        )
+    })
+    
+    output$modal_box_nav_protein_button <- renderUI({
+        ds <- modal_box_selection_mapped()
+        protein_button = tags$div(style = "width:0px;")
+        if(ds$isSite){
+            protein = paste(ds$protein, "_", "Protein", sep = "")
+            callback <- sprintf("Shiny.setInputValue('site_kinase_network_doubleclickb', '%s', {priority: 'event'});", protein)
+            protein_button =  tags$div(style = "display: inline-block;", 
+                tags$button(id = "modal_nav_protein_select_button", protein, onclick = callback))
+            
+        }
+        if(ds$isKinase & ds$isMapped){
+            protein = as.character(ds$table$Gene)
+            protein = paste(protein, "_", "Protein", sep = "")
+            callback <- sprintf("Shiny.setInputValue('site_kinase_network_doubleclickb', '%s', {priority: 'event'});", protein)
+            protein_button =  tags$div(style = "display: inline-block;", 
+                tags$button(id = "modal_nav_protein_select_button", protein, onclick = callback))
+        }
+        
+        return(protein_button)
+    })
+    
+    
+    fo_restore_if_applicable <- function(groups, var){
+        if(sum(is.na(match(var, groups))) == 0){
+            return(var)
+        }
+        if(length(groups) >= 1){
+            return(groups[1])
+        }
+        return("")
+    }
+    
+    output$modal_box_site_plot_controls <- renderUI({
+        validate(
+            need(metadata_ready(), "")
+        )
+        x <- current_metadata()
+        groups <- rownames(x$Tsample_metadata)
+        selected = fo_restore_if_applicable(groups, cached_mbox_site_plot_select_group())
+        #isolate(cached_mbox_site_plot_select_group(selected))
+        tags$div(
+            multiChoicePicker("mbox_site_plot_select_group", "Grouping:", groups, 
+                              selected = selected, 
+                              isInline = "F", multiple = T, max_opts = 2)
+        )
+        #uiOutput(paste(identifier, "select_group_ui", sep = "_"))
+    })
+    
+    cached_mbox_site_plot_select_group <- reactiveVal("")
+    
+    observeEvent(input$mbox_site_plot_select_group, {
+        cached_mbox_site_plot_select_group(input$mbox_site_plot_select_group)
+    })
+    
+    cached_mbox_protein_tab <- reactiveVal("")
+    
+    observeEvent(input$modal_box_protein_tab, {
+        cached_mbox_protein_tab(input$modal_box_protein_tab)
+    })
+    
+    # cached_mbox_protein_plot_select_group <- reactiveVal("")
+    # 
+    # output$modal_box_protein_plot_controls <- renderUI({
+    #     validate(
+    #         need(metadata_ready(), "")
+    #     )
+    #     x <- current_metadata()
+    #     groups <- rownames(x$Tsample_metadata)
+    #     selected = fo_restore_if_applicable(groups, cached_mbox_protein_plot_select_group())
+    #     isolate(cached_mbox_protein_plot_select_group(selected))
+    #     tags$div(
+    #         multiChoicePicker("mbox_protein_plot_select_group", "Grouping:", groups, 
+    #                           selected = selected, 
+    #                           isInline = "F", multiple = T, max_opts = 2)
+    #     )
+    #     #uiOutput(paste(identifier, "select_group_ui", sep = "_"))
+    # })
+    # 
+    # observeEvent(input$cached_mbox_protein_plot_select_group, {
+    #     cached_mbox_protein_plot_select_group(input$cached_mbox_protein_plot_select_group)
+    # })
+    
+    output$abcd_ui <- renderUI({
+        validate(
+            need(modal_box_selection(), "")
+        )
+        ds <- modal_box_selection()
+        
+        mainDiv <- tags$div(
+            shinycssloaders::withSpinner(DT::dataTableOutput("proteinTable_test"))
+        )
+        if(ds$isKinase){
+            mainDiv <- tags$div(
+                style = "min-height:200px;", 
+              #  style = "margin-top: 8px;", 
+                #tags$b("Known Targets: "), 
+                tabsetPanel(
+                    tabPanel("Known Targets", 
+                        shinycssloaders::withSpinner(DT::dataTableOutput("modal_kinase_sites_table"))
+                    )
+                )
+            )
+        }
+        if(ds$isProtein){
+            mainDiv <- tags$div(
+                style = "min-height:200px;", 
+                tabsetPanel(id = "modal_box_protein_tab", 
+                    tabPanel("Overview", 
+                             tags$div(
+                                 shinycssloaders::withSpinner(plotOutput("modal_protein_samplewise_barplot")), 
+                                 uiOutput("modal_box_site_plot_controls")
+                             )
+                    ), 
+                    tabPanel("Sites", 
+                             shinycssloaders::withSpinner(DT::dataTableOutput("modal_protein_sites_table"))
+                    ), 
+                    selected = fo_restore_if_applicable(c("Overview", "Sites"), cached_mbox_protein_tab())
+                )
+            )
+        }
+        if(ds$isSite){
+            mainDiv <- tags$div(
+                shinycssloaders::withSpinner(plotOutput("modal_site_samplewise_barplot")), 
+                uiOutput("modal_box_site_plot_controls")
+            )
+        }
+        
+        tags$div(
+            #uiOutput("modal_box_nav_protein_button", inline = T), 
+            #tags$hr(), 
+            mainDiv
+            #output$proteinTable, 
+           # shinycssloaders::withSpinner(plotOutput("abcd"))
+        )
+    })
+    
+    abcd <- reactiveVal("")
+    
+    observeEvent(input$site_kinase_network_doubleclick, {
+      message(input$site_kinase_network_doubleclick)
+      abcd(input$site_kinase_network_doubleclick)
+     # delay(50, toggleModal(session, "bsmodal_xyz", toggle = "open"))
+      delay(50, showModal(modalDialog(
+        uiOutput("abcd_ui"),
+        title = uiOutput("abcd_title"),
+        footer = modalButton("Close"),
+        size = "m",
+        easyClose = TRUE
+      )))
+    })
+    
+    observeEvent(input$site_kinase_network_doubleclickb, {
+        abcd(input$site_kinase_network_doubleclickb)
+    })
     
     site_kinase_network <- reactive({
         req(site_table_processed())
@@ -1462,7 +1771,8 @@ shinyServer(function(input, output, session) {
         topk = input$site_kinase_network_maxitems
         keepsinglekinases = input$site_kinase_network_single_kinases
         show_significant_only = input$site_kinase_network_significant_only
-        footer_txt = "Orange edges indicate the site is on the kinase."
+        #footer_txt = "Orange edges indicate the site is on the kinase."
+        footer_txt = "This network is interactive! You can drag & drop nodes to adjust the view and hover to see more information. Double click on a node to inspect it in detail. "
         return(foKinaseNetworkDraw(ds$ST, ds$KT, ds$Wk2s, 
                                    ds$Wk2os, minzscore, topk, 
                                    keepsinglekinases, "sites", 
@@ -1491,7 +1801,8 @@ shinyServer(function(input, output, session) {
         topk = input$protein_kinase_network_maxitems
         keepsinglekinases = input$protein_kinase_network_single_kinases
         show_significant_only = input$protein_kinase_network_significant_only
-        footer_txt = "Orange edges indicate that protein is a kinase. Black edges indicate the kinase phosphorylates a site on that protein. "
+        #footer_txt = "Orange edges indicate that protein is a kinase. Black edges indicate the kinase phosphorylates a site on that protein. "
+        footer_txt = "This network is interactive! You can drag & drop nodes to adjust the view and hover to see more information. Double click on a node to inspect it in detail. "
         return(foKinaseNetworkDraw(ds$ST, ds$KT, ds$Wk2s, 
                                    ds$Wk2os, minzscore, topk, 
                                    keepsinglekinases, "proteins", 
@@ -1509,11 +1820,27 @@ shinyServer(function(input, output, session) {
         si <- order(abs(ST$ZScore), decreasing = TRUE)
         ST <- ST[si,]
         
+        ST = subset(ST, select = -c(Identifier))
+        
+        callback <- c(
+          "table.on('dblclick','tr', function() {",
+          " var data=table.row(this).data(); ",
+          " let text1 = data[1].concat('-', data[2])", 
+          " Shiny.setInputValue('site_kinase_network_doubleclick', text1.concat('_Site'), {priority: 'event'});",
+          "})"
+        )
+        
         fn = 'site_table'
-        DT::datatable(ST, rownames= FALSE, extensions = 'Buttons', 
+        tab <- DT::datatable(ST, rownames= FALSE, extensions = 'Buttons',
+                             callback=JS(callback),
+                             selection = "single",
                       options = list(scrollX=TRUE, lengthMenu = c(5,10,15),
+                                 #    extensions = "Select", 
+            #                         callback = JS(callback),
                                      paging = TRUE, searching = TRUE, pageLength = 10, dom = 'Bfrtip', buttons = list(list(extend = 'csv', filename = fn), list(extend = 'excel', filename = fn)))) %>% 
             formatSignif('PValue', 3) %>% formatSignif('FDR', 3) 
+        
+        return(tab)
     })
     
     output$proteinTable <- DT::renderDataTable(server = FALSE, {
@@ -1527,11 +1854,277 @@ shinyServer(function(input, output, session) {
         si <- order(abs(PT$ZScore), decreasing = TRUE)
         PT <- PT[si,]
         
+        PT = subset(PT, select = -c(Identifier))
+        
+        callback <- c(
+            "table.on('dblclick','tr', function() {",
+            " var data=table.row(this).data(); ",
+            " Shiny.setInputValue('site_kinase_network_doubleclick', data[1].concat('_Protein'), {priority: 'event'});",
+            "})"
+        )
+        
         fn = 'site_table'
         DT::datatable(PT, rownames= FALSE, extensions = 'Buttons', 
+                      callback = JS(callback), 
+                      selection = "single",
                       options = list(scrollX=TRUE, lengthMenu = c(5,10,15),
                                      paging = TRUE, searching = TRUE, pageLength = 10, dom = 'Bfrtip', buttons = list(list(extend = 'csv', filename = fn), list(extend = 'excel', filename = fn)))) %>% 
             formatSignif('PValue', 3) %>% formatSignif('FDR', 3) 
+    })
+    
+    
+    output$proteinTable_test <- DT::renderDataTable(server = TRUE, {
+        req(protein_table_processed())
+        PT <- protein_table_processed();
+        PT$Phos = round(PT$Phos, digits = 3)
+        PT$StdErr = round(PT$StdErr, digits = 3)
+        PT$ZScore = round(PT$ZScore, digits = 3)
+        PT$MagnitudeAdj = round(PT$MagnitudeAdj, digits = 3)
+        
+        si <- order(abs(PT$ZScore), decreasing = TRUE)
+        PT <- PT[si,]
+        
+        index <- match(abcd(), PT$Name)
+        if(!is.na(index)){
+            PT = PT[index, ]  
+        } else {
+            PT = PT[1:100, ]
+        }
+        
+        callback <- c(
+            "table.on('dblclick','tr', function() {",
+            " var data=table.row(this).data(); ",
+            " Shiny.setInputValue('site_kinase_network_doubleclickb', data[1].concat('_Protein'), {priority: 'event'});",
+            "})"
+        )
+        
+        fn = 'site_table'
+        DT::datatable(PT, rownames= FALSE, extensions = 'Buttons', 
+                      callback = JS(callback), 
+                      selection = "single",
+                      options = list(scrollX=TRUE, lengthMenu = c(5,10,15),
+                                     paging = TRUE, searching = TRUE, pageLength = 10, dom = 'Bfrtip', buttons = list())) %>% 
+            formatSignif('PValue', 3) %>% formatSignif('FDR', 3) 
+    })
+    
+    output$modal_kinase_sites_table <- DT::renderDataTable(server = TRUE, {
+        req(site_table_processed())
+        req(modal_box_selection_mapped())
+        ds <- modal_box_selection_mapped()
+        validate(need(ds$isKinase & ds$isMapped, ""))
+        
+        ST <- site_table_processed();
+        ST$Phos = round(ST$Phos, digits = 3)
+        ST$StdErr = round(ST$StdErr, digits = 3)
+        ST$ZScore = round(ST$ZScore, digits = 3)
+        ST$MagnitudeAdj = round(ST$MagnitudeAdj, digits = 3)
+        
+        net <- reactive_network()
+        site_indices <- net$Wkin2site[ds$index, ]
+        site_identifiers = as.character(net$Site$Identifier[site_indices])
+        valid_sites = match(site_identifiers, ST$Identifier)
+        valid_sites = valid_sites[!is.na(valid_sites)]
+        ST = ST[valid_sites, ]
+
+        si <- order(abs(ST$ZScore), decreasing = TRUE)
+        ST <- ST[si,]
+            
+      #  message(class(ST))
+        ST = subset(ST, select = -c(Identifier))
+        
+        callback <- c(
+            "table.on('dblclick','tr', function() {",
+            " var data=table.row(this).data(); ",
+            " let text1 = data[1].concat('-', data[2])", 
+            " Shiny.setInputValue('site_kinase_network_doubleclickb', text1.concat('_Site'), {priority: 'event'});",
+            "})"
+        )
+        
+        fn = 'site_table'
+        tab <- DT::datatable(ST, rownames= FALSE, extensions = 'Buttons',
+                             callback=JS(callback),
+                             selection = "single",
+                             options = list(scrollX=TRUE, lengthMenu = c(5,10,15),
+                                            #    extensions = "Select", 
+                                            #                         callback = JS(callback),
+                                            paging = TRUE, searching = TRUE, pageLength = 8, dom = 'frtip', buttons = list(list(extend = 'csv', filename = fn), list(extend = 'excel', filename = fn)))) %>% 
+            formatSignif('PValue', 3) %>% formatSignif('FDR', 3) 
+        
+        return(tab)
+    })
+    
+    output$modal_protein_sites_table <- DT::renderDataTable(server = TRUE, {
+        req(site_table_processed())
+        req(modal_box_selection_mapped())
+        ds <- modal_box_selection_mapped()
+        validate(need(ds$isProtein & ds$isMapped, "This protein is not identified in the experiment. "))
+        
+        ST <- site_table_processed();
+        ST$Phos = round(ST$Phos, digits = 3)
+        ST$StdErr = round(ST$StdErr, digits = 3)
+        ST$ZScore = round(ST$ZScore, digits = 3)
+        ST$MagnitudeAdj = round(ST$MagnitudeAdj, digits = 3)
+        
+        # net <- reactive_network()
+        # site_indices <- net$Wkin2site[ds$index, ]
+        # site_identifiers = as.character(net$Site$Identifier[site_indices])
+        protein_identifier = ds$table$ID
+        valid_sites = !is.na(match(ST$Protein, protein_identifier))
+        ST = ST[valid_sites, ]
+        
+        si <- order(abs(ST$ZScore), decreasing = TRUE)
+        ST <- ST[si,]
+        
+        #  message(class(ST))
+        ST = subset(ST, select = -c(Identifier))
+        
+        callback <- c(
+            "table.on('dblclick','tr', function() {",
+            " var data=table.row(this).data(); ",
+            " let text1 = data[1].concat('-', data[2])", 
+            " Shiny.setInputValue('site_kinase_network_doubleclickb', text1.concat('_Site'), {priority: 'event'});",
+            "})"
+        )
+        
+        fn = 'site_table'
+        tab <- DT::datatable(ST, rownames= FALSE, extensions = 'Buttons',
+                             callback=JS(callback),
+                             selection = "single",
+                             options = list(scrollX=TRUE, lengthMenu = c(5,10,15),
+                                            #    extensions = "Select", 
+                                            #                         callback = JS(callback),
+                                            paging = TRUE, searching = TRUE, pageLength = 8, dom = 'frtip', buttons = list(list(extend = 'csv', filename = fn), list(extend = 'excel', filename = fn)))) %>% 
+            formatSignif('PValue', 3) %>% formatSignif('FDR', 3) 
+        
+        return(tab)
+    })
+    
+    
+    barplot_samplewise <- function(ds, ST, mds, groupings, item_txt){
+        Tmeta <- ds$Tmeta
+       # ST <- ds$ST
+        
+        index = match(mds$identifier, ST$Identifier)
+        validate(need(!is.na(index), paste("This", tolower(item_txt), "is not identified in the experiment.", sep = " ")))
+        
+        ST = ST[index, ]
+        
+        Xv = as.numeric(ds$Xv[index, ])
+        Sx = as.numeric(ds$Sx[index, ])
+        Z = Xv/Sx
+        
+        sample_names = colnames(ds$Xv)
+        
+        Ks = data.frame(ID = sample_names, Phos = Xv, StdErr = Sx, ZScore = Z)
+        
+        c_limit = 4
+        Ks$ColoringVar = Ks$ZScore
+        Ks$ColoringVar = pmax( -1*c_limit, pmin(Ks$ColoringVar, c_limit))
+        
+        Ks$Sorting = 1:nrow(Ks)
+        Ks$Yaxis = Ks$Phos
+        yaxisText = "Log2-FC"
+        showErrorBars = FALSE
+        
+        indices = match(Ks$ID, colnames(Tmeta$Tsample_metadata))
+        
+        
+        nGrouping = length(groupings)
+        for(iGroup in range(1, nGrouping)){
+            grp_txt = paste("Grouping", iGroup, sep = "")
+            Ks[[grp_txt]] = t(Tmeta$Tsample_metadata[groupings[iGroup], indices])
+        }
+        # Ks$Grouping = t(Tmeta$Tsample_metadata["Timepoint", indices])
+        
+        dyMin = min(Ks$Yaxis, na.rm = T)
+        dyMax = max(Ks$Yaxis, na.rm = T) 
+        
+        if((dyMin > 0) & (dyMax > 0)){
+            dyMin = 0
+        }
+        
+        if((dyMin < 0) & (dyMax < 0)){
+            dyMax = 0
+        }
+        
+        dyRange = abs(dyMax - dyMin)
+        dyRangeMin = 2.5
+        rangeDif = dyRangeMin - dyRange
+        if(dyRange < dyRangeMin){
+            if(dyMin == 0){ # All positive 
+                dyMax = dyMax + rangeDif
+            } else {
+                if(dyMax == 0){
+                    dyMin = dyMin - rangeDif
+                } else {
+                    dyMax = dyMax + rangeDif * 0.5
+                    dyMin = dyMin - rangeDif * 0.5
+                }
+            }
+        }
+        
+        dyRange = abs(dyMax - dyMin)
+        yMin = dyMin - (dyRange * 0.02)
+        yMax = dyMax + (dyRange * 0.02)
+        
+        
+        p <- ggplot(data=Ks, aes(x=reorder(ID, Sorting), y=Yaxis, fill = ColoringVar)) +
+            geom_bar(stat="identity", width=0.8, col="#333333", size = 0.75) +
+            theme_minimal() +
+            theme(text = element_text(size=18),
+                  axis.text.x = element_text(size = 16, angle=90, hjust=1, face = "bold"))
+        
+        if(showErrorBars){ 
+            p <- p + geom_errorbar(aes(ymin=Phos-1.96*StdErr, ymax=Phos+1.96*StdErr), width=.5, size = 0.95)
+        }
+        
+        p <- p + scale_fill_distiller(palette = "RdYlBu", type = "div", limit = c_limit * c(-1, 1))
+        p <- p + labs(fill = "Z-Score", x = "", y = yaxisText)
+        p <- p + geom_hline(yintercept = 0, color = "#333333")
+        p <- p + ylim(yMin, yMax)
+        if(nGrouping == 1){
+            p <- p + facet_grid(cols = vars(Grouping1), scales='free')
+        }
+        if(nGrouping >= 2){
+            p <- p + facet_grid(cols = vars(Grouping1, Grouping2), scales='free')
+        }
+        
+        p = p + theme(strip.text.x = element_text(size = 16))
+        #p = p + theme(strip.background = element_rect(color = "#000000", fill = "#F9F9B7"))
+        p = p + theme(strip.background = element_rect(color = "#AAAAAA", fill = "#FDFDF3"))
+        
+        return(p)
+    }
+    
+    modal_site_samplewise_barplot <- reactive({
+        req(modal_box_selection_mapped())
+        mds <- modal_box_selection_mapped()
+        validate(need(mds$isSite, ""))
+        req(processed_data_bysample_unfiltered())
+        
+        ds <- processed_data_bysample_unfiltered()
+        groupings = input$mbox_site_plot_select_group
+        barplot_samplewise(ds, ds$ST, mds, groupings, "Site")
+    })
+    
+    output$modal_site_samplewise_barplot <- renderPlot({
+        modal_site_samplewise_barplot()
+    })
+    
+    ## Protein samplewise barplot
+    modal_protein_samplewise_barplot <- reactive({
+        req(modal_box_selection_mapped())
+        mds <- modal_box_selection_mapped()
+        validate(need(mds$isProtein, ""))
+        req(processed_protein_data_bysample_unfiltered())
+        
+        ds <- processed_protein_data_bysample_unfiltered()
+        groupings = input$mbox_site_plot_select_group
+        barplot_samplewise(ds, ds$PT, mds, groupings, "Protein")
+    })
+    
+    output$modal_protein_samplewise_barplot <- renderPlot({
+        modal_protein_samplewise_barplot()
     })
     
     output$buttonDownloadSampleData <- downloadHandler(

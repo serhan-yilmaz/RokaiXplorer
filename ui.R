@@ -17,7 +17,7 @@ library(tippy)
 
 #library(plotly)
 
-version_text <- function(){"v0.3.1"}
+version_text <- function(){"v0.4.0"}
 version_style <- function(){"font-size: 14px; color:#93A3A3;"}
 version_style_additional <- function(){
     "-webkit-user-select: none;
@@ -198,6 +198,7 @@ shinyUI(fluidPage(
     # Sidebar with a slider input for number of bins
     verticalLayout(
         div(
+          #bsModal(id = "bsmodal_xyz", title = uiOutput("abcd_title"), trigger = "", uiOutput("abcd_ui")), 
             style = "margin-bottom:0px; padding-bottom:0px;",
             div(
                 style = "position: relative; width: 100%",
@@ -299,11 +300,14 @@ shinyUI(fluidPage(
                   ), 
                   tabPanel("Table", 
                         tags$div(id = "site_table_div", 
-                            shinycssloaders::withSpinner(DT::dataTableOutput("siteTable"))
+                             tags$div(style = "min-height:450px;",
+                                shinycssloaders::withSpinner(DT::dataTableOutput("siteTable")),
+                             ),
+                            "Double click on a row to inspect it in detail."
                         )
                   ),
                   tabPanel(
-                    "Network", 
+                    "Interactive Network", 
                     network_ks_ui("site_kinase_network", defaultSingleKinases = T)
                   )
                   
@@ -323,11 +327,14 @@ shinyUI(fluidPage(
                     ),
                     tabPanel("Table", 
                        tags$div(id = "protein_table_div", 
-                                shinycssloaders::withSpinner(DT::dataTableOutput("proteinTable"))
+                                tags$div(style = "min-height:450px;",
+                                  shinycssloaders::withSpinner(DT::dataTableOutput("proteinTable")),
+                                ),
+                                "Double click on a row to inspect it in detail."
                        )
                     ),
                     tabPanel(
-                      "Network", 
+                      "Interactive Network", 
                       network_ks_ui("protein_kinase_network")
                     )
               )),
