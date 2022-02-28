@@ -1,0 +1,86 @@
+observeEvent(input$file1, {
+  inFile <- input$file1
+  if (is.null(inFile))
+    return(NULL)
+  # session$sendCustomMessage('upload_attempted_message', paste(upload_name(), network_value(), sep="-"))
+  # main_logging(paste("Upload Attempted", sep = ""))
+  upload_dataset()
+  req(upload_dataset())
+  network_value(refProteomeValue())
+  # if(input$mainTabset == "About"){
+  #     updateTabsetPanel(session, "mainTabset", "Plot")
+  # }
+  # session$sendCustomMessage('upload_sucess_message', paste(upload_name(), network_value(), sep="-"))
+  # main_logging(paste("Upload Data - ", upload_name(), "-", network_value(), sep = ""))
+})
+
+observeEvent(input$file2, {
+  inFile <- input$file2
+  if (is.null(inFile))
+    return(NULL)
+  upload_metadata()
+  req(upload_metadata())
+})
+
+upload_dataset <- reactive({
+  library(tools)
+  inFile <- input$file1
+  if (is.null(inFile))
+    return(NULL)
+  fileInfo <- input$file1
+  ext = file_ext(inFile$datapath)
+  switch(ext, 
+         "csv" = x <- read.csv(inFile$datapath),
+         validate(
+           need(FALSE, "Invalid file type.")
+         )
+  )
+  myvalue("upload")
+  upload_data_ready(TRUE)
+  upload_name(fileInfo$name)
+  message(cat("Dataset is uploaded: ", fileInfo$name))
+  
+  validate(
+    need(x$Protein, "File format error: Protein column is missing."),
+    need(x$Position, "File format error: Position column is missing."),
+    # need(x$Quantification, "File format error: Quantification column is missing.")
+  )
+  
+  # validate(
+  #     need(class(x$Quantification) == "numeric", "File format error: Quantification column must be numeric.")
+  # )
+  return(x)
+})
+
+upload_metadata <- reactive({
+  library(tools)
+  inFile <- input$file2
+  if (is.null(inFile))
+    return(NULL)
+  fileInfo <- input$file2
+  ext = file_ext(inFile$datapath)
+  switch(ext, 
+         "csv" = x <- read.csv(inFile$datapath),
+         validate(
+           need(FALSE, "Invalid file type.")
+         )
+  )
+  myvalue("upload")
+  metadata_ready(FALSE)
+  upload_metadata_ready(TRUE)
+  upload_name_metadata(fileInfo$name)
+  message(cat("Metadata is uploaded: ", fileInfo$name))
+  
+  validate(
+    need(x$RowName, "File format error: RowName column is missing."),
+    #   need(x$Position, "File format error: Position column is missing."),
+    # need(x$Quantification, "File format error: Quantification column is missing.")
+  )
+  
+  message("metadata_ready")
+  
+  # validate(
+  #     need(class(x$Quantification) == "numeric", "File format error: Quantification column must be numeric.")
+  # )
+  return(x)
+})
