@@ -54,7 +54,13 @@ output$proteinTable <- DT::renderDataTable(server = FALSE, {
   callback <- c(
     "table.on('dblclick','tr', function() {",
     " var data=table.row(this).data(); ",
-    " Shiny.setInputValue('site_kinase_network_doubleclick', data[1].concat('_Protein'), {priority: 'event'});",
+    " let text1;", 
+    " if(data[1] != null){ ", 
+    " text1 = data[1]", 
+    " } else {",
+    " text1 = data[0]", 
+    " }",
+    " Shiny.setInputValue('site_kinase_network_doubleclick', text1.concat('_Protein'), {priority: 'event'});",
     "})"
   )
   

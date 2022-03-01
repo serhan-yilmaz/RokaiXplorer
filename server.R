@@ -10,6 +10,7 @@ library(shinytoastr)
 library(shinylogs)
 library(visNetwork)
 library(preprocessCore)
+#library(patchwork)
 
 # if (!require("BiocManager", quietly = TRUE))
 #     install.packages("BiocManager")

@@ -1,6 +1,6 @@
-multiChoicePicker <- function(id, label, choices, selected = choices[1], isInline = "T", multiple = F, max_opts = 2, max_opts_txt = "No more!") {
+multiChoicePicker <- function(id, label, choices, selected = choices[1], isInline = "T", multiple = F, max_opts = 2, max_opts_txt = "No more!", width = "fit") {
   picker_ui <- shinyWidgets::pickerInput(id, "", choices, selected = selected, 
-                                         width = "fit", inline = T, 
+                                         width = width, inline = T, 
                                          multiple = multiple,
                                          options =  list(
                                            "max-options" = max_opts,
