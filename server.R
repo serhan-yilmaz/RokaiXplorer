@@ -15,7 +15,6 @@ library(preprocessCore)
 
 # if (!require("BiocManager", quietly = TRUE))
 #     install.packages("BiocManager")
-# 
 # BiocManager::install("preprocessCore")
 
 ##
@@ -37,19 +36,6 @@ source("src/ui_util.R")
 folder = "data/"
 Tsample <- read.csv(paste(folder, "rokaiXplorer_sample_data.csv", sep=""))
 Tsample_metadata <- read.csv(paste(folder, "rokaiXplorer_sample_metadata.csv", sep=""))
-
-# foList <- function(...){
-#     x <- list(...)
-#     outList <- list()
-#     previous = NULL
-#     for(i in seq(1, length(x), 1)){
-#         if((i %% 2) == 0){
-#             outList[[previous]] <- x[[i]]
-#         }
-#         previous = x[[i]]
-#     }
-#     return(outList)
-# }
 
 shinyServer(function(input, output, session) {
 

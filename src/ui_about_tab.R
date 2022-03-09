@@ -71,7 +71,7 @@ tabPanel("About",
            about_desc_item("RokaiXplorer is an interactive environment for exploratory analysis of phospho-proteomic data with a particular focus on biomarker discovery."),
            contact_question("If you have any suggestions or comments, feel free to", "give feedback", "leaveCommentLink", "contact us", "contactLink", actLink = T, postfix = ""),
            about_question("Also, if you would like to impact future developments, please fill a", "5-question survey", "https://forms.gle/JMZY1WeR3appegFt9", postfix = "to help us prioritize which additional features to implement next!"),
-           about_desc_item("* The application is still in development! New features may be added or there may be changes in the way analysis are conducted as time goes on.", type = "medium"),
+           about_desc_item("* The application is still in development. New features may be added or there may be changes in the way analysis are conducted as time goes on.", type = "medium"),
            )
        ),
        tabPanel(
