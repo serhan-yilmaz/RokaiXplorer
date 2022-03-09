@@ -45,6 +45,7 @@ upload_dataset <- reactive({
     need(x$Position, "File format error: Position column is missing."),
     # need(x$Quantification, "File format error: Quantification column is missing.")
   )
+  main_logging(paste("Upload Data - ", upload_name(), "-", network_value(), sep = ""))
   
   # validate(
   #     need(class(x$Quantification) == "numeric", "File format error: Quantification column must be numeric.")
@@ -77,7 +78,8 @@ upload_metadata <- reactive({
     # need(x$Quantification, "File format error: Quantification column is missing.")
   )
   
-  message("metadata_ready")
+  main_logging(paste("Upload Metadata - ", upload_name_metadata(), "-", network_value(), sep = ""))
+  #message("metadata_ready")
   
   # validate(
   #     need(class(x$Quantification) == "numeric", "File format error: Quantification column must be numeric.")

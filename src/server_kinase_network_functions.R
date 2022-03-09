@@ -13,8 +13,6 @@ foKinaseNetworkSubset <- function(ST, NetworkData, indices, Wkin2site, Wkin2onsi
   return(list(KT = KT, ST = ST, Wk2s = Wk2s, Wk2os = Wk2os))
 }
 
-
-
 foKinaseNetworkDraw <- function(K, KT, Wk2s, Wk2os, minzscore, topk, keepsinglekinases, items_txt, footer_txt, show_significant_only){
   thereAreNoItemsError = paste("There are no", items_txt, "that can pass the specified threshold.")
   valids = (abs(K$ZScore) >= minzscore)
@@ -143,13 +141,18 @@ foKinaseNetworkDraw <- function(K, KT, Wk2s, Wk2os, minzscore, topk, keepsinglek
     visEdges(smooth = FALSE) %>%
     visInteraction(hideEdgesOnDrag = TRUE) %>%
     visInteraction(navigationButtons = TRUE) %>%
+    visLayout(randomSeed = 100) %>%
     visEvents(doubleClick = c("function(properties) {",
                               " label = this.body.data.nodes.get(properties.nodes[0]).label", 
                               " group = this.body.data.nodes.get(properties.nodes[0]).group", 
                               " txt = label.concat('_', group)", 
                               " Shiny.setInputValue('site_kinase_network_doubleclick', txt, {priority: 'event'});",
                               "}")) %>%
+    # visExport(type = "jpeg", name = "export-network", 
+    #           float = "left", label = "Save network", 
+    #           background = "purple", style= "") %>% 
     # visEvents(doubleClick = "function(properties) {
     # alert('selected nodes ' + this.body.data.nodes.get(properties.nodes[0]).id);}") %>%
     visPhysics(stabilization = T) 
+
 }

@@ -6,7 +6,7 @@ observeEvent(input$buttonSampleData, {
   reset('file2')
   upload_data_ready(FALSE)
   upload_metadata_ready(FALSE)
-  #main_logging("Sample Data")
+  main_logging("Sample Data")
   # if(input$mainTabset == "About"){
   #     updateTabsetPanel(session, "mainTabset", "Plot")
   # }

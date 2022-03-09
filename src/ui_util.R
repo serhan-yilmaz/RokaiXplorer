@@ -44,3 +44,13 @@ foMaxItemsHelper <- function(el, base_id){
   maxitems_helper_file = "how_top_items_selected"
   foAddHelper(el, maxitems_helper_id, maxitems_tooltip, maxitems_helper_file)
 }
+
+on_ready <- paste(
+  "$(function() {",
+  "$(document).on('shiny:connected', function(e) {",
+  "Shiny.setInputValue('initialized', 1);",
+  "});",
+  "",
+  "});",
+  sep = "\n"
+)

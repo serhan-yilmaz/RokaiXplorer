@@ -15,8 +15,7 @@ site_kinase_network <- reactive({
                                NetworkData$Wkinase2site))
 })
 
-output$site_kinase_network <- renderVisNetwork({
-  req(site_kinase_network())
+siteKinaseNetwork <- reactive({
   ds <- site_kinase_network()
   minzscore = input$site_kinase_network_minzscore
   topk = input$site_kinase_network_maxitems
@@ -29,6 +28,31 @@ output$site_kinase_network <- renderVisNetwork({
                              keepsinglekinases, "sites", 
                              footer_txt, show_significant_only))
 })
+
+output$site_kinase_network <- renderVisNetwork({
+  req(site_kinase_network())
+  siteKinaseNetwork()
+})
+
+siteKSNetworkDownloadHandler <- function(file_name, file_type){
+  downloadHandler(
+    filename = function() { paste(file_name, "png", sep='.') },
+    content = function(file) {
+      h = 4.6
+      toastr_info("Preparing the download. Please do not change tabs till the download is ready. This may take a few seconds...")
+      
+      html_name <- tempfile(fileext = ".html")
+      siteKinaseNetwork() %>% 
+        visOptions(height = "600px", width = "800px;") %>%
+        visSave(html_name)
+      webshot(html_name, zoom = 1, file = file, vheight = 800, vwidth = 800, delay = 0.2)
+    },
+    #contentType = paste("application/", file_type, sep = "")
+  )
+}
+
+output$site_kinase_network_downloadPlotPNG <- siteKSNetworkDownloadHandler(
+  file_name = "site-kinase-network", file_type = "png")
 
 protein_kinase_network <- reactive({
   req(protein_table_processed())

@@ -9,6 +9,7 @@ library(shinyjs)
 library(shinytoastr)
 library(shinylogs)
 library(visNetwork)
+library(webshot)
 library(preprocessCore)
 #library(patchwork)
 
@@ -21,6 +22,8 @@ library(preprocessCore)
 #library(BiocManager)
 #options(repos = BiocManager::repositories())
 
+##
+#webshot::install_phantomjs()
 
 library(ids)
 
@@ -51,6 +54,7 @@ foList <- function(...){
 shinyServer(function(input, output, session) {
 
     observe_helpers(withMathJax = TRUE, help_dir = "helpfiles")
+    track_usage(storage_mode = store_json(path = "logs/by_instance/"))
     
     session_id <- reactiveVal(random_id(n = 1, byte = 8))
     network_value <- reactiveVal("uniprot.human")
@@ -63,6 +67,11 @@ shinyServer(function(input, output, session) {
     metadata_ready <- reactiveVal(FALSE)
     analyze_group_differences <- reactiveVal(FALSE)
     
+    source(file = "src/server_logging_main.R", local=TRUE)
+    
+    observeEvent(input$initialized, {
+        main_logging("Session Initialized")
+    })
     
     refProteomeValue <- reactive({
         switch(input$refproteome, 

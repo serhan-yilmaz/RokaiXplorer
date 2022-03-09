@@ -27,27 +27,26 @@ source("src/ui_plots_main.R", local = TRUE)
 shinyUI(fluidPage(
     useToastr(),
     useShinyjs(),
+    
     # Application title
     title = "RokaiXplorer",
-    #titlePanel("RokaiXplorer"),
     
+    tags$head(
+        tags$link(rel="shortcut icon", href="favicon.png"),
+        tags$meta(name="description", content="RokaiXplorer"),
+        #includeHTML(("www/google-analytics.html")),
+        tags$script(on_ready)
+    ),
 
-    # Sidebar with a slider input for number of bins
     verticalLayout(
         div(
-          #bsModal(id = "bsmodal_xyz", title = uiOutput("abcd_title"), trigger = "", uiOutput("abcd_ui")), 
             style = "margin-bottom:0px; padding-bottom:0px;",
             div(
                 style = "position: relative; width: 100%",
                 img(src='rokaiXplorer_logo.png', align = "left", style = "height: 53px; margin-bottom:10px; margin-top: 10px;"),
                 
                 tags$p(version_text(), style = paste(version_style(), version_style_additional(), "position: absolute; top: 35px; left:287px; width: 70%;", sep = ""))
-                #tags$p("v2.0.0", style = "color:#A3A3A3;")
             )
-            # style = "margin-bottom:10px; margin-top: 20px; padding-bottom:0px;",
-            # tags$h2("RokaiXplorer", style = "display: inline;"),
-            # tags$text(version_text(), style = paste(version_style(), "margin-left: 4px;", sep = "")), 
-           # tags$text(version_text(), style = paste(version_style(), version_style_additional(), "margin-left: 4px;", sep = "")), 
         ), 
         fluidRow(
             id = "main_layout_div", 

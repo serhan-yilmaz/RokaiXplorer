@@ -3,7 +3,6 @@ siteDownloadHeatmapDLHandler <- function(plot, file_name, file_type){
     filename = function() { paste(file_name, file_type, sep='.') },
     content = function(file) {
       h = 4.6
-      message("fjjf")
       ggsave(file, plot = siteHeatmap(), device = file_type, width=3*h, height=h)
     },
     contentType = paste("application/", file_type, sep = "")
