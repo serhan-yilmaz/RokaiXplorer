@@ -45,6 +45,19 @@ foMaxItemsHelper <- function(el, base_id){
   foAddHelper(el, maxitems_helper_id, maxitems_tooltip, maxitems_helper_file)
 }
 
+foList <- function(...){
+  x <- list(...)
+  outList <- list()
+  previous = NULL
+  for(i in seq(1, length(x), 1)){
+    if((i %% 2) == 0){
+      outList[[previous]] <- x[[i]]
+    }
+    previous = x[[i]]
+  }
+  return(outList)
+}
+
 on_ready <- paste(
   "$(function() {",
   "$(document).on('shiny:connected', function(e) {",

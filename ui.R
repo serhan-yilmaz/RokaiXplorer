@@ -23,7 +23,6 @@ source("src/ui_util.R")
 source("src/ui_styling.R", local = TRUE)
 source("src/ui_plots_main.R", local = TRUE)
 
-
 shinyUI(fluidPage(
     useToastr(),
     useShinyjs(),
@@ -34,6 +33,7 @@ shinyUI(fluidPage(
     tags$head(
         tags$link(rel="shortcut icon", href="favicon.png"),
         tags$meta(name="description", content="RokaiXplorer"),
+        tags$link(rel = "stylesheet", type = "text/css", href = "style.css"),
         #includeHTML(("www/google-analytics.html")),
         tags$script(on_ready)
     ),
@@ -121,6 +121,7 @@ shinyUI(fluidPage(
             # mainPanel(
             column(width = 8,
              tabsetPanel(id = "mainTabset",
+              source(file = "src/ui_about_tab.R", local=TRUE)$value,
               tabPanel("Site", tabsetPanel(id = "siteTabset", 
                   tabPanel(
                       "Volcano Plot",
