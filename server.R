@@ -9,7 +9,7 @@ library(shinyjs)
 library(shinytoastr)
 library(shinylogs)
 library(visNetwork)
-library(webshot)
+#library(webshot)
 library(preprocessCore)
 #library(patchwork)
 

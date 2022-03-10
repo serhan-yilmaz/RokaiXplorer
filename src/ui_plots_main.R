@@ -99,11 +99,11 @@ network_ks_ui <- function(identifier, defaultSingleKinases = F){
                         tags$b("Single Kinases"), 
                         shinyWidgets::materialSwitch(inputId = paste(identifier, "single_kinases", sep = "_"), label = "", status = "danger", value = defaultSingleKinases, inline = T)
                       ),
-                      tags$div(style = "margin-top: 8px;",
-                               downloadButton(paste(identifier, "downloadPlotPNG", sep = "_"), 'Download PNG'),
-                               #tags$br(),
-                               #downloadButton(paste(identifier, "downloadPlotPDF", sep = "_"), 'Download PDF')
-                      )
+                      # tags$div(style = "margin-top: 8px;",
+                      #          downloadButton(paste(identifier, "downloadPlotPNG", sep = "_"), 'Download PNG'),
+                      #          #tags$br(),
+                      #          #downloadButton(paste(identifier, "downloadPlotPDF", sep = "_"), 'Download PDF')
+                      # )
              ))
     )
   )
