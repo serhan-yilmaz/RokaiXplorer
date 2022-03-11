@@ -35,6 +35,7 @@ source("src/ui_util.R")
 ## Update Sample Data
 folder = "data/"
 Tsample <- read.csv(paste(folder, "rokaiXplorer_sample_data.csv", sep=""))
+Tsample_snippet <- read.csv(paste(folder, "rokaiXplorer_sample_data_snippet.csv", sep=""))
 Tsample_metadata <- read.csv(paste(folder, "rokaiXplorer_sample_metadata.csv", sep=""))
 
 shinyServer(function(input, output, session) {
@@ -140,7 +141,7 @@ shinyServer(function(input, output, session) {
     output$buttonDownloadSampleData <- downloadHandler(
         filename = function() { paste('sample_data.csv', sep='') },
         content = function(file) {
-            write.csv(Tsample, file = file, row.names = FALSE, quote=FALSE)
+            write.csv(Tsample_snippet, file = file, row.names = FALSE, quote=FALSE)
         }
     )
     
