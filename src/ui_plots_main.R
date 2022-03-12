@@ -53,7 +53,8 @@ heatmap_ui <- function(identifier){
                                , identifier),
                       ),
                       column(width= 6, style = "padding: 8px;", 
-                             sliderInput(paste(identifier, "minzscore", sep = "_"), "Min. Samplewise Magnitude", 0, 2, 0.5, step = 0.02, width = "220px"),
+                             foMinSamplewiseMagnitudeHelper(sliderInput(paste(identifier, "minzscore", sep = "_"), "Min. Samplewise Magnitude", 0, 2, 0.5, step = 0.02, width = "220px"),
+                              identifier),
                              tags$div(
                                style = "margin-top: 8px;", 
                                tags$b(paste("Significant ", item_txt, "s only", sep = "")), 

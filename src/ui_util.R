@@ -45,6 +45,13 @@ foMaxItemsHelper <- function(el, base_id){
   foAddHelper(el, maxitems_helper_id, maxitems_tooltip, maxitems_helper_file)
 }
 
+foMinSamplewiseMagnitudeHelper <- function(el, base_id){
+  maxitems_helper_id = paste(base_id, "samplewise_magnitude_helper", sep = "_")
+  maxitems_tooltip = "Click to learn about the metric."
+  maxitems_helper_file = "min_samplewise_magnitude"
+  foAddHelper(el, maxitems_helper_id, maxitems_tooltip, maxitems_helper_file)
+}
+
 foList <- function(...){
   x <- list(...)
   outList <- list()
