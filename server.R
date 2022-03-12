@@ -139,7 +139,7 @@ shinyServer(function(input, output, session) {
     source(file = "src/server_modalbox_tables.R", local=TRUE)
     
     output$buttonDownloadSampleData <- downloadHandler(
-        filename = function() { paste('sample_data.csv', sep='') },
+        filename = function() { paste('sample_data_snippet.csv', sep='') },
         content = function(file) {
             write.csv(Tsample_snippet, file = file, row.names = FALSE, quote=FALSE)
         }

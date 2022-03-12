@@ -29,7 +29,7 @@ modal_box_selection_mapped <- reactive({
   
   ds$isMapped = FALSE
   if(ds$isKinase){
-    net <- reactive_network()
+    NetworkData <- reactive_network()
     ds$index = match(ds$identifier, NetworkData$Kinase$KinaseName)
     ds$table = NetworkData$Kinase[ds$index, ]
     ds$isMapped = !is.na(ds$index)
