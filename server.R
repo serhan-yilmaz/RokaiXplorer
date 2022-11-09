@@ -62,6 +62,9 @@ shinyServer(function(input, output, session) {
     source(file = "src/server_leave_feedback.R", local=TRUE)
     
     observeEvent(input$initialized, {
+        if(!dir.exists("logs/")){
+          dir.create("logs/")
+        }
         main_logging("Session Initialized")
     })
     
