@@ -95,7 +95,7 @@ cache_locked = reactiveVal(FALSE)
 
 cached_mbox_main_select_group = reactiveVal("")
 cached_mbox_main_casecontrol = reactiveVal("")
-cached_mbox_main_normgroup = reactiveVal(FALSE)
+cached_mbox_main_normgroup = reactiveVal(TRUE)
 
 output$modal_box_site_plot_controls <- renderUI({
   validate(

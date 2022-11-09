@@ -5,11 +5,14 @@ output$siteTable <- DT::renderDataTable(server = FALSE, {
   ST$StdErr = round(ST$StdErr, digits = 3)
   ST$ZScore = round(ST$ZScore, digits = 3)
   ST$MagnitudeAdj = round(ST$MagnitudeAdj, digits = 3)
+  ST$EffectiveMag = pmax(ST$MagnitudeAdj, 0)
   
   si <- order(abs(ST$ZScore), decreasing = TRUE)
   ST <- ST[si,]
+  si <- order(abs(ST$EffectiveMag), decreasing = TRUE)
+  ST <- ST[si,]
   
-  ST = subset(ST, select = -c(Identifier))
+  ST = subset(ST, select = -c(Identifier, MagnitudeAdj))
   
   callback <- c(
     "table.on('dblclick','tr', function() {",
@@ -45,11 +48,14 @@ output$proteinTable <- DT::renderDataTable(server = FALSE, {
   PT$StdErr = round(PT$StdErr, digits = 3)
   PT$ZScore = round(PT$ZScore, digits = 3)
   PT$MagnitudeAdj = round(PT$MagnitudeAdj, digits = 3)
+  PT$EffectiveMag = pmax(PT$MagnitudeAdj, 0)
   
   si <- order(abs(PT$ZScore), decreasing = TRUE)
   PT <- PT[si,]
+  si <- order(abs(PT$EffectiveMag), decreasing = TRUE)
+  PT <- PT[si,]
   
-  PT = subset(PT, select = -c(Identifier))
+  PT = subset(PT, select = -c(Identifier, MagnitudeAdj))
   
   callback <- c(
     "table.on('dblclick','tr', function() {",

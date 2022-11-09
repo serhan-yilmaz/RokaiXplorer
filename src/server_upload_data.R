@@ -35,6 +35,10 @@ upload_dataset <- reactive({
            need(FALSE, "Invalid file type.")
          )
   )
+  if(input$mainTabset == "About"){
+    updateTabsetPanel(session, "mainTabset", "Site")
+  }
+  
   myvalue("upload")
   upload_data_ready(TRUE)
   upload_name(fileInfo$name)
@@ -66,6 +70,10 @@ upload_metadata <- reactive({
            need(FALSE, "Invalid file type.")
          )
   )
+  if(input$mainTabset == "About"){
+    updateTabsetPanel(session, "mainTabset", "Site")
+  }
+  
   myvalue("upload")
   metadata_ready(FALSE)
   upload_metadata_ready(TRUE)

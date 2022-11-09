@@ -35,6 +35,7 @@ protein_table <- reactive({
   PT$PValue = res$PValues
   PT$FDR = res$QValues
   PT$MagnitudeAdj <- abs(PT$Phos) - 3 * PT$StdErr;
+  PT$EffectiveMag = pmax(PT$MagnitudeAdj, 0)
   
   nameX = PT$Name
   nameX[is.na(nameX)] = PT$ID[is.na(nameX)]

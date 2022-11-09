@@ -15,7 +15,7 @@ library(shinyBS)
 library(shinyhelper)
 library(tippy)
 
-#library(plotly)
+library(plotly)
 
 source("current_version.R")
 
@@ -37,6 +37,10 @@ shinyUI(fluidPage(
         #includeHTML(("www/google-analytics.html")),
         tags$script(on_ready)
     ),
+    
+#     tags$script("$('*').on('plotly_click', function(evt) {
+#     console.log(evt);
+# });"),
 
     verticalLayout(
         div(

@@ -113,7 +113,12 @@ network_ks_ui <- function(identifier, defaultSingleKinases = F){
 volcanoplot_ui <- function(identifier){
   tags$div(
     fluidRow(
-      column(width = 9, shinycssloaders::withSpinner(plotOutput(identifier, height = "445px"))), 
+      column(width = 9, 
+             tags$div(
+               shinycssloaders::withSpinner(plotlyOutput(identifier, height = "445px"), hide.ui = FALSE),
+               "Click on a point to inspect it in detail."
+               )
+             ), 
       column(width = 3, style = "padding: 8px;", 
              fluidRow(id = paste(identifier, "sliders_div", sep = "_"), 
                       sliderInput(paste(identifier, "maxfdr", sep = "_"), "Max. FDR", 0.01, 0.25, 0.1, step = 0.01, width = "220px"),

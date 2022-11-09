@@ -14,7 +14,7 @@ foKinaseNetworkSubset <- function(ST, NetworkData, indices, Wkin2site, Wkin2onsi
 }
 
 foKinaseNetworkDraw <- function(K, KT, Wk2s, Wk2os, minzscore, topk, keepsinglekinases, items_txt, footer_txt, show_significant_only){
-  thereAreNoItemsError = paste("There are no", items_txt, "that can pass the specified threshold.")
+  thereAreNoItemsError = paste("There are no", items_txt, "that can pass the specified threshold with a known kinase.")
   valids = (abs(K$ZScore) >= minzscore)
   if(show_significant_only == T){
     valids = valids & K$isSignificant

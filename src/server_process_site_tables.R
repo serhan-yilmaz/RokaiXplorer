@@ -18,6 +18,7 @@ site_table <- reactive({
   ST$PValue = res$PValues
   ST$FDR = res$QValues
   ST$MagnitudeAdj <- abs(Xv) - 3 * Sx;
+  ST$EffectiveMag = pmax(ST$MagnitudeAdj, 0)
   
   validate(
     need(nrow(ST) > 0, "There are no sites identified in the selected subgroup. Please make sure there are no conflicts in the subgroup selection.")

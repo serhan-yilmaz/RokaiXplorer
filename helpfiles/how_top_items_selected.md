@@ -4,7 +4,7 @@ Given we have an estimate of log2-FC and the corresponding standard error for ea
  - \(q_i\): Log fold change for item \(i\)
  - \(s_i\): Standard error of the log fold change for item \(i\)
 
-We compute an adjusted score to quantify the magnitude: 
+We compute an adjusted score to quantify the effective magnitude: 
 - \(q'_i = |q_i| - 3 s_i\)
 
 Then, we sort the terms according to \(q'_i\) and obtain the top items.
