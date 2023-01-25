@@ -98,7 +98,7 @@ After setting all the desired options, please run:
 ```
   deployRokaiXplorer()
 ```
-  
+After a couple minutes, this should deploy the application to shinyapps.io and open it in your browser.
   
 
 
