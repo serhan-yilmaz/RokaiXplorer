@@ -73,8 +73,8 @@ options(RokaiXplorer_description_filepath = "deploy/description.md")
 runRokaiXplorer()
 ```
 
-
-
+### Step 8: Deploying the application to Shinyapps.io
+To deploy your application to Shinyapps similar to the Example Application, first you need create an account. For this purpose, visit [Shinyapps Sign-up page](https://www.shinyapps.io/admin/#/signup) and set up your account. 
 
 
 
