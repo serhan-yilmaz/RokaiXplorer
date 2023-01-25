@@ -102,7 +102,7 @@ After a couple minutes, this should deploy the application to shinyapps.io and o
   
   
 ### Putting it all together
-- Install [R](https://cran.r-project.org/), [RStudio](https://posit.co/download/rstudio-desktop/), and [Rtools](https://cran.r-project.org/bin/windows/Rtools/)(for Windows). 
+- Install [R](https://cran.r-project.org/), [RStudio](https://posit.co/download/rstudio-desktop/), and [Rtools](https://cran.r-project.org/bin/windows/Rtools/) (for Windows). 
 - Download the source code and install the necessary libraries:
 ```
 if(!require("devtools"))
