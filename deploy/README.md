@@ -20,6 +20,7 @@ if(!require("pkgbuild"))
   devtools::install_github("r-lib/pkgbuild")
 pkgbuild::find_rtools()
 ```
+This will return `TRUE` if Rtools is installed properly.
 
 ### Step 2: Create a project in RStudio
 For getting started, open RStudio and create a project in a new directory with a desired name. For more information, check out [instructions on creating a project in RStudio](https://swcarpentry.github.io/r-novice-gapminder/02-project-intro/#a-possible-solution).
