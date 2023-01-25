@@ -131,6 +131,7 @@ rsconnect::setAccountInfo(name="<ACCOUNT>", token=, "<TOKEN>", secret="<SECRET>"
 ```
 - Next, set up the final details and deploy your application. Here is what it look like for the sample application:
 ```
+  devtools::source_url("https://github.com/serhan-yilmaz/RokaiXplorer/blob/main/src/deploy_from_github.R?raw=TRUE")
   options(RokaiXplorer_shinyapps_account = "serhan-yilmaz")
   options(RokaiXplorer_shinyapps_title = "ExampleApp")
   deployRokaiXplorer()
