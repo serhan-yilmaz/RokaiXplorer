@@ -30,11 +30,12 @@ installDependencies()
 ```
 
 ### Step 5: Running RokaiXplorer under deployment mode
-If everything works up to this point and all libraries are installed properly, the following code should start the RokaiXplorer with preloaded sample data, similar to how it is in the [ExampleApp](https://yilmazs.shinyapps.io/ADXplorer/). 
+If everything works up to this point and all libraries are installed properly, the following code should start the RokaiXplorer application with preloaded sample data, identical t the [Example Application](https://yilmazs.shinyapps.io/ADXplorer/). 
 ```
 options(RokaiXplorer_deployment_mode = TRUE)
 runRokaiXplorer()
 ```
+Note that, after running the ```runRokaiXplorer()``` command, the application will stay open until it is closed. Make sure to close the application before moving on the next steps and running other code. 
 
 ### Step 6: Customizing the application for user data & configuration
 To customize the application to load your data instead of the sample dataset, first place your data under the ```/RokaiXplorer/data/``` folder in the current directory and run the following code after setting the file paths appropriately:
@@ -62,6 +63,7 @@ With this option preset, the results that you obtain should be identical to what
 ```
 options(RokaiXplorer_application_title = "NewTitle")
 options(RokaiXplorer_application_subtitle = "This will be the new subtitle to display")
+runRokaiXplorer()
 ```
 
 
