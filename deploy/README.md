@@ -4,7 +4,7 @@ Starting from v0.5.0, you can now use [RokaiXplorer](http://explorer.rokai.io/) 
 
 To see some examples on deployed applications, check out the following: 
 - A sample application: [RokaiXplorer-ExampleApp](https://serhan-yilmaz.shinyapps.io/exampleapp/)
-- A live version on Alzheimer's data: [AD-Xplorer](https://yilmazs.shinyapps.io/ADXplorer/)
+- A live version on Alzheimer's data: [ADXplorer](https://yilmazs.shinyapps.io/ADXplorer/)
 
 ### Step 1: Install R, Rtools & RStudio
 
