@@ -112,7 +112,7 @@ devtools::source_url("https://github.com/serhan-yilmaz/RokaiXplorer/blob/main/sr
 downloadRokaiXplorer()
 installDependencies()
 ```
-- Place your data/metadata under ```RokaiXplorer/data/``` your config file under ```RokaiXplorer/deploy/config.json``` folders (if you decide to use one). Modify the ```RokaiXplorer/deploy/description.md``` file to add a description of your application in the front page. Place any resources (e.g., images if used) under ```RokaiXplorer/www/``` folder.
+- Place your data/metadata under ```RokaiXplorer/data/``` your config file under ```RokaiXplorer/deploy/config.json``` folders (if you decide to use one). Modify the ```RokaiXplorer/deploy/description.md``` file to add a description of your application in the front page. Place any resources (e.g., images if used in the description) under ```RokaiXplorer/www/``` folder.
 - Set the deployment options for RokaiXplorer. Here is what they look like for the [Example application](https://yilmazs.shinyapps.io/ADXplorer/):
 ```
 options(RokaiXplorer_deployment_mode = TRUE)
