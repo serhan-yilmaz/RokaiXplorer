@@ -47,7 +47,7 @@ options(RokaiXplorer_metadata_filepath = "data/<METADATA>.csv")
 options(RokaiXplorer_reference_proteome = "Uniprot Mouse")
 ```
 
-Optionally, you can use a configuration file to set up the analysis options for your data. For this purpose, visit [RokaiXplorer website](http://explorer.rokai.io/), upload your input datasets and set your desired analysis options. Then, on the left panel, under the "Import/Export Config" section, press the ``Download Config``` button to download the ```config.json`` file which contains a list of all options set within the application. In your current directory, place this file under ```/RokaiXplorer/deploy/``` folder (and rename it to ```config.json`` if necessary). Then run the following command in RStudio:
+Optionally, you can use a configuration file to set up the analysis options for your data. For this purpose, visit [RokaiXplorer website](http://explorer.rokai.io/), upload your input datasets and set your desired analysis options. Then, on the left panel, under the "Import/Export Config" section, press the ```Download Config``` button to download the ```config.json`` file which contains a list of all options set within the application. In your current directory, place this file under ```/RokaiXplorer/deploy/``` folder (and rename it to ```config.json`` if necessary). Then run the following command in RStudio:
 ```
 options(RokaiXplorer_config_filepath = "deploy/config.json")
 runRokaiXplorer()
