@@ -78,7 +78,7 @@ runRokaiXplorer()
 To deploy your application to Shinyapps similar to the Example Application, first you need create an account. For this purpose, visit [Shinyapps Sign-up page](https://www.shinyapps.io/admin/#/signup) and set up your account. At the time of this writing (January 2023), setting up shinyapps.io is free and allows up to 5 applications. 
 
 #### Setting up the shinyapps account in RStudio
-After setting up your account, visit the [Shinyapps Dashboard](https://www.shinyapps.io/admin/#/dashboard) and log in. Here, you will need to obtain the security token to connect your account in RStudio. Under ```Account -> Tokens`` tabs, select the "Show Token" option which will display the necessary R code for this purpose. Click ```Copy to clipboard``` button to copy the code and run it in RStudio. The copied code should be in the following form: 
+After setting up your account, visit the [Shinyapps Dashboard](https://www.shinyapps.io/admin/#/dashboard) and log in. Here, you will need to obtain the security token to connect your account in RStudio. Under ```Account -> Tokens``` tabs, select the "Show Token" option which will display the necessary R code for this purpose. Click ```Copy to clipboard``` button to copy the code and run it in RStudio. The copied code should be in the following form: 
 ```
 rsconnect::setAccountInfo(name="<ACCOUNT>", token=, "<TOKEN>", secret="<SECRET>")
 ```
