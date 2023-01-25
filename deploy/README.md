@@ -11,7 +11,7 @@
 
 
 ### Step 3: Download the RokaiXplorer source code
-Next, you will need to download the source code of RokaiXplorer. For this purpose, you can run the following code in the RStudio console, which will download the source code from Github and place it under "RokaiXplorer" directory. 
+Next, you will need to download the source code of RokaiXplorer. For this purpose, you can run the following code in the RStudio console, which will download the source code from Github and place it under ``RokaiXplorer`` directory. 
 
 ```
 if(!require("devtools"))
