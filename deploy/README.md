@@ -28,3 +28,16 @@ if(!require("devtools"))
 devtools::source_url("https://github.com/serhan-yilmaz/RokaiXplorer/blob/main/src/deploy_from_github.R?raw=TRUE")
 installDependencies()
 ```
+
+### Step 5: Running RokaiXplorer under deployment mode
+If everything works up to this point and all libraries are installed properly, the following code should start the RokaiXplorer with preloaded sample data, similar to how it is in the [ExampleApp](https://yilmazs.shinyapps.io/ADXplorer/). 
+```
+if(!require("devtools"))
+  install.packages("devtools")
+devtools::source_url("https://github.com/serhan-yilmaz/RokaiXplorer/blob/main/src/deploy_from_github.R?raw=TRUE")
+options(RokaiXplorer_deployment_mode = TRUE)
+runRokaiXplorer()
+```
+
+
+
