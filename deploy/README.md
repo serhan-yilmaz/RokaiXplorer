@@ -12,7 +12,13 @@ To see some examples on deployed applications, check out the following:
 - Install Rstudio: [Download Link](https://posit.co/download/rstudio-desktop/). [Instructions on installation](https://rstudio-education.github.io/hopr/starting.html#rstudio).
 - Install Rtools (required for Windows): [Download Link](https://cran.r-project.org/bin/windows/Rtools/). [Instructions on installation](https://cran.r-project.org/bin/windows/Rtools/).
 
-While installing Rtools, please make sure that its version matches with the downloaded R version. For example, if you download R version v4.2.2, install the Rtool version 4.2 (not the latest 4.3). 
+While installing Rtools, please make sure that its version matches with the downloaded R version. For example, if you download R version v4.2.2, install the Rtool version 4.2 (not the latest 4.3). You can use the following command to check if Rtools is installed properly:
+```
+if(!require("devtools"))
+  install.packages("devtools")
+  devtools::install_github("r-lib/pkgbuild")
+  pkgbuild::find_rtools()
+```
 
 ### Step 2: Create a project in RStudio
 For getting started, open RStudio and create a project in a new directory with a desired name. For more information, check out [instructions on creating a project in RStudio](https://swcarpentry.github.io/r-novice-gapminder/02-project-intro/#a-possible-solution).
