@@ -59,12 +59,26 @@ runRokaiXplorer()
 With this option preset, the results that you obtain should be identical to what you observe in the RokaiXplorer application. 
 
 ### Step 7: Customizing the application title & descriptions
-
+To change the application title and subtitle (displayed in the top left corner of the application), run the following code:
 ```
 options(RokaiXplorer_application_title = "NewTitle")
 options(RokaiXplorer_application_subtitle = "This will be the new subtitle to display")
 runRokaiXplorer()
 ```
+This will change the title to be "NewTitle" and display some description under the title. Change these as you see fit according to your application. 
+
+
+```
+options(RokaiXplorer_description_filepath = "deploy/description.md")
+runRokaiXplorer()
+```
+
+
+
+
+
+
+
 
 
 
