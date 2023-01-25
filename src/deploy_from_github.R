@@ -52,6 +52,23 @@ deployRokaiXplorer <- function(shinyapps_title = NULL, shinyapps_account = NULL)
   library(BiocManager)
   
   options(repos = BiocManager::repositories())
+  
+  deployment_options <- readDeploymentOptions("RokaiXplorer")
+  saveDeploymentOptions()
+  
+  if(is.null(shinyapps_title)){
+	shinyapps_title = deployment_options$shinyapps_title
+	if(is.na(shinyapps_title)){
+		shinyapps_title = NULL
+	}
+  }
+  if(is.null(shinyapps_account)){
+	shinyapps_account = deployment_options$shinyapps_account
+	if(is.na(shinyapps_account)){
+		shinyapps_account = NULL
+	}
+  }
+
   deployApp(appDir = "RokaiXplorer", appTitle = shinyapps_title, account = shinyapps_account)
 }
 
@@ -98,7 +115,7 @@ saveDeploymentOptions <- function(){
   line_end2 = ')'
   
   content = paste(line1, line2, opt_lines, line_end1, line_end2, sep = "\n");  
-  cat(content, file = "test_config.R", append = FALSE)
+  cat(content, file = "RokaiXplorer/deploy/deploy_options.R", append = FALSE)
 }
 
 
