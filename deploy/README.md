@@ -37,11 +37,12 @@ runRokaiXplorer()
 ```
 
 ### Step 6: Customizing the application for user data & configuration
-
+To customize the application to load your data instead of the sample dataset, first place your data under the ```/RokaiXplorer/data/``` folder in the current directory and run the following code after setting the file paths appropriately:
 ```
 options(RokaiXplorer_data_filepath = "data/<DATA>.csv")
 options(RokaiXplorer_metadata_filepath = "data/<METADATA>.csv")
 ```
+In the above code, please make sure to update ```<DATA>``` and ```<METADATA>``` with the names of your data files. 
 
 Next, run the following code to set the appropriate reference proteome for your data. The available options are ```Uniprot Human```, ```Uniprot Mouse```, and ```Uniprot Rat```.
 ```
