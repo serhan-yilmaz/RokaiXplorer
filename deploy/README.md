@@ -115,7 +115,7 @@ installDependencies()
 - Set the deployment options for RokaiXplorer. Here is what they look like for the [Example application](https://yilmazs.shinyapps.io/ADXplorer/):
 ```
 options(RokaiXplorer_deployment_mode = TRUE)
-options(RokaiXplorer_data_filepath = "data/rokaiXplorer_sample_data.csv.csv")
+options(RokaiXplorer_data_filepath = "data/rokaiXplorer_sample_data.csv")
 options(RokaiXplorer_metadata_filepath = "data/rokaiXplorer_sample_metadata.csv")
 options(RokaiXplorer_reference_proteome = "Uniprot Mouse")
 options(RokaiXplorer_config_filepath = "deploy/config.json")
