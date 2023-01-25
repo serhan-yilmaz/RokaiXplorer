@@ -1,4 +1,4 @@
-## Deploying RokaiXplorer with Input Data Preloaded
+## Deploying RokaiXplorer with input data already preloaded
 
 
 ### Step 1: Install R, Rtools & RStudio
