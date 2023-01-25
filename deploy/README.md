@@ -134,4 +134,4 @@ rsconnect::setAccountInfo(name="<ACCOUNT>", token=, "<TOKEN>", secret="<SECRET>"
   options(RokaiXplorer_shinyapps_title = "ExampleApp")
   deployRokaiXplorer()
 ```
-This make the application accessible via the link: [https://yilmazs.shinyapps.io/ExampleApp](https://yilmazs.shinyapps.io/ExampleApp/)
+This makes the application accessible via the link: [https://yilmazs.shinyapps.io/ExampleApp](https://yilmazs.shinyapps.io/ExampleApp/)
