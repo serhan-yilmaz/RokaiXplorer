@@ -82,9 +82,11 @@ After setting up your account, visit the [Shinyapps Dashboard](https://www.shiny
 ```
 rsconnect::setAccountInfo(name="<ACCOUNT>", token=, "<TOKEN>", secret="<SECRET>")
 ```
-where the "<ACCOUNT>", "<TOKEN>", "<SECRET>" fields are filled according to your account details. 
+where the "<ACCOUNT>", "<TOKEN>", "<SECRET>" fields are filled according to your account details.
+  
+For more information on this step, you can read the [instructions on deploying to shinyapps.io](https://docs.posit.co/shinyapps.io/getting-started.html). 
 
-#### Deploying the application 
+#### Deploying your application 
 
 
 
