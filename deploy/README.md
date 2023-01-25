@@ -16,8 +16,8 @@ While installing Rtools, please make sure that its version matches with the down
 ```
 if(!require("devtools"))
   install.packages("devtools")
-  devtools::install_github("r-lib/pkgbuild")
-  pkgbuild::find_rtools()
+devtools::install_github("r-lib/pkgbuild")
+pkgbuild::find_rtools()
 ```
 
 ### Step 2: Create a project in RStudio
