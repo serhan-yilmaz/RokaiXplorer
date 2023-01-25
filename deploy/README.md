@@ -67,7 +67,7 @@ runRokaiXplorer()
 ```
 This will change the title to be "NewTitle" and display some description under the title. Change these as you see fit according to your application. 
 
-Next, to specify what to display on the about page, you will need to provide a markdown file. For this purpose, the easiest way is to modify the provided markdown file under ``RokaiXplorer/deploy/description.md``` and write some descriptive text about your application and dataset. If you wish to display any images, make sure to place the image files under ```RokaiXplorer/www/``` folder (otherwise the images will not display properly when the application is deployed online). After setting up the description file, run the following command to view the changes:
+Next, to specify what to display on the about page, you will need to provide a markdown file. For this purpose, the easiest way is to modify the provided markdown file under ```RokaiXplorer/deploy/description.md``` and write some descriptive text about your application and dataset. If you wish to display any images, make sure to place the image files under ```RokaiXplorer/www/``` folder (otherwise the images will not display properly when the application is deployed online). After setting up the description file, run the following command to view the changes:
 ```
 options(RokaiXplorer_description_filepath = "deploy/description.md")
 runRokaiXplorer()
