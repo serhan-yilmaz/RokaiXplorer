@@ -92,7 +92,7 @@ Finally, to deploy your application, set up the following options based on your 
   options(RokaiXplorer_shinyapps_account = "<ACCOUNT>")
   options(RokaiXplorer_shinyapps_title = "<TITLE>")
 ```
-Here, ```"<ACCOUNT>"``` should be your shinyapps account name (same as in the above step). When created, the application will have the link:  ```<ACCOUNT>.shinyapps.io/<TITLE>```, so set the ```"<TITLE>"``` based on what you wish to display in the link. 
+Here, ```"<ACCOUNT>"``` should be your shinyapps account name (same as in the above step). When created, the application will have the link:  ```<ACCOUNT>.shinyapps.io/<TITLE>```, so set the ```"<TITLE>"``` variable based on what you wish to display in the link. 
   
 After setting all desired options, run: 
 ```
