@@ -52,6 +52,7 @@ Optionally, you can use a configuration file to set up the analysis options for 
 options(RokaiXplorer_config_filepath = "deploy/config.json")
 runRokaiXplorer()
 ```
+With this option preset, the results that you obtain should be identical to what you observe in the RokaiXplorer application. 
 
 ### Step 7: Customizing the application title & descriptions
 
