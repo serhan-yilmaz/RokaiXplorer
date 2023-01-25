@@ -72,7 +72,7 @@ processed_data_bysample_unfiltered <- reactive({
   ds <- current_dataset_mapped()
   Tmeta <- current_metadata()
   
-  if(cached_mbox_main_normgroup() == T){
+  if(cache$cached_mbox_main_normgroup() == T){
     norm_by = input$mbox_site_plot_select_group
     if(is.null(norm_by)){norm_by = c()}
   } else {

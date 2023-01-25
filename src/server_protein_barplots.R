@@ -1,17 +1,5 @@
 ## Protein Bar Plots
 
-proteinDownloadPlotDLHandler <- function(plot, file_name, file_type){
-  downloadHandler(
-    filename = function() { paste(file_name, file_type, sep='.') },
-    content = function(file) {
-      h = 4.6
-      message("fjjf")
-      ggsave(file, plot = proteinBarPlot(), device = file_type, width=3*h, height=h)
-    },
-    contentType = paste("application/", file_type, sep = "")
-  )
-}
-
 proteinBarPlot <- reactive({
   req(protein_table_processed())
   PT <- protein_table_processed()
@@ -31,8 +19,8 @@ output$protein_barplot_plot <- renderPlot({
   proteinBarPlot()
 })
 
-output$protein_barplot_downloadPlotPNG <- proteinDownloadPlotDLHandler(
-  proteinBarPlot(), file_name = "protein-barplot", file_type = "png")
+output$protein_barplot_downloadPlotPNG <- downloadPlotDLHandler(
+  proteinBarPlot, file_name = "protein-barplot", file_type = "png")
 
-output$protein_barplot_downloadPlotPDF <- proteinDownloadPlotDLHandler(
-  proteinBarPlot(), file_name = "protein-barplot", file_type = "pdf")
+output$protein_barplot_downloadPlotPDF <- downloadPlotDLHandler(
+  proteinBarPlot, file_name = "protein-barplot", file_type = "pdf")

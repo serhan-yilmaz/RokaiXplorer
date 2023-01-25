@@ -12,6 +12,7 @@ site_table <- reactive({
   
   NetworkData <- reactive_network()
   ST = ds$ST[, c("Protein", "ProteinName", "Position", "Identifier")]
+  ST$InRef = !is.na(ds$ST$NetworkDataIndex)
   ST$Phos = Xv
   ST$StdErr = Sx
   ST$ZScore = Zx
@@ -19,6 +20,8 @@ site_table <- reactive({
   ST$FDR = res$QValues
   ST$MagnitudeAdj <- abs(Xv) - 3 * Sx;
   ST$EffectiveMag = pmax(ST$MagnitudeAdj, 0)
+  
+  # browser()
   
   validate(
     need(nrow(ST) > 0, "There are no sites identified in the selected subgroup. Please make sure there are no conflicts in the subgroup selection.")
@@ -35,3 +38,5 @@ site_table_processed <- reactive({
   ST$isSignificant = (ST$FDR <= max_fdr) & (abs(ST$Phos) >= min_logfc)
   return(ST)
 })
+
+  

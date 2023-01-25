@@ -83,11 +83,18 @@ current_dataset_mapped <- reactive({
   NetworkData <- reactive_network()
   
   proteins = ds$ST$Protein
-  indices = match(proteins, NetworkData$Protein$ID)
-  ds$ST$ProteinName <- NetworkData$Protein$Name[indices]
+  
+  indices = match(proteins, NetworkData$UniprotGene$ID)
+  ds$ST$ProteinName <- NetworkData$UniprotGene$Gene[indices]
+  
+  # indices = match(proteins, NetworkData$Protein$ID)
+  # ds$ST$ProteinName <- NetworkData$Protein$Name[indices]
+  
   nameX = ds$ST$ProteinName
   nameX[is.na(nameX)] = ds$ST$Protein[is.na(nameX)]
   ds$ST$Identifier <- str_c(nameX, ds$ST$Position, sep = "-")
+  ds$ST$NetworkDataIndex <- match(ds$ST$Identifier, NetworkData$Site$Identifier)
+  # browser()
   
   ## Check the sample match
   

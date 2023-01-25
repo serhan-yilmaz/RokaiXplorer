@@ -35,8 +35,8 @@ upload_dataset <- reactive({
            need(FALSE, "Invalid file type.")
          )
   )
-  if(input$mainTabset == "About"){
-    updateTabsetPanel(session, "mainTabset", "Site")
+  if(isolate(input$mainTabset) == "About"){
+    updateTabsetPanel(session, "mainTabset", "Phosphosite")
   }
   
   myvalue("upload")
@@ -70,8 +70,8 @@ upload_metadata <- reactive({
            need(FALSE, "Invalid file type.")
          )
   )
-  if(input$mainTabset == "About"){
-    updateTabsetPanel(session, "mainTabset", "Site")
+  if(isolate(input$mainTabset) == "About"){
+    updateTabsetPanel(session, "mainTabset", "Phosphosite")
   }
   
   myvalue("upload")
@@ -87,8 +87,7 @@ upload_metadata <- reactive({
   )
   
   main_logging(paste("Upload Metadata - ", upload_name_metadata(), "-", network_value(), sep = ""))
-  #message("metadata_ready")
-  
+
   # validate(
   #     need(class(x$Quantification) == "numeric", "File format error: Quantification column must be numeric.")
   # )

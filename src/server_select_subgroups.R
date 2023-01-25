@@ -1,3 +1,10 @@
+cache$cached_subgroup_select1 = reactiveVal("1")
+cache$cached_subgroup_select2 = reactiveVal("1")
+cache$cached_subgroup_select3 = reactiveVal("1")
+cache$cached_subgroup_select4 = reactiveVal("1")
+cache$cached_subgroup_select5 = reactiveVal("1")
+cache$cached_subgroup_select6 = reactiveVal("1")
+
 foSubgroupSelectInput <- function(i, T_metadata) {
   q <- T_metadata[i,]
   rowname <- rownames(q)
@@ -9,17 +16,26 @@ foSubgroupSelectInput <- function(i, T_metadata) {
     li[[values[j]]] <- j + 1
   }
   
+  id = paste("subgroup_select", i, sep="")
+  cache_id = paste("cached", id, sep = "_")
+  selected = fo_restore_if_applicable(li, isolate(foGetCacheValue(cache_id)))
+  
   tags$div(
     style = "margin-bottom: 0px;",
-    selectInput(paste("subgroup_select", i, sep="") , rowname[1], 
+    selectInput(id , rowname[1], 
                 choices = li, 
-                selected = 1, selectize = F, width = 170)  
+                selected = selected, selectize = F, width = 170)  
   )
 }
 
 output$subgroup_controls <- renderUI({
+  if(DEPLOYMENT_MODE_ENABLED){
+    metadata_not_ready_text = "Loading..."
+  } else {
+    metadata_not_ready_text = ""
+  }
   validate(
-    need(metadata_ready(), "")
+    need(metadata_ready(), metadata_not_ready_text)
   )
   x <- current_metadata()
   # tags$div(
@@ -48,13 +64,13 @@ subgroup_samples <- reactive({
   if(nrow(x$Tsample_metadata) > 0){
     for (i in 1:nrow(x$Tsample_metadata)){
       q <- input[[paste("subgroup_select", i, sep="")]]
-      if(is.null(q)){ validate(need(FALSE, "")); }
+      #if(is.null(q)){ validate(need(FALSE, "")); }
+      if(is.null(q)){next}
       qv <- as.numeric(q)
       if(qv > 1){
         subgroups = x$Tsample_metadata[i,]
         values <- unique(as.character(subgroups))
         values = sort(values, decreasing =F)
-        #message((subgroups == values[qv - 1]))
         validSamples = validSamples & (subgroups == values[qv - 1])
       }
     }

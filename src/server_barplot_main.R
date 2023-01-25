@@ -1,4 +1,7 @@
 barplot <- function(K, minzscore, topk, yaxis, coloring, show_significant_only){
+  if(is.null(yaxis)){
+    yaxis = "Log2-FC"
+  }
   Ks <- K[!is.na(K$Phos),]
   Ks <- Ks[abs(Ks$ZScore) >= minzscore,]
   if(show_significant_only == T){
@@ -32,7 +35,8 @@ barplot <- function(K, minzscore, topk, yaxis, coloring, show_significant_only){
   
   Ks$Sorting = -1*Ks$Phos
   Ks$Yaxis = Ks$Phos
-  yaxisText = "Log2-FC"
+  # yaxisText = "Log2-FC"
+  yaxisText = yaxis
   # yaxisText = yaxistxt_main
   showErrorBars = TRUE
   if(yaxis == "Z-Score"){

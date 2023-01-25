@@ -8,7 +8,7 @@ heatmapMain <- function(ST, STx, ds, minzscore, topk, show_significant_only, int
   
   indices = match(ST$ID, STx$ID)
   valids = !is.na(indices)
-  error_no_items_txt <- paste("There are no", items_txt, "to show for the specified options.")
+  error_no_items_txt <- paste("There are no", items_txt, "to show for the specified options (at least two required).")
   validate(
     need(nnzero(valids) > 1, error_no_items_txt)
   )
@@ -33,14 +33,15 @@ heatmapMain <- function(ST, STx, ds, minzscore, topk, show_significant_only, int
   avgZ = apply(Z, 1, function(x) mean(x, na.rm=T))
   avgAbsZ = apply(Z, 1, function(x) mean(abs(x), na.rm=T))
   sumAbsZ = apply(Z, 1, function(x) sum(abs(x), na.rm=T)) / ncol(Z)
-  #message(ncol(Z))
   #valids = (abs(sumAbsZ) >= (2 * ncol(Z))) & (abs(avgZ) >= 1)
   # valids = STv$isSignificant
   #valids = rep(T, nrow(STv), 1) & (abs(STv$ZScore) >= minzscore)
   valids = !is.na(sumAbsZ) & (abs(sumAbsZ) >= minzscore)
+  # valids[is.na(sumAbsZ)] = FALSE
   #valids = !is.na(avgAbsZ) & (abs(avgAbsZ) >= minzscore)
   if(show_significant_only){
     valids = valids & (STv$isSignificant)
+    # browser()
   }
   #& (abs(STv$ZScore) >= 3.5)
   
@@ -69,8 +70,7 @@ heatmapMain <- function(ST, STx, ds, minzscore, topk, show_significant_only, int
   Ts <- Ts[valids, ]
   
   #caseSamples = !is.na(match(colnames(Ts), colnames(Z)))
-  #  message(nnzero(caseSamples))
-  
+
   #groupings = c("Timepoint", "Gender")
   if(show_intensity){
     Tq <- Ts

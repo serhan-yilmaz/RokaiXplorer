@@ -5,7 +5,8 @@ modal_box_selection <- reactive({
   validate(need(valid, "Item category is missing."))
   identifier = parts[[1]][[1]]
   category = parts[[1]][[2]]
-  isSite = category == "Site"
+  isGOTerm = (category == "GOTerm")
+  isSite = (category == "Site") || (category == "Phosphosite")
   isProtein = category == "Protein"
   isKinase = category == "Kinase"
   if(isSite){
@@ -21,6 +22,7 @@ modal_box_selection <- reactive({
               "identifier" = identifier, "category" = category, 
               "isSite" = isSite, "isProtein" = isProtein, 
               "isKinase" = isKinase, "protein" = protein, 
+              "isGOTerm"= isGOTerm, 
               "site" = site))
 })
 
@@ -28,6 +30,12 @@ modal_box_selection_mapped <- reactive({
   ds <- modal_box_selection()
   
   ds$isMapped = FALSE
+  if(ds$isGOTerm){
+    NetworkData <- reactive_network()
+    ds$index = match(ds$identifier, NetworkData$GO$ID)
+    ds$table = NetworkData$GO[ds$index, ]
+    ds$isMapped = !is.na(ds$index)
+  }
   if(ds$isKinase){
     NetworkData <- reactive_network()
     ds$index = match(ds$identifier, NetworkData$Kinase$KinaseName)
@@ -39,9 +47,17 @@ modal_box_selection_mapped <- reactive({
     ds$index = match(ds$identifier, PT$Identifier)
     ds$table = PT[ds$index, ]
     ds$isMapped = !is.na(ds$index)
+    NetworkData <- reactive_network()
+    if(ds$isMapped){
+      ds$kinindex = match(ds$table$ID, NetworkData$Kinase$KinaseID)
+    } else {
+      ds$kinindex = match(ds$identifier, NetworkData$Kinase$Gene)
+    }
+    ds$kintable = NetworkData$Kinase[ds$kinindex, ]
+    ds$isKinaseMapped = !is.na(ds$kinindex)
   }
   if(ds$isSite){
-    ST <- protein_table_processed()
+    ST <- site_table_processed()
     ds$index = match(ds$identifier, ST$Identifier)
     ds$table = ST[ds$index, ]
     ds$isMapped = !is.na(ds$index)
@@ -50,11 +66,93 @@ modal_box_selection_mapped <- reactive({
   return(ds)
 })
 
+foGetGoCategoryText <- function(cat){
+  switch(cat, 
+         "molecular_function" = cat <- "Molecular_Function",
+         "biological_process" = cat <- "Biological_Process",
+         "cellular_component" = cat <- "Cellular_Component"
+  )
+  return(cat)
+}
+
 output$abcd_title <- renderUI({
   ds <- modal_box_selection()
+  title = ds$main_identifier
+  if(ds$isGOTerm){
+    ds <- modal_box_selection_mapped()
+    cat = ds$table$Namespace
+    if(!is.null(cat) && !is.na(cat) && !is.empty(cat)){
+      cat <- foGetGoCategoryText(cat)
+      title = paste(ds$identifier, cat, sep = "_")
+      link_main = "https://www.ebi.ac.uk/QuickGO/term/"
+      title = tags$a(href = paste0(link_main, ds$identifier), title, target = "_blank")
+    }
+  }
+  if(ds$isKinase){
+    ds <- modal_box_selection_mapped()
+    if(ds$isMapped){
+      # message(sprintf("Mapped: %s", ds$identifier))
+      # kinname <- ds$identifier
+      identifier <- ds$table$Gene
+      # message(sprintf("Gene Identifier: %s", identifier))
+      NetworkData <- reactive_network()
+      index <- match(identifier, NetworkData$UniprotGene$Gene)
+      # message(paste0("Index: "), index)
+      # message(paste0("IsTableNull: ", is.null(NetworkData$UniprotGene$Gene)))
+      if(!is.null(index) && !is.na(index)){
+        # message(sprintf("Mapped and not null: %s", ds$identifier))
+        Tx <- NetworkData$UniprotGene[index, ]
+        if(Tx$FromUniprot){
+          prot_id = Tx$ID
+          # link_main = "https://www.uniprot.org/uniprotkb/"
+          # link_extra = "/entry"
+          link_main = "https://www.uniprot.org/uniprotkb/"
+          link_extra = "/entry#ptm_processing"
+          title = tags$a(href = paste0(link_main, prot_id, link_extra), title, target = "_blank")
+        }
+      }
+    }
+    
+  }
+  
+  if(ds$isProtein){
+    identifier <- ds$identifier
+    NetworkData <- reactive_network()
+    index <- match(identifier, NetworkData$UniprotGene$Gene)
+    if(!is.null(index) && !is.na(index)){
+       Tx <- NetworkData$UniprotGene[index, ]
+       if(Tx$FromUniprot){
+         prot_id = Tx$ID
+         link_main = "https://www.uniprot.org/uniprotkb/"
+         link_extra = "/entry"
+         title = tags$a(href = paste0(link_main, prot_id, link_extra), title, target = "_blank")
+       }
+    }
+  }
+  if(ds$isSite){
+    identifier <- ds$protein
+    NetworkData <- reactive_network()
+    index <- match(identifier, NetworkData$UniprotGene$Gene)
+    ds <- modal_box_selection_mapped()
+    inRef <- ds$table$InRef
+    if(is.null(inRef) || !ds$isMapped){
+      inRef = FALSE
+    }
+    if(!is.null(index) && !is.na(index) && inRef){
+      Tx <- NetworkData$UniprotGene[index, ]
+      if(Tx$FromUniprot){
+        prot_id = Tx$ID
+        link_main = "https://www.phosphosite.org/uniprotAccAction?id="
+        # link_main = "https://www.phosphosite.org/uniprotAccAction?id="
+        link_extra = ""
+        title = tags$a(href = paste0(link_main, prot_id, link_extra), title, target = "_blank")
+      }
+    }
+  }
+  
   tags$div(
     style = "display: flex; justify-content: space-between;", 
-    ds$main_identifier, 
+    title, 
     uiOutput("modal_box_nav_protein_button", inline = T), 
   )
 })
@@ -77,27 +175,37 @@ output$modal_box_nav_protein_button <- renderUI({
                                tags$button(id = "modal_nav_protein_select_button", protein, onclick = callback))
   }
   
+  if(ds$isProtein){
+    if(ds$isKinaseMapped){
+      kinase = as.character(ds$kintable$KinaseName)
+      kinase = paste0(kinase, "_", "Kinase")
+      callback <- sprintf("Shiny.setInputValue('site_kinase_network_doubleclickb', '%s', {priority: 'event'});", kinase)
+      protein_button =  tags$div(style = "display: inline-block;",
+                                 tags$button(id = "modal_nav_protein_select_button", kinase, onclick = callback))
+    }
+  }
+  
   return(protein_button)
 })
 
-
-fo_restore_if_applicable <- function(groups, var){
-  if(sum(is.na(match(var, groups))) == 0){
-    return(var)
-  }
-  if(length(groups) >= 1){
-    return(groups[1])
-  }
-  return("")
-}
-
 cache_locked = reactiveVal(FALSE)
 
-cached_mbox_main_select_group = reactiveVal("")
-cached_mbox_main_casecontrol = reactiveVal("")
-cached_mbox_main_normgroup = reactiveVal(TRUE)
+cache$cached_mbox_main_select_group = reactiveVal("")
+cache$cached_mbox_main_casecontrol = reactiveVal("")
+cache$cached_mbox_main_normgroup = reactiveVal(TRUE)
+cache$cached_mbox_main_showsamples = reactiveVal(TRUE)
+
+cache$cached_mbox_protein_tab <- reactiveVal("")
+
+model_update_toggle <- reactiveVal(FALSE)
 
 output$modal_box_site_plot_controls <- renderUI({
+	modal_box_site_plot_controls_reactive()
+})
+
+
+modal_box_site_plot_controls_reactive <- reactive({
+  a <- model_update_toggle()
   validate(
     need(metadata_ready(), "")
   )
@@ -106,14 +214,10 @@ output$modal_box_site_plot_controls <- renderUI({
   groups <- rownames(x$Tsample_metadata)
   casecontrol_opts <- c("Case samples", "Control samples","Both case and control")
   #casecontrol_opts <- c("Case samples", "Control samples","Both case and control")
-  #message(paste("abcd: ", isolate(cached_mbox_main_select_group())))
-  selected_grouping = fo_restore_if_applicable(groups, cached_mbox_main_select_group())
-  selected_casecontrol = fo_restore_if_applicable(casecontrol_opts, cached_mbox_main_casecontrol())
-  selected_normgroup = fo_restore_if_applicable(c(F, T), cached_mbox_main_normgroup())
-  # cache_locked(TRUE)
-  # isolate(cached_mbox_main_casecontrol(selected_casecontrol))
-  # isolate(cached_mbox_main_select_group(selected_grouping))
-  # cache_locked(FALSE)
+  selected_grouping = fo_restore_if_applicable(groups, isolate(cache$cached_mbox_main_select_group()))
+  selected_casecontrol = fo_restore_if_applicable(casecontrol_opts, isolate(cache$cached_mbox_main_casecontrol()))
+  selected_normgroup = fo_restore_if_applicable(c(F, T), isolate(cache$cached_mbox_main_normgroup()))
+  selected_showsamples = fo_restore_if_applicable(c(F, T), isolate(cache$cached_mbox_main_showsamples()))
   
   # select_subgroup_opts = list()
   # 
@@ -136,7 +240,9 @@ output$modal_box_site_plot_controls <- renderUI({
            tags$div(style = "width: 180px; margin: 4px;", 
     multiChoicePicker("mbox_site_plot_select_group", "Grouping:", groups, 
                       selected = selected_grouping, 
-                      isInline = "F", multiple = T, max_opts = 2, width = 170), 
+                      isInline = "F", multiple = T, max_opts = 2, width = 170, 
+                      style_picker = "display:inline-flex; margin-top:4px;", 
+                      picker_inline = F), 
     tags$div(
       style = "margin-top: 8px;", 
       tags$b("Normalize within group:"), 
@@ -148,47 +254,99 @@ output$modal_box_site_plot_controls <- renderUI({
            tags$div(style = "width: 180px; margin: 4px;", 
     multiChoicePicker("mbox_site_plot_samples_case_control", "Show:", casecontrol_opts, 
                       selected = selected_casecontrol,
-                      isInline = "F", width = 175)
-           )
+                      isInline = "F", width = 175, 
+                      style_picker = "display:inline-flex; margin-top:4px;", 
+                      picker_inline = F), 
+    tags$div(
+      style = "margin-top: 8px;", 
+      tags$b("Sample names:"), 
+      shinyWidgets::materialSwitch(inputId = "mbox_site_plot_show_samples", label = "", status = "primary", value = selected_showsamples, inline = T)
     )
-    # column(width = 4,
-    #        tags$div(style = "width: 180px; margin: 4px;", 
-    #                 multiChoicePicker("mbox_site_plot_select_subgroup", "Show:", select_subgroup_opts, 
-    #                                   multiple = T, 
-    #                                   selected = all, 
-    #                                   isInline = "F", width = 175,
-    #                                   max_opts = Inf)
-    #        )
-    # )
+           )
+    ), 
+    column(width = 3, 
+      style = "padding: 8px; padding-top: 12px;", 
+      tags$div(
+        downloadButton(paste("modalbox_barplot", "downloadPlotPNG", sep = "_"), 'Download PNG'),
+        tags$br(), 
+        downloadButton(paste("modalbox_barplot", "downloadPlotPDF", sep = "_"), 'Download PDF')
+      )
+    )
+    
     )
   )
 })
 
-# observeEvent(input$mbox_site_plot_select_subgroup, {
-#   message(input$mbox_site_plot_select_subgroup)
-# })
-
 observeEvent(input$mbox_site_plot_select_group, {
   if(cache_locked()){return()}
-  cached_mbox_main_select_group(input$mbox_site_plot_select_group)
-  message(paste("Updated cache:", cached_mbox_main_select_group()))
+  cache$cached_mbox_main_select_group(input$mbox_site_plot_select_group)
+  message(paste("Updated cache:", cache$cached_mbox_main_select_group()))
 })
 
 observeEvent(input$mbox_site_plot_samples_case_control, {
   if(cache_locked()){return()}
-  cached_mbox_main_casecontrol(input$mbox_site_plot_samples_case_control)
+  cache$cached_mbox_main_casecontrol(input$mbox_site_plot_samples_case_control)
 })
 
 observeEvent(input$mbox_site_plot_norm_by_group, {
   if(cache_locked()){return()}
-  cached_mbox_main_normgroup(input$mbox_site_plot_norm_by_group)
+  cache$cached_mbox_main_normgroup(input$mbox_site_plot_norm_by_group)
 })
 
-cached_mbox_protein_tab <- reactiveVal("")
 
-observeEvent(input$modal_box_protein_tab, {
-  if(cache_locked()){return()}
-  cached_mbox_protein_tab(input$modal_box_protein_tab)
+###############
+
+# observeEvent(input$modal_box_protein_tab, {
+#   #if(cache_locked()){return()}
+#   cache$cached_mbox_protein_tab(input$modal_box_protein_tab)
+#   message(sprintf("Cache Updated 'cached_mbox_protein_tab' - %s", cache$cached_mbox_protein_tab()))
+# })
+
+
+
+output$modal_goterm_parents_chart <- renderUI({
+  req(modal_box_selection_mapped())
+  ds <- modal_box_selection_mapped()
+  validate(need(ds$isMapped && ds$isGOTerm, ""))
+  
+  name = tools::toTitleCase(ds$table$Name)
+  def = ds$table$Definition
+  go_id = gsub("GO:", "", ds$identifier);
+  main_link = "https://www.ebi.ac.uk/QuickGO/services/ontology/go/terms/%7Bids%7D/chart?ids=GO%3A"
+  requestURL <- paste0(main_link, go_id);
+  # requestURL <- "https://www.ebi.ac.uk/QuickGO/services/ontology/go/terms/%7Bids%7D/chart?ids=GO%3A0030170";
+  
+  style_ = "text-align:justify;"
+  tags$div(
+    tags$div(style = style_, tags$b("Name: "), name),
+    tags$div(style = style_, tags$b("Definition: "), def), 
+    tags$div(
+      style = "text-align:center;", 
+      tags$img(src = requestURL, height = 360)
+    )
+  )
+})
+
+output$modal_box_plot_showing_text <- renderUI({
+  validate(
+    need(modal_box_selection(), "")
+  )
+  ds <- modal_box_selection()
+  showing_text = ""
+  if(ds$isKinase){
+    showing_text = "inferred kinase activities"
+  }
+  if(ds$isProtein){
+    showing_text = "mean phosphorylation"
+  }
+  if(ds$isSite){
+    showing_text = "phosphorylation"
+  }
+  tags$div(
+    style = "margin-bottom:4px; margin-top:4px; color: #444;", 
+    sprintf("Showing the %s:", showing_text),
+    # tags$img(src = requestURL, width = 400)
+  )
 })
 
 output$abcd_ui <- renderUI({
@@ -196,16 +354,49 @@ output$abcd_ui <- renderUI({
     need(modal_box_selection(), "")
   )
   ds <- modal_box_selection()
+  plot_height = "370px";
   
   mainDiv <- tags$div(
     shinycssloaders::withSpinner(DT::dataTableOutput("proteinTable_test"))
   )
+  
+  if(ds$isGOTerm){
+    mainDiv <- tags$div(
+      style = "min-height:200px;", 
+      tabsetPanel(id = "modal_box_kinase_tab",
+                  tabPanel("Overview", 
+                           mainDiv <- tags$div(
+                             # uiOutput("modal_box_plot_showing_text"), 
+                             uiOutput("modal_goterm_parents_chart"), 
+                             # uiOutput("modal_box_site_plot_controls")
+                           )
+                  ), 
+                  tabPanel("Plot", 
+                           tags$div(
+                             # uiOutput("modal_box_plot_showing_text"), 
+                             shinycssloaders::withSpinner(plotOutput("modal_goenrichment_samplewise_barplot", height = plot_height)), 
+                             uiOutput("modal_box_site_plot_controls")
+                           )
+                  ), 
+                  tabPanel("Related Proteins", 
+                           shinycssloaders::withSpinner(DT::dataTableOutput("modal_goterm_related_proteins_table"))
+                  )
+      )
+    )
+
+  }
+  
   if(ds$isKinase){
     mainDiv <- tags$div(
       style = "min-height:200px;", 
-      #  style = "margin-top: 8px;", 
-      #tags$b("Target Sites: "), 
-      tabsetPanel(
+      tabsetPanel(id = "modal_box_kinase_tab",
+        tabPanel("Overview", 
+                 tags$div(
+                   uiOutput("modal_box_plot_showing_text"), 
+                   shinycssloaders::withSpinner(plotOutput("modal_kinase_samplewise_barplot", height = plot_height)), 
+                   uiOutput("modal_box_site_plot_controls")
+                 )
+        ), 
         tabPanel("Known Targets", 
                  shinycssloaders::withSpinner(DT::dataTableOutput("modal_kinase_sites_table"))
         )
@@ -218,20 +409,25 @@ output$abcd_ui <- renderUI({
       tabsetPanel(id = "modal_box_protein_tab", 
                   tabPanel("Overview", 
                            tags$div(
-                             shinycssloaders::withSpinner(plotOutput("modal_protein_samplewise_barplot")), 
+                             uiOutput("modal_box_plot_showing_text"), 
+                             shinycssloaders::withSpinner(plotOutput("modal_protein_samplewise_barplot", height = plot_height)), 
                              uiOutput("modal_box_site_plot_controls")
                            )
                   ), 
-                  tabPanel("Sites", 
+                  tabPanel("Phosphosites", 
                            shinycssloaders::withSpinner(DT::dataTableOutput("modal_protein_sites_table"))
                   ), 
-                  selected = fo_restore_if_applicable(c("Overview", "Sites"), cached_mbox_protein_tab())
+                  tabPanel("GO Terms", 
+                           shinycssloaders::withSpinner(DT::dataTableOutput("modal_protein_goterms_table"))
+                  ), 
+                  selected = fo_restore_if_applicable(c("Overview", "Phosphosites"), isolate(cache$cached_mbox_protein_tab()))
       )
     )
   }
   if(ds$isSite){
     mainDiv <- tags$div(
-      shinycssloaders::withSpinner(plotOutput("modal_site_samplewise_barplot")), 
+      uiOutput("modal_box_plot_showing_text"), 
+      shinycssloaders::withSpinner(plotOutput("modal_site_samplewise_barplot", height = plot_height)), 
       uiOutput("modal_box_site_plot_controls")
     )
   }
@@ -243,23 +439,84 @@ output$abcd_ui <- renderUI({
   )
 })
 
+output$abcd_footer <- renderUI({
+  # delay(10, isolate(foUpdateBackButtonBasedOnHistory()))
+  if(modalbox_history_length() >= 1){
+    backbutton = actionButton("modal_back_button", "Back", style = "float:left;")
+  } else {
+    backbutton = ""
+  }
+  tags$div(
+    backbutton, 
+    modalButton("Close")
+  )
+})
+
 ## Rename these
 abcd <- reactiveVal("")
 
-observeEvent(input$site_kinase_network_doubleclick, {
-  #message(input$site_kinase_network_doubleclick)
-  cache_locked(TRUE)
-  abcd(input$site_kinase_network_doubleclick)
-  delay(50, showModal(modalDialog(
+modalX <- reactive({
+modalDialog(
     uiOutput("abcd_ui"),
     title = uiOutput("abcd_title"),
-    footer = modalButton("Close"),
+    footer = uiOutput("abcd_footer"),
     size = "m",
     easyClose = TRUE
-  )))
-  delay(75, cache_locked(FALSE))
+  )
+})
+
+modalbox_history <- reactiveVal(c())
+modalbox_history_length <- reactiveVal(-1)
+
+observeEvent(input$site_kinase_network_doubleclick, {
+  cache_locked(TRUE)
+  model_update_toggle(!model_update_toggle())
+  modalbox_history(c())
+  modalbox_history_length(0)
+  abcd(input$site_kinase_network_doubleclick)
+  b = modal_box_site_plot_controls_reactive()
+  delay(50, showModal(modalX()))
+  delay(200, cache_locked(FALSE))
 })
 
 observeEvent(input$site_kinase_network_doubleclickb, {
-  abcd(input$site_kinase_network_doubleclickb)
+  previous = abcd()
+  current = input$site_kinase_network_doubleclickb
+  
+  m_len = modalbox_history_length()
+  modalbox_history_length(max(m_len, 0) + 1)
+  
+  m_hist <- modalbox_history()
+  m_hist[modalbox_history_length()] <- previous
+  
+  if(modalbox_history_length() >= 100){
+    m_hist = m_hist[51:modalbox_history_length()]
+    modalbox_history_length() = modalbox_history_length() - 1
+  }
+  modalbox_history(m_hist)
+  abcd(current)
 })
+
+observeEvent(input$modal_back_button, {
+  m_len = modalbox_history_length()
+  if(m_len >= 1){
+    abcd(modalbox_history()[m_len])
+    modalbox_history_length(m_len - 1)
+  }
+})
+
+foUpdateBackButtonBasedOnHistory <- function(){
+  if(modalbox_history_length() >= 1){
+    shinyjs::enable("modal_back_button")
+  } else {
+    shinyjs::disable("modal_back_button")
+  }
+}
+
+observeEvent(modalbox_history_length(), {
+  foUpdateBackButtonBasedOnHistory()
+}, ignoreNULL = FALSE)
+
+
+
+

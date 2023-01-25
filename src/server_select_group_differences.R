@@ -1,9 +1,15 @@
+cache$cached_select_group_differences = reactiveVal("None")
+
 output$group_difference_controls <- renderUI({
   validate(
     need(metadata_ready(), "")
   )
   x <- current_metadata()
   groups <- rownames(x$Tsample_metadata)
+  choices = c("None", groups)
+  
+  selected = fo_restore_if_applicable(choices, isolate(foGetCacheValue("cached_select_group_differences")))
+  
   # tags$div(
   #     style = "margin-top: 8px; ", 
   #     tags$b("Investigate Group Differences: "), 
@@ -17,11 +23,14 @@ output$group_difference_controls <- renderUI({
   # )
   tags$div(
     selectInput("select_group_differences" , "Select Group:", 
-                choices = c("None", groups), 
-                selected = 1, selectize = F, width = 170),
+                choices = choices, 
+                selected = selected, selectize = F, width = 170),
     uiOutput("select_subgroups_for_difference")
   )
 })
+
+cache$cached_select_subgroup_A = reactiveVal("")
+cache$cached_select_subgroup_B = reactiveVal("")
 
 output$select_subgroups_for_difference <- renderUI({
   validate(
@@ -31,7 +40,6 @@ output$select_subgroups_for_difference <- renderUI({
     need(!(input$select_group_differences == "None"), ""),
   )
   selected_group <- as.character(input$select_group_differences)
-  # message(selected_group)
   if(selected_group != "None"){
     x <- current_metadata()
     groups <- rownames(x$Tsample_metadata)
@@ -39,12 +47,17 @@ output$select_subgroups_for_difference <- renderUI({
   } else {
     possible_choices = "Select a group first."
   }
-  selected_two = possible_choices[min(2, length(possible_choices))]
+  selected = fo_restore_if_applicable(possible_choices, isolate(foGetCacheValue("cached_select_subgroup_A")))
+  selected_two = fo_restore_if_applicable(possible_choices, isolate(foGetCacheValue("cached_select_subgroup_B")))
+  if(identical(selected, selected_two)){
+    selected_two = possible_choices[min(2, length(possible_choices))]
+  }
+  # selected_two = possible_choices[min(2, length(possible_choices))]
   tags$div(
     tags$div(style="display:inline-block;", 
              selectInput("select_subgroup_A" , "A:", 
                          choices = possible_choices, 
-                         selected = 1, selectize = F, width = 100)
+                         selected = selected, selectize = F, width = 100)
     ),
     tags$div(style="display:inline-block;", 
              selectInput("select_subgroup_B" , "B:", 

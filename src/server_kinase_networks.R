@@ -25,7 +25,7 @@ siteKinaseNetwork <- reactive({
   footer_txt = "This network is interactive! You can drag & drop nodes to adjust the view and hover to see more information. Double click on a node to inspect it in detail. "
   return(foKinaseNetworkDraw(ds$ST, ds$KT, ds$Wk2s, 
                              ds$Wk2os, minzscore, topk, 
-                             keepsinglekinases, "sites", 
+                             keepsinglekinases, "phosphosites", 
                              footer_txt, show_significant_only))
 })
 

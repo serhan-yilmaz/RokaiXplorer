@@ -10,4 +10,12 @@ version_style_additional <- function(){
   user-select: none;"
 }
 
-
+rokaiLogo <- div(
+  style = "margin-bottom:0px; padding-bottom:0px;",
+  div(
+    style = "position: relative; width: 100%",
+    img(src='rokaiXplorer_logo.png', align = "left", style = "height: 53px; margin-bottom:10px; margin-top: 10px;"),
+    
+    tags$p(version_text(), style = paste(version_style(), version_style_additional(), "position: absolute; top: 35px; left:287px; width: 70%;", sep = ""))
+  )
+)

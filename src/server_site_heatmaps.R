@@ -1,13 +1,4 @@
-siteDownloadHeatmapDLHandler <- function(plot, file_name, file_type){
-  downloadHandler(
-    filename = function() { paste(file_name, file_type, sep='.') },
-    content = function(file) {
-      h = 4.6
-      ggsave(file, plot = siteHeatmap(), device = file_type, width=3*h, height=h)
-    },
-    contentType = paste("application/", file_type, sep = "")
-  )
-}
+cache$cached_site_heatmap_select_group = reactiveVal("")
 
 output$site_heatmap_select_group_ui <- renderUI({
   validate(
@@ -15,16 +6,12 @@ output$site_heatmap_select_group_ui <- renderUI({
   )
   x <- current_metadata()
   groups <- rownames(x$Tsample_metadata)
+  selected = fo_restore_if_applicable(groups, isolate(foGetCacheValue("cached_site_heatmap_select_group")))
+  
   tags$div(
-    multiChoicePicker("site_heatmap_select_group", "Grouping:", groups, isInline = "F", multiple = T, max_opts = 1)
+    multiChoicePicker("site_heatmap_select_group", "Grouping:", groups, isInline = "F", multiple = T, max_opts = 1, selected = selected)
   )
 })
-
-output$site_heatmap_downloadPlotPNG <- siteDownloadHeatmapDLHandler(
-  siteHeatmap(), file_name = "site-heatmap", file_type = "png")
-
-output$site_heatmap_downloadPlotPDF <- siteDownloadHeatmapDLHandler(
-  siteHeatmap(), file_name = "site-heatmap", file_type = "pdf")
 
 siteHeatmap <- reactive({
   req(processed_data_bysample())
@@ -46,8 +33,6 @@ siteHeatmap <- reactive({
   intensity_fc_style = input$site_heatmap_intensity_fc_style
   groupings = input$site_heatmap_select_group
   
-  message(input$site_heatmap_coloring)
-  message(class(input$site_heatmap_coloring))
   heatmapMain(ST, STx, ds, minzscore, topk, 
               show_significant_only, intensity_fc_style, "sites",
               groupings = groupings)
@@ -56,3 +41,9 @@ siteHeatmap <- reactive({
 output$site_heatmap <- renderPlot({
   siteHeatmap()
 })
+
+output$site_heatmap_downloadPlotPNG <- downloadPlotDLHandler(
+  siteHeatmap(), file_name = "phosphosite-heatmap", file_type = "png")
+
+output$site_heatmap_downloadPlotPDF <- downloadPlotDLHandler(
+  siteHeatmap(), file_name = "phosphosite-heatmap", file_type = "pdf")

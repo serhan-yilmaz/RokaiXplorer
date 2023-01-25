@@ -1,13 +1,18 @@
 ## Protein heatmaps
 
+cache$cached_protein_heatmap_select_group = reactiveVal("")
+
 output$protein_heatmap_select_group_ui <- renderUI({
   validate(
     need(metadata_ready(), "")
   )
   x <- current_metadata()
   groups <- rownames(x$Tsample_metadata)
+  # browser()
+  selected = fo_restore_if_applicable(groups, isolate(foGetCacheValue("cached_protein_heatmap_select_group")))
+  
   tags$div(
-    multiChoicePicker("protein_heatmap_select_group", "Grouping:", groups, isInline = "F", multiple = T, max_opts = 1)
+    multiChoicePicker("protein_heatmap_select_group", "Grouping:", groups, isInline = "F", multiple = T, max_opts = 1, selected = selected)
   )
 })
 
@@ -39,20 +44,9 @@ output$protein_heatmap <- renderPlot({
   proteinHeatmap()
 })
 
-proteinDownloadHeatmapDLHandler <- function(plot, file_name, file_type){
-  downloadHandler(
-    filename = function() { paste(file_name, file_type, sep='.') },
-    content = function(file) {
-      h = 4.6
-      message("fjjf")
-      ggsave(file, plot = siteHeatmap(), device = file_type, width=3*h, height=h)
-    },
-    contentType = paste("application/", file_type, sep = "")
-  )
-}
 
-output$protein_heatmap_downloadPlotPNG <- proteinDownloadHeatmapDLHandler(
-  proteinHeatmap(), file_name = "protein-heatmap", file_type = "png")
+output$protein_heatmap_downloadPlotPNG <- downloadPlotDLHandler(
+  proteinHeatmap, file_name = "protein-heatmap", file_type = "png")
 
-output$protein_heatmap_downloadPlotPDF <- proteinDownloadHeatmapDLHandler(
-  proteinHeatmap(), file_name = "protein-heatmap", file_type = "pdf")
+output$protein_heatmap_downloadPlotPDF <- downloadPlotDLHandler(
+  proteinHeatmap, file_name = "protein-heatmap", file_type = "pdf")

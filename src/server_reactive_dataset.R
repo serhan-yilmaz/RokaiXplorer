@@ -8,6 +8,7 @@ reactive_dataset <- reactive({
   switch (myvalue(),
           "sample" = D <- Tsample,
           "upload" = D <- upload_dataset(),
+          "deploymentdata" = D <- Tdeployment_data,
           validate(
             need(FALSE, "Waiting for data...")
           )
@@ -26,9 +27,21 @@ reactive_metadata <- reactive({
   switch (myvalue(),
           "sample" = D <- Tsample_metadata,
           "upload" = D <- upload_metadata(),
+          "deploymentdata" = D <- Tdeployment_metadata,
           validate(
             need(FALSE, "Waiting for data...")
           )
   )
+  # foOnMetadataUpdate()
   return (D)
 })
+
+# observe({
+#   if(metadata_ready() == TRUE){
+#     isolate(foOnMetadataUpdate())
+#   }
+# })
+# 
+# foOnMetadataUpdate <- function(){
+#   uiOutput("site_heatmap_select_group_ui")
+# }

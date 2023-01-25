@@ -33,9 +33,6 @@ processed_dataset <- reactive({
     TcontrolA = as.matrix(Tcontrol[, Tmeta$samplesA[!caseSamples]])
     TcontrolB = as.matrix(Tcontrol[, Tmeta$samplesB[!caseSamples]])
     
-    # message(colnames(TcaseB))
-    # message(colnames(TcontrolB))
-    
     McaseA <- apply(TcaseA, 1, function(x) mean(x, na.rm=T))
     McaseB <- apply(TcaseB, 1, function(x) mean(x, na.rm=T))
     McontrolA <- apply(TcontrolA, 1, function(x) mean(x, na.rm=T))
@@ -104,7 +101,7 @@ processed_dataset <- reactive({
       SE <- rep(sd(Q, na.rm = T), length(Q))
       valids <- (Ncase >= 1) & (Ncontrol >= 1)
     }
-    validSites = (!is.na(Q)) & valids
+    validSites = (!is.na(Q)) & !is.na(SE) & valids
   }
   
   Xv = Q[validSites]
@@ -112,7 +109,7 @@ processed_dataset <- reactive({
   ST = ST[validSites, ]
   
   #Scase = apply(Tcase, 2, function(x) sd(x, na.rm=T))
-  return (list("Xv" = Xv, "Sx" = Sx, "ST"= ST,"validSites" = validSites))
+  return (list("Xv" = Xv, "Sx" = Sx, "ST"= ST, "validSites" = validSites))
 })
 
 preprocessed_dataset <- reactive({

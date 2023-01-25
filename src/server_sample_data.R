@@ -1,7 +1,7 @@
 observeEvent(input$buttonSampleData, {
   shinyWidgets::updatePickerInput(session, "refproteome", selected = "Uniprot Mouse");
   if(input$mainTabset == "About"){
-    updateTabsetPanel(session, "mainTabset", "Site")
+    updateTabsetPanel(session, "mainTabset", "Phosphosite")
   }
   network_value("uniprot.mouse")
   myvalue("sample")

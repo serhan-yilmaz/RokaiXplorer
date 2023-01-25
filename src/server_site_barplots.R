@@ -1,14 +1,3 @@
-siteDownloadPlotDLHandler <- function(plot, file_name, file_type){
-  downloadHandler(
-    filename = function() { paste(file_name, file_type, sep='.') },
-    content = function(file) {
-      h = 4.6
-      message("fjjf")
-      ggsave(file, plot = siteBarPlot(), device = file_type, width=3*h, height=h)
-    },
-    contentType = paste("application/", file_type, sep = "")
-  )
-}
 
 siteBarPlot <- reactive({
   req(site_table_processed())
@@ -29,8 +18,8 @@ output$site_barplot_plot <- renderPlot({
   siteBarPlot()
 })
 
-output$site_barplot_downloadPlotPNG <- siteDownloadPlotDLHandler(
-  siteBarPlot(), file_name = "site-barplot", file_type = "png")
+output$site_barplot_downloadPlotPNG <- downloadPlotDLHandler(
+  siteBarPlot, file_name = "phosphosite-barplot", file_type = "png")
 
-output$site_barplot_downloadPlotPDF <- siteDownloadPlotDLHandler(
-  siteBarPlot(), file_name = "site-barplot", file_type = "pdf")
+output$site_barplot_downloadPlotPDF <- downloadPlotDLHandler(
+  siteBarPlot, file_name = "phosphosite-barplot", file_type = "pdf")
