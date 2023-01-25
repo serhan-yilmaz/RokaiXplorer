@@ -1,4 +1,9 @@
 
+source("install_dependencies.R", local = TRUE)
+install_dependencies()
+
+library(stringr)
+library(tools)
 library(Matrix)
 library(shiny)
 library(DT)

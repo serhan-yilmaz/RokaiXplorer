@@ -23,7 +23,6 @@ observeEvent(input$file2, {
 })
 
 upload_dataset <- reactive({
-  library(tools)
   inFile <- input$file1
   if (is.null(inFile))
     return(NULL)
@@ -58,7 +57,6 @@ upload_dataset <- reactive({
 })
 
 upload_metadata <- reactive({
-  library(tools)
   inFile <- input$file2
   if (is.null(inFile))
     return(NULL)

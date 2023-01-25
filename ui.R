@@ -5,6 +5,7 @@ library(cicerone)
 library(visNetwork)
 library(shinydashboard)
 library(shinyWidgets)
+library(shinycssloaders)
 library(knitr)
 
 # For javascript
@@ -43,7 +44,7 @@ if(DEPLOYMENT_MODE_ENABLED){
   }
   filter_by_collapsed = F
   script_on_start_hide_contact = tags$script(on_start_hide_contact)
-  subtitle <- deployment_options$subtitle
+  subtitle <- deployment_options$application_subtitle
   if(!is.empty(subtitle)){
     subtitle_div <- tags$text(style = "font-size:18px; font-weight:normal; color: #888;", subtitle)
   } else {

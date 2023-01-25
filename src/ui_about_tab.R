@@ -2,7 +2,7 @@ source("src/ui_about_tab_content.R", local = TRUE)
 source("src/ui_about_contact_tab.R", local = TRUE)
 source("src/ui_about_references_tab.R", local = TRUE)
 if(DEPLOYMENT_MODE_ENABLED){
-  config_about_page_path = deployment_options$config_about_page_path
+  config_about_page_path = deployment_options$description_file_path
   aboutTabContent <- withMathJax(includeMarkdown(config_about_page_path))
   aboutTabExtraContent <- tags$div(
     tags$hr(style = "margin-bottom:8px; margin-top:14px;"),
