@@ -8,10 +8,10 @@
 - Install Rtools (required for Windows): [Download Link](https://cran.r-project.org/bin/windows/Rtools/). [Instructions on installation](https://cran.r-project.org/bin/windows/Rtools/).
 
 ### Step 2: Create a project in RStudio
-Before getting started, create a project in RStudio with a desired name. For more information, check out [instructions on creating a project in RStudio](https://swcarpentry.github.io/r-novice-gapminder/02-project-intro/#a-possible-solution).
+For getting started, create a project in RStudio with a desired name. For more information, check out [instructions on creating a project in RStudio](https://swcarpentry.github.io/r-novice-gapminder/02-project-intro/#a-possible-solution).
 
 ### Step 3: Download the RokaiXplorer source code
-Next, you will need to download the source code of RokaiXplorer. For this purpose, you can run the following code in the RStudio console, which will download the source code from Github and place it under ``/RokaiXplorer`` folder in the currect working directory: 
+Next, you will need to download the source code of RokaiXplorer. For this purpose, open the RStudio project and run the following code in the console, which will download the source code from Github and place it under ``/RokaiXplorer`` folder in the currect working directory: 
 
 ```
 if(!require("devtools"))
