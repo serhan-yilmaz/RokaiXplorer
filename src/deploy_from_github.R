@@ -45,7 +45,7 @@ runRokaiXplorer <- function(){
   runApp(appDir = "RokaiXplorer")
 }
 
-deployRokaiXplorer <- function(shinyapps_title = NULL, shinyapps_account = NULL){
+deployRokaiXplorer <- function(shinyapps_title = NULL, shinyapps_account = NULL, forceUpdate = TRUE){
   Sys.setenv(LANG = "en")
   library(shiny)
   library(rsconnect)
@@ -69,7 +69,7 @@ deployRokaiXplorer <- function(shinyapps_title = NULL, shinyapps_account = NULL)
 	}
   }
 
-  deployApp(appDir = "RokaiXplorer", appTitle = shinyapps_title, account = shinyapps_account)
+  deployApp(appDir = "RokaiXplorer", appTitle = shinyapps_title, account = shinyapps_account, forceUpdate = forceUpdate)
 }
 
 clearRokaiXplorerOptions <- function(){
