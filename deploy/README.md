@@ -11,6 +11,7 @@ To see some examples on deployed applications, check out the following:
 - Install R: [Download Link](https://cran.r-project.org/). [Instructions on how to download and install R](https://rstudio-education.github.io/hopr/starting.html).
 - Install Rstudio: [Download Link](https://posit.co/download/rstudio-desktop/). [Instructions on installation](https://rstudio-education.github.io/hopr/starting.html#rstudio).
 - Install Rtools (required for Windows): [Download Link](https://cran.r-project.org/bin/windows/Rtools/). [Instructions on installation](https://cran.r-project.org/bin/windows/Rtools/).
+- 
 While installing Rtools, please make sure that its version matches with the downloaded R version. For example, if you download R version v4.2.2, install the Rtool version 4.2 (not the latest 4.3). 
 
 ### Step 2: Create a project in RStudio
