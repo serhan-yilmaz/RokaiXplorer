@@ -72,7 +72,7 @@ Next, to specify what to display on the about page, you will need to provide a m
 options(RokaiXplorer_description_filepath = "deploy/description.md")
 runRokaiXplorer()
 ```
-For more information on preparing a markdown file, you can check out the [Markdown cheatsheet](https://www.markdownguide.org/cheat-sheet/). 
+For more information on preparing a markdown file, check out the [Markdown cheatsheet](https://www.markdownguide.org/cheat-sheet/). 
 
 ### Step 8: Deploying the application to Shinyapps.io
 #### Creating a shinyapps.io account
