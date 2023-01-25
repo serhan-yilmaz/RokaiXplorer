@@ -115,7 +115,7 @@ installDependencies()
 - Set the deployment options for RokaiXplorer. Here is what they look like for the [Example application](https://yilmazs.shinyapps.io/ADXplorer/):
 ```
 options(RokaiXplorer_deployment_mode = TRUE)
-options(RokaiXplorer_data_filepath = "data/rokaiXplorer_sample_data.csv.csv")
+options(RokaiXplorer_data_filepath = "data/rokaiXplorer_sample_data.csv")
 options(RokaiXplorer_metadata_filepath = "data/rokaiXplorer_sample_metadata.csv")
 options(RokaiXplorer_reference_proteome = "Uniprot Mouse")
 options(RokaiXplorer_config_filepath = "deploy/config.json")
@@ -131,8 +131,8 @@ rsconnect::setAccountInfo(name="<ACCOUNT>", token=, "<TOKEN>", secret="<SECRET>"
 ```
 - Next, set up the final details and deploy your application. Here is what it look like for the sample application:
 ```
-  options(RokaiXplorer_shinyapps_account = "yilmazs")
+  options(RokaiXplorer_shinyapps_account = "serhan-yilmaz")
   options(RokaiXplorer_shinyapps_title = "ExampleApp")
   deployRokaiXplorer()
 ```
-This makes the application accessible via the link: [https://yilmazs.shinyapps.io/ExampleApp](https://yilmazs.shinyapps.io/ExampleApp/)
+This makes the application accessible via the link: [https://serhan-yilmaz.shinyapps.io/ExampleApp](https://serhan-yilmaz.shinyapps.io/ExampleApp/)
