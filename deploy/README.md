@@ -35,7 +35,7 @@ installDependencies()
 ```
 
 ### Step 5: Running RokaiXplorer under deployment mode
-If everything works up to this point and all libraries are installed properly, the following code should start the RokaiXplorer application with preloaded sample data, identical to the [Example Application](https://yilmazs.shinyapps.io/ADXplorer/). 
+If everything works up to this point and all libraries are installed properly, the following code should start the RokaiXplorer application with preloaded sample data, identical to the [Example Application](https://serhan-yilmaz.shinyapps.io/exampleapp/). 
 ```
 options(RokaiXplorer_deployment_mode = TRUE)
 runRokaiXplorer()
