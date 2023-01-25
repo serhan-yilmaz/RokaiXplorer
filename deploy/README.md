@@ -82,7 +82,7 @@ After setting up your account, visit the [Shinyapps Dashboard](https://www.shiny
 ```
 rsconnect::setAccountInfo(name="<ACCOUNT>", token=, "<TOKEN>", secret="<SECRET>")
 ```
-where the "<ACCOUNT>", "<TOKEN>", "<SECRET>" fields are filled according to your account details.
+where the ```"<ACCOUNT>"```, ```"<TOKEN>"```, ```"<SECRET>"``` fields are filled according to your account details.
   
 For more information on this step, you can read the [instructions on deploying to shinyapps.io](https://docs.posit.co/shinyapps.io/getting-started.html). 
 
@@ -92,7 +92,7 @@ Finally, to deploy your application, set up the following options based on your 
   options(RokaiXplorer_shinyapps_account = "<ACCOUNT>")
   options(RokaiXplorer_shinyapps_title = "<TITLE>")
 ```
-Here, "<ACCOUNT>" should be your shinyapps account name (same as in the above step). When created, the application will have the link:  ```<ACCOUNT>.shinyapps.io/<TITLE>```, so set the ```<TITLE>``` based on what you wish to display in the link. 
+Here, ```"<ACCOUNT>"``` should be your shinyapps account name (same as in the above step). When created, the application will have the link:  ```<ACCOUNT>.shinyapps.io/<TITLE>```, so set the ```"<TITLE>"``` based on what you wish to display in the link. 
   
 After setting all desired options, run: 
 ```
