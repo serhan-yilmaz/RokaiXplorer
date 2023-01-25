@@ -17,4 +17,5 @@ Next, you will need to download the source code of RokaiXplorer. For this purpos
 if(!require("devtools"))
   install.packages("devtools")
 devtools::source_url("https://github.com/serhan-yilmaz/RokaiXplorer/blob/main/src/deploy_from_github.R?raw=TRUE")
+downloadRokaiXplorer()
 ```
