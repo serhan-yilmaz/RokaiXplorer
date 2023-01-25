@@ -1,6 +1,7 @@
 ## Deploying RokaiXplorer with input data already preloaded
 
-Here are some examples:
+
+#### Example applications
 - An example application: [RokaiXplorer-ExampleApp](https://serhan-yilmaz.shinyapps.io/exampleapp/)
 - A live version on Alzheimer's data: [AD-Xplorer](https://yilmazs.shinyapps.io/ADXplorer/)
 
