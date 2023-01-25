@@ -20,7 +20,7 @@ devtools::source_url("https://github.com/serhan-yilmaz/RokaiXplorer/blob/main/sr
 downloadRokaiXplorer()
 ```
 
-### Step 4: Install the required libraries
+### Step 4: Install the required R libraries
 To install the required libraries to run and deploy RokaiXplorer, please run the following code: 
 ```
 if(!require("devtools"))
