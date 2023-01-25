@@ -1,8 +1,8 @@
 ## Deploying RokaiXplorer with input data already preloaded
 
-Starting from v0.5.0, you can now use [RokaiXplorer](http://explorer.rokai.io/) to share your datasets and analysis results online in the form of an interactive web application! This tutorial will teach you how prepare and deploy your application in a few easy steps using the pregenerated scripts on R. 
+Starting from v0.5.0, you can now use [RokaiXplorer](http://explorer.rokai.io/) to share your datasets and analysis results online in the form of an interactive web application! This tutorial will teach you how prepare and deploy your application in a few easy steps using the provided scripts on R. 
 
-To see some examples, view the following: 
+To see some examples on deployed applications, check out the following: 
 - A sample application: [RokaiXplorer-ExampleApp](https://serhan-yilmaz.shinyapps.io/exampleapp/)
 - A live version on Alzheimer's data: [AD-Xplorer](https://yilmazs.shinyapps.io/ADXplorer/)
 
