@@ -177,14 +177,6 @@ shinyUI(fluidPage(
                     "Interactive Network", 
                     network_ks_ui("site_kinase_network", defaultSingleKinases = T)
                   ),
-                  tabPanel("Enrichment", 
-                           tags$div(id = "site_enrichment_table_div", 
-                                    tags$div(style = "min-height:450px;",
-                                             shinycssloaders::withSpinner(DT::dataTableOutput("siteEnrichmentTable")),
-                                    ),
-                                    "Double click on a row to inspect it in detail.",
-                           )
-                  )
               )),
               tabPanel("Protein", tabsetPanel(id = "proteinTabset", 
                     tabPanel(
@@ -239,6 +231,14 @@ shinyUI(fluidPage(
                              )
                     )
               )),
+              tabPanel("Enrichment", 
+                       tags$div(id = "site_enrichment_table_div", 
+                                tags$div(style = "min-height:450px;",
+                                         shinycssloaders::withSpinner(DT::dataTableOutput("siteEnrichmentTable")),
+                                ),
+                                "Double click on a row to inspect it in detail.",
+                       )
+              ),
               tabPanel("Diagnostics", tabsetPanel(id = "diagnosticsTabset", 
                   tabPanel("Histogram",
                       shinycssloaders::withSpinner(plotOutput("histogram_sitecentering"))

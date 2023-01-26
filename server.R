@@ -70,11 +70,13 @@ if(DEPLOYMENT_MODE_ENABLED){
          stop("Invalid reference proteome.")) 
 }
 
+by_instance_logs_enabled = FALSE
+
 shinyServer(function(input, output, session) {
 
     observe_helpers(withMathJax = TRUE, help_dir = "helpfiles")
   
-    if(!DEPLOYMENT_MODE_ENABLED){
+    if(!DEPLOYMENT_MODE_ENABLED && by_instance_logs_enabled ){
       track_usage(storage_mode = store_json(path = "logs/by_instance/"))
     }
     
