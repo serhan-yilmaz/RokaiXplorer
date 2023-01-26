@@ -1,5 +1,10 @@
 ## Deploying RokaiXplorer with input data already preloaded
 
+Starting from v0.5.0, you can now use [RokaiXplorer](http://explorer.rokai.io/) to share your datasets and analysis results online in the form of an interactive web application! This tutorial will teach you how prepare and deploy your application in a few easy steps using the provided scripts on R. 
+
+To see some examples on deployed applications, check out the following: 
+- A sample application: [RokaiXplorer-ExampleApp](https://serhan-yilmaz.shinyapps.io/exampleapp/)
+- A live version on Alzheimer's data: [ADXplorer](https://yilmazs.shinyapps.io/ADXplorer/)
 
 ### Step 1: Install R, Rtools & RStudio
 
@@ -7,11 +12,21 @@
 - Install Rstudio: [Download Link](https://posit.co/download/rstudio-desktop/). [Instructions on installation](https://rstudio-education.github.io/hopr/starting.html#rstudio).
 - Install Rtools (required for Windows): [Download Link](https://cran.r-project.org/bin/windows/Rtools/). [Instructions on installation](https://cran.r-project.org/bin/windows/Rtools/).
 
+While installing Rtools, please make sure that its version matches with the downloaded R version. For example, if you download R version v4.2.2, install the Rtool version 4.2 (not the latest 4.3). You can use the following command to check if Rtools is installed properly:
+```
+if(!require("devtools"))
+  install.packages("devtools")
+if(!require("pkgbuild"))
+  devtools::install_github("r-lib/pkgbuild")
+pkgbuild::find_rtools()
+```
+This will return `TRUE` if Rtools is installed properly.
+
 ### Step 2: Create a project in RStudio
-Before getting started, create a project in RStudio with a desired name. For more information, check out [instructions on creating a project in RStudio](https://swcarpentry.github.io/r-novice-gapminder/02-project-intro/#a-possible-solution).
+For getting started, open RStudio and create a project in a new directory with a desired name. For more information, check out [instructions on creating a project in RStudio](https://swcarpentry.github.io/r-novice-gapminder/02-project-intro/#a-possible-solution).
 
 ### Step 3: Download the RokaiXplorer source code
-Next, you will need to download the source code of RokaiXplorer. For this purpose, you can run the following code in the RStudio console, which will download the source code from Github and place it under ``/RokaiXplorer`` folder in the currect working directory: 
+Next, you will need to download the source code of RokaiXplorer. For this purpose, open the RStudio project and run the following code in the console, which will download the source code from Github and place it under ``/RokaiXplorer`` folder in the currect working directory: 
 
 ```
 if(!require("devtools"))
@@ -30,8 +45,9 @@ installDependencies()
 ```
 
 ### Step 5: Running RokaiXplorer under deployment mode
-If everything works up to this point and all libraries are installed properly, the following code should start the RokaiXplorer application with preloaded sample data, identical to the [Example Application](https://yilmazs.shinyapps.io/ADXplorer/). 
+If everything works up to this point and all libraries are installed properly, the following code should start the RokaiXplorer application with preloaded sample data, identical to the [Example Application](https://serhan-yilmaz.shinyapps.io/exampleapp/). 
 ```
+devtools::source_url("https://github.com/serhan-yilmaz/RokaiXplorer/blob/main/src/deploy_from_github.R?raw=TRUE")
 options(RokaiXplorer_deployment_mode = TRUE)
 runRokaiXplorer()
 ```
@@ -67,11 +83,12 @@ runRokaiXplorer()
 ```
 This will change the title to be "NewTitle" and display some description under the title. Change these as you see fit according to your application. 
 
-
+Next, to specify what to display on the about page, you will need to provide a markdown file. For this purpose, the easiest way is to modify the provided markdown file under ```RokaiXplorer/deploy/description.md``` and write some descriptive text about your application and dataset. If you wish to display any images, make sure to place the image files under ```RokaiXplorer/www/``` folder (otherwise the images will not display properly when the application is deployed online). After setting up the description file, run the following command to view the changes:
 ```
 options(RokaiXplorer_description_filepath = "deploy/description.md")
 runRokaiXplorer()
 ```
+For more information on preparing a markdown file, check out the [Markdown cheatsheet](https://www.markdownguide.org/cheat-sheet/). Note that, you can open and edit the .md file in any text file editor.
 
 ### Step 8: Deploying the application to Shinyapps.io
 #### Creating a shinyapps.io account
@@ -80,7 +97,7 @@ To deploy your application to Shinyapps similar to the Example Application, firs
 #### Setting up the shinyapps account in RStudio
 After setting up your account, visit the [Shinyapps Dashboard](https://www.shinyapps.io/admin/#/dashboard) and log in. Here, you will need to obtain the security token to connect your account in RStudio. Under ```Account -> Tokens``` tabs, select the "Show Token" option which will display the necessary R code for this purpose. Click ```Copy to clipboard``` button to copy the code and run it in RStudio. The copied code should be in the following form: 
 ```
-rsconnect::setAccountInfo(name="<ACCOUNT>", token=, "<TOKEN>", secret="<SECRET>")
+rsconnect::setAccountInfo(name="<ACCOUNT>", token= "<TOKEN>", secret="<SECRET>")
 ```
 where the ```"<ACCOUNT>"```, ```"<TOKEN>"```, ```"<SECRET>"``` fields are filled according to your account details.
   
@@ -111,8 +128,8 @@ devtools::source_url("https://github.com/serhan-yilmaz/RokaiXplorer/blob/main/sr
 downloadRokaiXplorer()
 installDependencies()
 ```
-- Place your data/metadata under ```RokaiXplorer/data/``` your config file under ```RokaiXplorer/deploy/config.json``` folders (if you decide to use one). Modify the ```RokaiXplorer/deploy/description.md``` file to add a description of your application in the front page. Place any resources (e.g., images if used) under ```RokaiXplorer/www/``` folder.
-- Set the deployment options for RokaiXplorer. Here is what they look like for the [Example application](https://yilmazs.shinyapps.io/ADXplorer/):
+- Place your data/metadata under ```RokaiXplorer/data/``` your config file under ```RokaiXplorer/deploy/config.json``` folders (if you decide to use one). Modify the ```RokaiXplorer/deploy/description.md``` file to add a description of your application in the front page. Place any resources (e.g., images if used in the description) under ```RokaiXplorer/www/``` folder.
+- Set the deployment options for RokaiXplorer. Here is what they look like for the [Example application](https://serhan-yilmaz.shinyapps.io/ExampleApp/):
 ```
 options(RokaiXplorer_deployment_mode = TRUE)
 options(RokaiXplorer_data_filepath = "data/rokaiXplorer_sample_data.csv")
@@ -131,6 +148,7 @@ rsconnect::setAccountInfo(name="<ACCOUNT>", token=, "<TOKEN>", secret="<SECRET>"
 ```
 - Next, set up the final details and deploy your application. Here is what it look like for the sample application:
 ```
+  devtools::source_url("https://github.com/serhan-yilmaz/RokaiXplorer/blob/main/src/deploy_from_github.R?raw=TRUE")
   options(RokaiXplorer_shinyapps_account = "serhan-yilmaz")
   options(RokaiXplorer_shinyapps_title = "ExampleApp")
   deployRokaiXplorer()
