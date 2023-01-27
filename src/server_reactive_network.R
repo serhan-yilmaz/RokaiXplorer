@@ -1,7 +1,7 @@
 reactive_network <- reactive({
   req(initialized())
   switch (network_value(),
-          "uniprot.human" = fname <- "rokai_network_data_uniprotkb.rds",
+          "uniprot.human" = fname <- "rokai_network_data_uniprotkb_human.rds",
           "uniprot.mouse" = fname <- "rokai_network_data_uniprotkb_mouse.rds",
           validate(
             need(FALSE, "Invalid network state.")

@@ -3,6 +3,8 @@ fo_process_data_bysample <- function(ds, Tmeta, norm_by = c()){
   ST <- ds$ST
   caseSamples <- Tmeta$caseSamples
   
+  # browser()
+  
   Tcase <- as.matrix(log2(Ts[, caseSamples]))
   Tcontrol <- as.matrix(log2(Ts[, !caseSamples]))
   
@@ -18,7 +20,7 @@ fo_process_data_bysample <- function(ds, Tmeta, norm_by = c()){
   nGrouping = length(norm_by)
   if(nGrouping > 0){
     Tx <- as.data.frame(t(Tmeta$Tsample_metadata))
-    Tx.Identifier = rep("", nrow(Tx))
+    Tx$Identifier = rep("", nrow(Tx))
     for(iGrouping in 1:nGrouping){
       Tx$Identifier = paste(Tx$Identifier, Tx[[norm_by[iGrouping]]], sep = "_")
     }
@@ -29,9 +31,12 @@ fo_process_data_bysample <- function(ds, Tmeta, norm_by = c()){
       indices = Tx$Identifier == unique_groupings[iGrouping]
       caseGroupSamples = indices[caseSamples]
       controlGroupSamples = indices[!caseSamples]
-      if((nnzero(caseGroupSamples) > 0)  & (nnzero(controlGroupSamples) > 0)){
+      
+      nnz_control = nnzero(controlGroupSamples)
+      nnz_case = nnzero(caseGroupSamples)
+      if((nnz_case > 0) & (nnz_control > 0)){
         TcaseV = Tcase[, caseGroupSamples]
-        TcontrolV = Tcontrol[, controlGroupSamples]
+        TcontrolV = as.matrix(Tcontrol[, controlGroupSamples])
         McontrolV <- apply(TcontrolV, 1, function(x) mean(x, na.rm=T))
         Q[, caseGroupSamples] = Q[, caseGroupSamples] - McontrolV
       }

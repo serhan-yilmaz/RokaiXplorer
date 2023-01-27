@@ -128,11 +128,13 @@ go_enrichment_table <- reactive({
                 foChiSqr(nSigOut, expectedSigOut) + 
                 foChiSqr(nNotSigIn, expectedNotSigIn) + 
                 foChiSqr(nNotSigOut, expectedNotSigOut)
-  
+  valids = (expectedSigIn > 0) & (expectedSigOut > 0) & 
+          (expectedNotSigIn > 0) & (expectedNotSigOut > 0)
+  chi_squared[!valids] = NaN
   pvalues = pchisq(chi_squared, df=1, lower.tail=FALSE)
   qvalues <- p.adjust(pvalues, method = "BH")
   
-  # allchi2 <- suppressWarnings(apply(allnums,1, function(x) chisq.test(matrix(x,nr=2), correct = TRUE)$statistic))
+  # chi_squared <- suppressWarnings(apply(allnums,1, function(x) chisq.test(matrix(x,nr=2), correct = TRUE)$statistic))
   # allpvals <- suppressWarnings(apply(allnums,1, function(x) chisq.test(matrix(x,nr=2), correct = TRUE)$p.value))
   # allp_vals <- apply(allnums,1, function(x) fisher.test(matrix(x,nr=2))$p.value)
   # allfdr <- p.adjust(allp_vals, method = "BH")
@@ -165,6 +167,8 @@ go_enrichment_table <- reactive({
   GO$EffectiveMag = pmax(GO$MagnitudeAdj, 0)
   # elapsed <- (Sys.time() - startTime)
   # message(elapsed)
+  
+  # browser()
   
   return(GO)
 })

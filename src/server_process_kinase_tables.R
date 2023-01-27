@@ -49,7 +49,7 @@ kinase_table <- reactive({
   
   
   #input$rokaiEnabled
-  rokaiEnabled = FALSE
+  rokaiEnabled = TRUE
   if(rokaiEnabled){
     if(ropts$ppi){
       Wk2k = NetworkData$net$Wkin2kin * 1e-3
