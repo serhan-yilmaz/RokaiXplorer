@@ -8,6 +8,7 @@ processed_dataset <- reactive({
   Tmeta <- filtered_metadata()
   caseSamples <- Tmeta$caseSamples
   
+  # browser()
   Tcase <- as.matrix(log2(Ts[, caseSamples]))
   Tcontrol <- as.matrix(log2(Ts[, !caseSamples]))
   

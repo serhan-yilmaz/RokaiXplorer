@@ -3,7 +3,16 @@ current_dataset <- reactive({
   library(tidyverse)
   Tx <- reactive_dataset()
   Ts <- as.matrix(Tx %>% select(3:ncol(Tx)))
+  
+  ## Convert to Numeric - Capture warning
+  cnames = colnames(Ts)
+  numcols = ncol(Ts)
+  Ts <- matrix(as.numeric(Ts), ncol = numcols)
+  colnames(Ts) <- cnames
+  
   ST <- (Tx %>% select(1:2))
+  
+  # browser()
   
   #T$ID = paste(T$Protein, T$Position, sep="_")
   return (list("Ts" = Ts, "ST" = ST))
