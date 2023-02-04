@@ -65,7 +65,7 @@ options(RokaiXplorer_use_expression_data = FALSE)
 ```
 In the above code, please make sure to update ```<DATA>``` and ```<METADATA>``` with the names of your data files. 
 
-Additionally, if you would like to use an protein expression data, place the data file under the ```/RokaiXplorer/data/`` and run the following:
+Similarly, if you would like to use a protein expression data, place the data file under the ```/RokaiXplorer/data/``` and run the following:
 ```
 options(RokaiXplorer_use_expression_data = TRUE)
 options(RokaiXplorer_expression_data_file_path =  "data/<EXPRESSION_DATA>.csv")
