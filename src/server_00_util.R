@@ -25,3 +25,39 @@ downloadCSVFileHandler <- function(data_file, file_name){
     }
   )
 }
+
+formatNumber <- function(X, digits = 3){
+  inner <- paste0("%.", digits, "f");
+  out <- sprintf(inner, X);
+}
+
+formatNumericVariables <- function(GT, exclude = c("PValue", "FDR")){
+  cols <- colnames(GT)
+  nCol = ncol(GT)
+  
+  for(iCol in 1:nCol){
+    Q = GT[[iCol]]
+    cname <- cols[iCol]
+    if(is.numeric(Q) && is.na(match(cname, exclude))){
+      GT[[iCol]] <- formatNumber(Q);
+    }
+  }
+  # GT$LogOdds = formatNumber(GT$LogOdds);
+  # GT$StdErr = formatNumber(GT$StdErr);
+  # GT$EffectiveMag = formatNumber(GT$EffectiveMag);
+  return(GT)
+}
+
+ceil <- function(v, digits = 0, sigdigits = c()){
+  expo = floor(log10(abs(v)));
+  val = abs(v)
+  if(length(digits) > 0){
+    val = ceiling(val * 10^(digits))/10^(digits)
+  }
+  remainder = val / 10^expo
+  
+  if(length(sigdigits) > 0){
+    remainder = ceiling(remainder * 10^(sigdigits-1))/10^(sigdigits-1)
+  }
+  vx = return(sign(v) * remainder * 10^expo)
+}

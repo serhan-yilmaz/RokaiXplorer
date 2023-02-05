@@ -14,6 +14,16 @@ observeEvent(input$file1, {
   # main_logging(paste("Upload Data - ", upload_name(), "-", network_value(), sep = ""))
 })
 
+
+observeEvent(input$file1_expression, {
+  inFile <- input$file1_expression
+  if (is.null(inFile))
+    return(NULL)
+  upload_expression_dataset()
+  req(upload_expression_dataset())
+  network_value(refProteomeValue())
+})
+
 observeEvent(input$file2, {
   inFile <- input$file2
   if (is.null(inFile))
@@ -53,6 +63,35 @@ upload_dataset <- reactive({
   # validate(
   #     need(class(x$Quantification) == "numeric", "File format error: Quantification column must be numeric.")
   # )
+  return(x)
+})
+
+upload_expression_dataset <- reactive({
+  inFile <- input$file1_expression
+  if (is.null(inFile))
+    return(NULL)
+  fileInfo <- input$file1_expression
+  ext = file_ext(inFile$datapath)
+  switch(ext, 
+         "csv" = x <- read.csv(inFile$datapath),
+         validate(
+           need(FALSE, "Invalid file type.")
+         )
+  )
+  
+  if(isolate(input$mainTabset) == "About"){
+    updateTabsetPanel(session, "mainTabset", "Expression")
+  }
+  
+  myvalue("upload")
+  upload_expression_data_ready(TRUE)
+  message(cat("Expression Dataset is uploaded: ", fileInfo$name))
+  
+  validate(
+    need(x$Protein, "File format error: Protein column is missing."),
+    need(is.na(match("Position", colnames(x))), "File format error: Expression data should not contain a position column."),
+  )
+  main_logging(paste("Upload Expression Data - ", fileInfo$name, "-", network_value(), sep = ""))
   return(x)
 })
 

@@ -48,6 +48,8 @@ createSiteDataTable <- function(ST, maintable = T){
   
   ST = subset(ST, select = -c(Identifier, MagnitudeAdj))
   
+  ST <- formatNumericVariables(ST)
+  
   if(maintable == TRUE){
     stateSave = TRUE
     stateLoadParams = JS('function (settings, data) {return false;}')
@@ -84,6 +86,10 @@ createSiteDataTable <- function(ST, maintable = T){
     "Phos" = "Phosphorylation as log2 fold change", 
     "Position" = "Position of the phosphosite on the protein",
     "StdErr" = "Standard error for log2 fold change",
+    "StdErrT" = "Standard error to be used in t-test alongside the degrees of freedom",
+    "DF" = "Degrees of freedom",
+    "InflationFactor" = "Estimates the additional variance due to the measurement of standard deviations in t-test. Equal to the ratio of StdErr/StdErrT",
+    "TStat" = "T-statistic for the t-test",
     "ZScore" = "Standardized log fold changes",
     "PValue" = "P-value",
     "FDR" = "False discovery rate",
@@ -93,6 +99,17 @@ createSiteDataTable <- function(ST, maintable = T){
     "dummy" = ""
   )
   
+  not_visible_targets = match(c("DF", "InflationFactor", "StdErrT"), colnames(ST))
+  not_visible_targets = not_visible_targets[!is.na(not_visible_targets)]
+  not_visible_targets = not_visible_targets - 1
+  columnDefs = list(
+    list(targets = not_visible_targets, visible = FALSE), 
+    list(targets = '_all', visible = TRUE)
+  )
+  #   { targets: [0, 1], visible: true},
+  #   { targets: '_all', visible: false }
+  # ]
+  
   fn = 'phosphosite_table'
   tab <- DT::datatable(ST, rownames= FALSE, extensions = 'Buttons',
                        callback=JS(callback),
@@ -100,12 +117,109 @@ createSiteDataTable <- function(ST, maintable = T){
                        options = list(scrollX=TRUE, lengthMenu = c(5,10,15),
                                       stateSave = stateSave, 
                                       stateLoadParams = stateLoadParams,
+                                      columnDefs = columnDefs,
                                       columns = columns,
                                       initComplete = foAddTooltips(colnames(ST), tooltips),
                                       paging = TRUE, searching = TRUE, pageLength = pageLength, dom = dom, buttons = list(list(extend = 'csv', filename = fn), list(extend = 'excel', filename = fn), "colvis"))) %>% 
     formatSignif('PValue', 3) %>% formatSignif('FDR', 3)
   return(tab)
 } 
+
+createProtExpressionDataTable <- function(ST, maintable = T){
+  ST$Phos = round(ST$Phos, digits = 3)
+  ST$StdErr = round(ST$StdErr, digits = 3)
+  ST$ZScore = round(ST$ZScore, digits = 3)
+  ST$MagnitudeAdj = round(ST$MagnitudeAdj, digits = 3)
+  ST$EffectiveMag = pmax(ST$MagnitudeAdj, 0)
+  # ST$InRef = ifelse(ST$InRef, "True", "False")
+  
+  si <- order(abs(ST$ZScore), decreasing = TRUE)
+  ST <- ST[si,]
+  si <- order(abs(ST$EffectiveMag), decreasing = TRUE)
+  ST <- ST[si,]
+  
+  ST = subset(ST, select = -c(Identifier, MagnitudeAdj, Position))
+  colnames(ST)[which(names(ST) == "Protein")] <- "ID"
+  colnames(ST)[which(names(ST) == "ProteinName")] <- "Name"
+  colnames(ST)[which(names(ST) == "Phos")] <- "Log2FC"
+  
+  ST <- formatNumericVariables(ST)
+  
+  if(maintable == TRUE){
+    stateSave = TRUE
+    stateLoadParams = JS('function (settings, data) {return false;}')
+    columns = foRestoreStateIfAvailable("protExpressionTable")
+    pageLength = 10
+    dom = 'Bfrtip'
+    callback_id = 'site_kinase_network_doubleclick'
+  } else {
+    stateSave = FALSE
+    stateLoadParams = NULL
+    columns = NULL
+    pageLength = 8
+    dom = 'frtip'
+    callback_id = 'site_kinase_network_doubleclickb'
+  }
+  
+  callback <- gsub('###CALLBACK_ID###', callback_id, c(
+    "table.on('dblclick','tr', function() {",
+    " var data=table.row(this).data(); ",
+    " let text1;", 
+    " if(data[1] != null){ ", 
+    " text1 = data[1]", 
+    " } else {",
+    " text1 = data[0]", 
+    " }",
+    " Shiny.setInputValue('###CALLBACK_ID###', text1.concat('_Protein'), {priority: 'event'});",
+    "})"
+  ))
+  
+  tooltips <- list(
+    "ID" = "Uniprot ID of the protein", 
+    "Name" = "Name of the protein", 
+    "Protein" = "Uniprot ID of the protein", 
+    "ProteinName" = "Name of the protein", 
+    "Log2FC" = "Log2 fold change", 
+    "StdErr" = "Standard error for log2 fold change",
+    "StdErrT" = "Standard error to be used in t-test alongside the degrees of freedom",
+    "DF" = "Degrees of freedom",
+    "InflationFactor" = "Estimates the additional variance due to the measurement of standard deviations in t-test. Equal to the ratio of StdErr/StdErrT",
+    "TStat" = "T-statistic for the t-test",
+    "ZScore" = "Standardized log fold changes",
+    "PValue" = "P-value",
+    "FDR" = "False discovery rate",
+    "EffectiveMag" = "Reliable portion of the log2 fold changes beyond 3 standard errors",
+    "isSignificant" = "Is the expression significant", 
+    # "EffectiveMag" = "log2FC - 3*StdErr",
+    "dummy" = ""
+  )
+  
+  not_visible_targets = match(c("DF", "InflationFactor", "StdErrT"), colnames(ST))
+  not_visible_targets = not_visible_targets[!is.na(not_visible_targets)]
+  not_visible_targets = not_visible_targets - 1
+  columnDefs = list(
+    list(targets = not_visible_targets, visible = FALSE), 
+    list(targets = '_all', visible = TRUE)
+  )
+  #   { targets: [0, 1], visible: true},
+  #   { targets: '_all', visible: false }
+  # ]
+  
+  fn = 'phosphosite_table'
+  tab <- DT::datatable(ST, rownames= FALSE, extensions = 'Buttons',
+                       callback=JS(callback),
+                       selection = "single",
+                       options = list(scrollX=TRUE, lengthMenu = c(5,10,15),
+                                      stateSave = stateSave, 
+                                      stateLoadParams = stateLoadParams,
+                                      columnDefs = columnDefs,
+                                      columns = columns,
+                                      initComplete = foAddTooltips(colnames(ST), tooltips),
+                                      paging = TRUE, searching = TRUE, pageLength = pageLength, dom = dom, buttons = list(list(extend = 'csv', filename = fn), list(extend = 'excel', filename = fn), "colvis"))) %>% 
+    formatSignif('PValue', 3) %>% formatSignif('FDR', 3)
+  return(tab)
+} 
+
 
 output$siteTable <- DT::renderDataTable(server = FALSE, {
   req(site_table_processed())
@@ -114,6 +228,15 @@ output$siteTable <- DT::renderDataTable(server = FALSE, {
   
   return(tab)
 })
+
+output$protExpressionTable <- DT::renderDataTable(server = FALSE, {
+  req(protexpression_table_processed())
+  ST <- protexpression_table_processed();
+  tab <- createProtExpressionDataTable(ST, maintable = T)
+  
+  return(tab)
+})
+
 
 # output$siteTable_state <- renderPrint(str(input$siteTable_state))
 
@@ -200,8 +323,6 @@ output$kinaseTable <- DT::renderDataTable(server = FALSE, {
   si <- order(abs(KT$EffectiveMag), decreasing = TRUE)
   KT <- KT[si,]
   
-  
-  
   KT = subset(KT, select = -c(MagnitudeAdj, Protein))
   colnames(KT)[1] <- "UniprotID"
   colnames(KT)[2] <- "Name"
@@ -249,7 +370,7 @@ output$kinaseTable <- DT::renderDataTable(server = FALSE, {
                                # ),
                                initComplete = foAddTooltips(colnames(KT), tooltips),
                                columns = foRestoreStateIfAvailable("kinaseTable"),
-                               paging = TRUE, searching = TRUE, pageLength = 10, dom = 'Bfrtip', buttons = list(list(extend = 'csv', filename = fn), list(extend = 'excel', filename = fn), "colvis"))) %>% 
+                               paging = TRUE, searching = TRUE, pageLength = 8, dom = 'Bfrtip', buttons = list(list(extend = 'csv', filename = fn), list(extend = 'excel', filename = fn), "colvis"))) %>% 
     formatSignif('PValue', 3) %>% formatSignif('FDR', 3) 
 })
 

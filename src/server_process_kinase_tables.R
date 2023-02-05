@@ -29,6 +29,10 @@ kinase_table <- reactive({
   Sx = ds$Sx[validSites]
   ST = ds$ST[validSites, ]
   
+  validate(
+    need(nrow(ST) > 0, "There are no ptms identified in the selected subgroup. Please make sure there are no conflicts in the subgroup selection.")
+  )
+  
   networkDataIndices = ST$NetworkDataIndex
   
   NetworkData <- reactive_network()
@@ -41,7 +45,11 @@ kinase_table <- reactive({
   nSubs = (wk2s %*% rep(1, length(Xv)))
   
   #input$rokaiNetwork
-  switch("KinaseSubstrate", 
+  
+  network = "KS+PPI+SD+CoEv";
+  # network = "KinaseSubstrate"
+  # network = "KS+PPI"
+  switch(network, 
          "KinaseSubstrate" = ropts <- list("ppi" = F, "sd" = F, "coev" = F),
          "KS+PPI" = ropts <- list("ppi" = T, "sd" = F, "coev" = F),
          "KS+PPI+SD" = ropts <- list("ppi" = T, "sd" = T, "coev" = F),

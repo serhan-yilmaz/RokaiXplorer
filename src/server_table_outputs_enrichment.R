@@ -1,26 +1,4 @@
 
-formatNumber <- function(X, digits = 3){
-  inner <- paste0("%.", digits, "f");
-  out <- sprintf(inner, X);
-}
-
-formatNumericVariables <- function(GT, exclude = c("PValue", "FDR")){
-  cols <- colnames(GT)
-  nCol = ncol(GT)
-  
-  for(iCol in 1:nCol){
-    Q = GT[[iCol]]
-    cname <- cols[iCol]
-    if(is.numeric(Q) && is.na(match(cname, exclude))){
-      GT[[iCol]] <- formatNumber(Q);
-    }
-  }
-  # GT$LogOdds = formatNumber(GT$LogOdds);
-  # GT$StdErr = formatNumber(GT$StdErr);
-  # GT$EffectiveMag = formatNumber(GT$EffectiveMag);
-  return(GT)
-}
-
 output$siteEnrichmentTable <- DT::renderDataTable(server = FALSE, {
   req(go_enrichment_table_processed())
   GT <- go_enrichment_table_processed();
@@ -30,7 +8,8 @@ output$siteEnrichmentTable <- DT::renderDataTable(server = FALSE, {
   GT$ChiSqr = round(GT$ChiSqr, digits = 3)
   GT$MagnitudeAdj = round(GT$MagnitudeAdj, digits = 3)
   GT$EffectiveMag = pmax(GT$MagnitudeAdj, 0)
-  GT$Ratio <- paste0(GT$numSignificant, " / ", GT$numIdentified)
+  GT$SigRatio <- paste0(GT$numSignificant, " / ", GT$numIdentified)
+  GT$ObsRatio <- paste0(GT$numIdentified, " / ", GT$numProtein)
   
   # GT <- GT[!is.na(GT$ZScore),]
   # GT <- GT[!is.na(GT$LogOdds), ]
@@ -52,10 +31,11 @@ output$siteEnrichmentTable <- DT::renderDataTable(server = FALSE, {
   si <- order(GT$isSignificant, decreasing = TRUE)
   GT <- GT[si,]
   
-  GT = subset(GT, select = -c(MagnitudeAdj, numSignificant, numIdentified))
+  GT = subset(GT, select = -c(MagnitudeAdj, numSignificant, numIdentified, numProtein))
   colnames(GT)[3] <- "Category"
   
-  GT <- GT %>% relocate(Ratio, .after = Category)
+  GT <- GT %>% relocate(SigRatio, .after = Category)
+  GT <- GT %>% relocate(ObsRatio, .after = SigRatio)
   
   GT <- formatNumericVariables(GT)
   # browser()
@@ -69,7 +49,8 @@ output$siteEnrichmentTable <- DT::renderDataTable(server = FALSE, {
     "ID" = "ID of the GO term", 
     "Name" = "Name of the GO term", 
     "Category" = "Category of the GO term", 
-    "Ratio" = "Number of significant / Number of identified proteins in the gene set", 
+    "SigRatio" = "Number of significant / Number of identified proteins in the gene set", 
+    "ObsRatio" = "Number of identified / Number of total proteins in the gene set", 
     "LogOdds" = "Log2 of odds ratio", 
     "LogRiskRatio" = "Log2 of risk ratio obtained by Bayesian estimation", 
     "StdErr" = "Standard error for the log risk ratio",
@@ -107,7 +88,7 @@ output$siteEnrichmentTable <- DT::renderDataTable(server = FALSE, {
                                stateSave = TRUE,
                                stateLoadParams = JS('function (settings, data) {return false;}'),
                                columnDefs = list(
-                                 list(targets = 1, title = "Name", width = '140px')
+                                 list(targets = 1, title = "Name", width = '150px')
                                  # list(targets = 1, title = "Name")
                                ),
                                # initComplete = js_adjust_after_initialize, 

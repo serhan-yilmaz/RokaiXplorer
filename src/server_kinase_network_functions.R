@@ -128,9 +128,11 @@ foKinaseNetworkDraw <- function(K, KT, Wk2s, Wk2os, minzscore, topk, keepsinglek
                       arrows = c("", ""),
                       shadow = c(F, F))
   
+  # visNetwork(nodes, edges, width = "100%",
+  #            main = paste("Kinases connected to the identified", items_txt),
+  #            footer = list(text = footer_txt, style = "font-size:13px;")) %>%
   visNetwork(nodes, edges, width = "100%",
-             main = paste("Kinases connected to the identified", items_txt),
-             footer = list(text = footer_txt, style = "font-size:13px;")) %>%
+             main = paste("Kinases connected to the identified", items_txt)) %>%
     visEdges(shadow = FALSE,
              arrows =list(to = list(enabled = TRUE, scaleFactor = 0.5)),
              color = list(color = "black", highlight = "red")) %>%

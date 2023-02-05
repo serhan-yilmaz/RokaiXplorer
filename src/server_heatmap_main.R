@@ -2,7 +2,7 @@ heatmapMain <- function(ST, STx, ds, minzscore, topk, show_significant_only, int
   show_intensity = intensity_fc_style == "Both case and control"
   
   #Z = ds$Xv/ds$Sx
-  Z = ds$Xv
+  Z = as.matrix(ds$Xv)
   Ts <- ds$Ts
   Tmeta <- ds$Tmeta
   
@@ -12,7 +12,8 @@ heatmapMain <- function(ST, STx, ds, minzscore, topk, show_significant_only, int
   validate(
     need(nnzero(valids) > 1, error_no_items_txt)
   )
-  Z <- Z[valids, ]
+  # browser()
+  Z <- as.matrix(Z[valids, ])
   ST <- ST[valids, ]
   Ts <- Ts[valids, ]
   indices <- indices[valids]
@@ -87,9 +88,11 @@ heatmapMain <- function(ST, STx, ds, minzscore, topk, show_significant_only, int
   }
   indices = match(data_melt$X2, colnames(Tmeta$Tsample_metadata))
   nGrouping = length(groupings)
-  for(iGroup in range(1, nGrouping)){
-    grp_txt = paste("Grouping", iGroup, sep = "")
-    data_melt[[grp_txt]] = t(Tmeta$Tsample_metadata[groupings[iGroup], indices])
+  if(nGrouping > 0){
+    for(iGroup in range(1, nGrouping)){
+      grp_txt = paste("Grouping", iGroup, sep = "")
+      data_melt[[grp_txt]] = t(Tmeta$Tsample_metadata[groupings[iGroup], indices])
+    }
   }
   
   

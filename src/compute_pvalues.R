@@ -1,9 +1,17 @@
-compute_pvalues <- function(zscores) {
+compute_pvalues <- function(zscores, DF = c()) {
   valids = !is.na(zscores);
   
   Z = zscores[valids]
+  DF = DF[valids]
   
-  ncdf = pnorm(q=Z, lower.tail=FALSE)
+  if(is.empty(DF)){ 
+    ## Use Normal distribution
+    ncdf = pnorm(q=Z, lower.tail=FALSE)
+  } else {
+    ## Use T distribution
+    ncdf = pt(q=Z, DF, lower.tail=FALSE)
+  }
+  
   pvals = 2 * pmin(ncdf, 1 - ncdf)
   qvals = p.adjust(pvals, method = "BH")
   

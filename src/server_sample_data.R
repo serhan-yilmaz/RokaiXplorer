@@ -8,6 +8,7 @@ observeEvent(input$buttonSampleData, {
   reset('file1')
   reset('file2')
   upload_data_ready(FALSE)
+  upload_expression_data_ready(FALSE)
   upload_metadata_ready(FALSE)
   main_logging("Sample Data")
 

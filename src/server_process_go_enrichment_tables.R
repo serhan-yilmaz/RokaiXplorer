@@ -34,8 +34,10 @@ go_enrichment_table <- reactive({
   NetworkData <- reactive_network()
   proteinIsSignificant = out$proteinIsSignificant[out$proteinIsIdentified]
   validGoterms <- colSums(NetworkData$Wuniprotgene2goterm) > 0
-  Wuniprotgene2goterm = NetworkData$Wuniprotgene2goterm[out$proteinIsIdentified, validGoterms]
+  Wuniprotgene2goterm_all = NetworkData$Wuniprotgene2goterm[, validGoterms]
+  Wuniprotgene2goterm = Wuniprotgene2goterm_all[out$proteinIsIdentified, ]
   Wuniprotgene2goterm_significant = proteinIsSignificant %*% Wuniprotgene2goterm
+  numProteinAll = colSums(Wuniprotgene2goterm_all)
   numIdentified = colSums(Wuniprotgene2goterm)
   numSignificant = colSums(Wuniprotgene2goterm_significant)
   # browser()
@@ -143,6 +145,7 @@ go_enrichment_table <- reactive({
   # res2 = compute_pvalues(as.matrix(Z2)) ## Odds Ratio Test
   
   GO = NetworkData$GO[validGoterms, c("ID", "Name", "Namespace")]
+  GO$numProtein = numProteinAll
   GO$numIdentified = numIdentified
   GO$numSignificant = numSignificant
   # GO$LogOdds = as.matrix(log_odds)

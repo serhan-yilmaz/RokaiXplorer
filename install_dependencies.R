@@ -117,11 +117,13 @@ install_dependencies <- function(verbose = F){
   	"xml2",
   	"xtable",
   	"yaml",
-  	"zoo"
+  	"zoo",
+	"statmod"
   )
   
   bioconductor_packages <- c(
-  	"preprocessCore"
+  	"preprocessCore",
+	"limma"
   )
   
   # Packages only available from a GitHub repository - not on CRAN
@@ -155,7 +157,7 @@ install_dependencies <- function(verbose = F){
   install_cran <- installer(install.packages, repos="http://cran.fhcrc.org",
                             clean=TRUE, dependencies=TRUE,
                             INSTALL_opts=install_opts)
-  install_bioconductor <- installer(BiocManager::install)
+  install_bioconductor <- installer(BiocManager::install, update = FALSE, ask = FALSE)
   
   
   ## Actually do the installation

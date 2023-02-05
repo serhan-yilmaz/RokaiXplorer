@@ -36,8 +36,34 @@ modal_protein_samplewise_barplot <- reactive({
                      showSampleNames = showSampleNames)
 })
 
+
+## Protein expression samplewise barplot
+modal_protexpression_samplewise_barplot <- reactive({
+  req(modal_box_selection_mapped())
+  validate(need(input$mbox_site_plot_samples_case_control, ""))
+  mds <- modal_box_selection_mapped()
+  validate(need(mds$isProtein, ""))
+  req(processed_expression_data_bysample_unfiltered())
+  
+  ds <- processed_expression_data_bysample_unfiltered()
+  
+  # browser()
+  
+  ds$ST$Identifier = ds$ST$ProteinName
+  
+  groupings = input$mbox_site_plot_select_group
+  case_control_option = input$mbox_site_plot_samples_case_control
+  showSampleNames = input$mbox_site_plot_show_samples
+  barplot_samplewise(ds, ds$ST, mds, groupings, "Protein", case_control_option, 
+                     showSampleNames = showSampleNames)
+})
+
 output$modal_protein_samplewise_barplot <- renderPlot({
-  modal_protein_samplewise_barplot()
+  if(is_protein_modalbox_plot_showing_expression()){
+    modal_protexpression_samplewise_barplot()
+  } else {
+    modal_protein_samplewise_barplot()
+  }
 })
 
 ## Kinase samplewise barplot
@@ -63,7 +89,7 @@ output$modal_kinase_samplewise_barplot <- renderPlot({
 ## Goterm samplewise barplot
 modal_goenrichment_samplewise_barplot <- reactive({
   req(modal_box_selection_mapped())
-  validate(need(input$mbox_site_plot_show_samples, ""))
+  # validate(need(input$mbox_site_plot_show_samples, ""))
   mds <- modal_box_selection_mapped()
   validate(need(mds$isGOTerm, ""))
   req(processed_go_enrichment_bysample_unfiltered())

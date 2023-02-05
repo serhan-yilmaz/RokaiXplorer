@@ -120,6 +120,9 @@ barplot_samplewise <- function(ds, ST, mds, groupings, item_txt, case_control_op
     if(item_txt == "Kinase"){
       yaxisText = "Activity"
     }
+    if(item_txt == "GOTerm"){
+      yaxisText = "Enrichment (log2-RR)"
+    }
   }
   
   indices = match(Ks$ID, colnames(Tmeta$Tsample_metadata))

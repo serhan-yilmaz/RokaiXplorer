@@ -6,7 +6,11 @@ if(DEPLOYMENT_MODE_ENABLED){
   aboutTabContent <- withMathJax(includeMarkdown(config_about_page_path))
   aboutTabExtraContent <- tags$div(
     tags$hr(style = "margin-bottom:8px; margin-top:14px;"),
-    tags$p(style = "font-size:15px;", "* This application is made using RokaiXplorer to perform interactive analysis of phospho-proteomic data. You can use this tool to identify significant changes in phosphorylation and protein expression, to infer kinase activities and to perform pathway enrichment. For more information, please visit the FAQ page.")
+    tags$p(style = "font-size:15px;", 
+           "* This application is made using",
+           " RokaiXplorer",
+           # tags$a("RokaiXplorer", href="http://explorer.rokai.io"),
+           "to perform interactive analysis of phospho-proteomic data. You can use this tool to identify significant changes in phosphorylation and protein expression, to infer kinase activities and to perform pathway enrichment. For more information, please visit the FAQ page.")
   )
 } else {
   aboutTabExtraContent = ""

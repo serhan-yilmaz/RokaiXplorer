@@ -143,7 +143,13 @@ RokaiXplorer_banner <- tags$div(
   tags$div(
     class = "panel-body",
     style = "padding-bottom:10px; padding-top:10px; margin:0px;",
-    sprintf("This application is made using RokaiXplorer %s. To access it and read instructions on how to deploy RokaiXplorer on other data, please visit: ", version_text()),
-    tags$a("http://explorer.rokai.io", href="http://explorer.rokai.io"),
+    "This application is made using ",
+    tags$a(sprintf("RokaiXplorer %s.", version_text()), href="http://explorer.rokai.io"),
+    "For instructions on how to deploy RokaiXplorer on other data, please check out",
+    tags$a("the Github page.", href="https://github.com/serhan-yilmaz/RokaiXplorer/tree/main/deploy"),
+    # tags$a(sprintf("RokaiXplorer"), href="http://explorer.rokai.io"), 
+    # sprintf("%s.", version_text()), 
+    # sprintf("This application is made using RokaiXplorer %s. For instructions on how to deploy RokaiXplorer on other data, please check out ", version_text()),
+    # tags$a("http://explorer.rokai.io", href="http://explorer.rokai.io"),
   )
 )

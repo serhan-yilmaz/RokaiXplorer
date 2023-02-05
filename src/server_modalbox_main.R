@@ -192,6 +192,7 @@ cache_locked = reactiveVal(FALSE)
 
 cache$cached_mbox_main_select_group = reactiveVal("")
 cache$cached_mbox_main_casecontrol = reactiveVal("")
+cache$cached_mbox_main_datasource = reactiveVal("")
 cache$cached_mbox_main_normgroup = reactiveVal(TRUE)
 cache$cached_mbox_main_showsamples = reactiveVal(TRUE)
 
@@ -233,6 +234,30 @@ modal_box_site_plot_controls_reactive <- reactive({
   #   }
   # }
 
+  selection <- modal_box_selection()
+  
+  if(selection$isProtein){
+    datasource_opts = c("Protein Expression", "Phosphorylation")
+    selected_datasource = fo_restore_if_applicable(datasource_opts, isolate(cache$cached_mbox_main_datasource()))
+    data_source_div <- 
+      multiChoicePicker("mbox_site_plot_datasource", "Data Source:", datasource_opts, 
+                      selected = selected_datasource,
+                      isInline = "F", width = 175, 
+                      style_picker = "display:inline-flex; margin-top:4px;", 
+                      picker_inline = F)
+  } else {
+    data_source_div <- ""
+  }
+  
+  if(!selection$isGOTerm){
+    casecontrol_div <- multiChoicePicker("mbox_site_plot_samples_case_control", "Show:", casecontrol_opts, 
+                      selected = selected_casecontrol,
+                      isInline = "F", width = 175, 
+                      style_picker = "display:inline-flex; margin-top:4px;", 
+                      picker_inline = F)
+  } else {
+    casecontrol_div <- tags$div()
+  }
   
   tags$div(
     fluidRow(
@@ -252,11 +277,8 @@ modal_box_site_plot_controls_reactive <- reactive({
     ),
     column(width = 4,
            tags$div(style = "width: 180px; margin: 4px;", 
-    multiChoicePicker("mbox_site_plot_samples_case_control", "Show:", casecontrol_opts, 
-                      selected = selected_casecontrol,
-                      isInline = "F", width = 175, 
-                      style_picker = "display:inline-flex; margin-top:4px;", 
-                      picker_inline = F), 
+                    data_source_div, 
+                    casecontrol_div, 
     tags$div(
       style = "margin-top: 8px;", 
       tags$b("Sample names:"), 
@@ -327,6 +349,17 @@ output$modal_goterm_parents_chart <- renderUI({
   )
 })
 
+is_protein_modalbox_plot_showing_expression <- reactive({
+  val <- input$mbox_site_plot_datasource
+  if(is.null(val)){
+    return(TRUE)
+  }
+  if(identical(val, "Protein Expression")){
+    return(TRUE)
+  }
+  return(FALSE)
+})
+
 output$modal_box_plot_showing_text <- renderUI({
   validate(
     need(modal_box_selection(), "")
@@ -337,7 +370,11 @@ output$modal_box_plot_showing_text <- renderUI({
     showing_text = "inferred kinase activities"
   }
   if(ds$isProtein){
-    showing_text = "mean phosphorylation"
+    if(is_protein_modalbox_plot_showing_expression()){
+      showing_text = "protein expression"
+    } else {
+      showing_text = "mean phosphorylation"
+    }
   }
   if(ds$isSite){
     showing_text = "phosphorylation"
@@ -354,7 +391,7 @@ output$abcd_ui <- renderUI({
     need(modal_box_selection(), "")
   )
   ds <- modal_box_selection()
-  plot_height = "370px";
+  plot_height = "365px";
   
   mainDiv <- tags$div(
     shinycssloaders::withSpinner(DT::dataTableOutput("proteinTable_test"))
@@ -404,6 +441,7 @@ output$abcd_ui <- renderUI({
     )
   }
   if(ds$isProtein){
+    # selected = fo_restore_if_applicable(c("Overview", "Phosphosites", "GO Terms"), isolate(cache$cached_mbox_protein_tab()))
     mainDiv <- tags$div(
       style = "min-height:200px;", 
       tabsetPanel(id = "modal_box_protein_tab", 
@@ -420,7 +458,7 @@ output$abcd_ui <- renderUI({
                   tabPanel("GO Terms", 
                            shinycssloaders::withSpinner(DT::dataTableOutput("modal_protein_goterms_table"))
                   ), 
-                  selected = fo_restore_if_applicable(c("Overview", "Phosphosites"), isolate(cache$cached_mbox_protein_tab()))
+                  selected = "Overview"
       )
     )
   }

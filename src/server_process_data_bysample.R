@@ -1,6 +1,13 @@
-fo_process_data_bysample <- function(ds, Tmeta, norm_by = c()){
+fo_process_data_bysample <- function(ds, Tmeta, norm_by = c(), type = "phosphorylation"){
   Ts <- ds$Ts
   ST <- ds$ST
+  valid_rows = ST$Type == type
+  Ts = Ts[valid_rows, ]
+  ST = ST[valid_rows, ]
+  validate(
+    need(nnzero(valid_rows) > 0, paste0(tools::toTitleCase(type), " data is not available"))
+  )
+  
   caseSamples <- Tmeta$caseSamples
   
   # browser()
@@ -87,3 +94,32 @@ processed_data_bysample_unfiltered <- reactive({
   
   fo_process_data_bysample(ds, Tmeta, norm_by)
 })
+
+processed_expression_data_bysample <- reactive({
+  req(filtered_dataset())
+  req(filtered_metadata())
+  ds <- filtered_dataset()
+  Tmeta <- filtered_metadata()
+  fo_process_data_bysample(ds, Tmeta, type = "expression")
+})
+
+processed_expression_data_bysample_unfiltered <- reactive({
+  req(current_dataset_mapped())
+  req(current_metadata())
+  ds <- current_dataset_mapped()
+  Tmeta <- current_metadata()
+  
+  if(cache$cached_mbox_main_normgroup() == T){
+    norm_by = input$mbox_site_plot_select_group
+    if(is.null(norm_by)){norm_by = c()}
+  } else {
+    norm_by = c()
+  }
+  # is_expression_data_available
+  #norm_by = c("Gender", "Timepoint")
+  
+  fo_process_data_bysample(ds, Tmeta, norm_by, type = "expression")
+})
+
+
+

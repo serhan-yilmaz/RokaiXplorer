@@ -12,6 +12,8 @@ deploymentOptionSpecs <- list(
   "deployment_mode" = list(global = "RokaiXplorer_deployment_mode", required = FALSE, default = FALSE),
   "data_file_path" = list(global = "RokaiXplorer_data_filepath", required = FALSE, default = "data/rokaiXplorer_sample_data.csv"),
   "metadata_file_path" = list(global = "RokaiXplorer_metadata_filepath", required = FALSE, default = "data/rokaiXplorer_sample_metadata.csv"),
+  "expression_data_file_path" = list(global = "RokaiXplorer_expression_data_filepath", required = FALSE, default = NULL),
+  "use_expression_data" = list(global = "RokaiXplorer_use_expression_data", required = FALSE, default = FALSE),
   "config_file_path" = list(global = "RokaiXplorer_config_file_path", required = FALSE, default = "deploy/config.json"),
   "reference_proteome" = list(global = "RokaiXplorer_reference_proteome", required = FALSE, default = "Uniprot Mouse"),
   "application_title" = list(global = "RokaiXplorer_application_title", required = FALSE, default = "ExampleApp"),

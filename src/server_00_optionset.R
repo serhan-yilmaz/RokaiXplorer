@@ -41,6 +41,18 @@ option_set = list(
   "protein_kinase_network_minzscore" = list(type = "sliderInput"),
   "protein_kinase_network_significant_only" = list(type = "materialSwitch"),
   "protein_kinase_network_single_kinases" = list(type = "materialSwitch"),
+  "protexpression_volcano_maxfdr" = list(type = "sliderInput"),
+  "protexpression_volcano_minlogfc" = list(type = "sliderInput"),
+  "protexpression_barplot_maxitems" = list(type = "sliderInput"),
+  "protexpression_barplot_minzscore" = list(type = "sliderInput"),
+  "protexpression_barplot_significant_only" = list(type = "materialSwitch"),
+  "protexpression_barplot_yaxis" = list(type = "pickerInput"),
+  "protexpression_barplot_coloring" = list(type = "pickerInput"),
+  "protexpression_heatmap_maxitems" = list(type = "sliderInput"),
+  "protexpression_heatmap_minzscore" = list(type = "sliderInput"),
+  "protexpression_heatmap_significant_only" = list(type = "materialSwitch"),
+  "protexpression_heatmap_intensity_fc_style" = list(type = "pickerInput"),
+  "protexpression_heatmap_select_group" = list(type = "pickerInput"),
   "kinaselevel_volcano_maxfdr" = list(type = "sliderInput"),
   "kinaselevel_volcano_minlogfc" = list(type = "sliderInput"),
   "kinase_barplot_maxitems" = list(type = "sliderInput"),
@@ -62,6 +74,8 @@ option_set = list(
 null_accepted_list_inputs <- list(
   "site_heatmap_select_group" = list(cache = "cached_site_heatmap_select_group", default = ""),
   "protein_heatmap_select_group" = list(cache = "cached_protein_heatmap_select_group", default = ""),
+  "kinase_heatmap_select_group" = list(cache = "cached_kinase_heatmap_select_group", default = ""),
+  "protexpression_heatmap_select_group" = list(cache = "cached_protexpression_heatmap_select_group", default = ""),
   "subgroup_select1" = list(cache = "cached_subgroup_select1", default = "1"),
   "subgroup_select2" = list(cache = "cached_subgroup_select2", default = "1"),
   "subgroup_select3" = list(cache = "cached_subgroup_select3", default = "1"),
@@ -73,6 +87,7 @@ null_accepted_list_inputs <- list(
   "select_subgroup_B" = list(cache = "cached_select_subgroup_B", default = ""),
   "modal_box_protein_tab" = list(cache = "cached_mbox_protein_tab", default = TRUE),
   "mbox_site_plot_show_samples" = list(cache = "cached_mbox_main_showsamples", default = TRUE),
+  "mbox_site_plot_datasource" = list(cache = "cached_mbox_main_datasource", default = TRUE),
   "dummy" = list()
 )
 

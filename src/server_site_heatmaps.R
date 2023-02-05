@@ -43,7 +43,7 @@ output$site_heatmap <- renderPlot({
 })
 
 output$site_heatmap_downloadPlotPNG <- downloadPlotDLHandler(
-  siteHeatmap(), file_name = "phosphosite-heatmap", file_type = "png")
+  siteHeatmap, file_name = "phosphosite-heatmap", file_type = "png")
 
 output$site_heatmap_downloadPlotPDF <- downloadPlotDLHandler(
-  siteHeatmap(), file_name = "phosphosite-heatmap", file_type = "pdf")
+  siteHeatmap, file_name = "phosphosite-heatmap", file_type = "pdf")

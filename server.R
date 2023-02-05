@@ -2,6 +2,7 @@
 source("install_dependencies.R", local = TRUE)
 install_dependencies()
 
+# timestart = Sys.time()
 library(stringr)
 library(tools)
 library(Matrix)
@@ -21,7 +22,13 @@ library(withr)
 library(htmlwidgets)
 library(rjson)
 library(clipr)
+library(clipr)
+library(limma, include.only = 'squeezeVar')
+library(statmod)
 library(plotly)
+
+# timeend = Sys.time() - timestart
+# message(timeend)
 
 # if (!require("BiocManager", quietly = TRUE))
 #     install.packages("BiocManager")
@@ -34,6 +41,8 @@ library(plotly)
 ##
 #webshot::install_phantomjs()
 
+options(shiny.sanitize.errors = FALSE)
+
 library(ids)
 
 #library(plotly)
@@ -43,11 +52,14 @@ source("current_version.R")
 source("src/common_util.R")
 source("src/ui_util.R")
 source("src/compute_pvalues.R")
+source("src/t2zstatistic.R")
 source("src/rokai_kinase_weights.R")
 source("src/rokai_inference.R")
 source("src/rokai_core.R")
 source("src/rokai_circuit.R")
 source("src/rokai_weights.R")
+
+options(shiny.sanitize.errors = FALSE)
 
 deployment_options <- readDeploymentOptions()
 DEPLOYMENT_MODE_ENABLED = deployment_options$deployment_mode
@@ -56,11 +68,19 @@ DEPLOYMENT_MODE_ENABLED = deployment_options$deployment_mode
 folder = "data/"
 Tsample <- read.csv(paste(folder, "rokaiXplorer_sample_data.csv", sep=""))
 Tsample_snippet <- read.csv(paste(folder, "rokaiXplorer_sample_data_snippet.csv", sep=""))
+Tsample_expression_snippet <- read.csv(paste(folder, "rokaiXplorer_sample_expression_data_snippet.csv", sep=""))
 Tsample_metadata <- read.csv(paste(folder, "rokaiXplorer_sample_metadata.csv", sep=""))
+Tsample_expression <- read.csv(paste(folder, "rokaiXplorer_sample_expression_data.csv", sep=""))
 
 if(DEPLOYMENT_MODE_ENABLED){
   Tdeployment_data <- read.csv(deployment_options$data_file_path)
   Tdeployment_metadata <- read.csv(deployment_options$metadata_file_path)
+  if(deployment_options$use_expression_data){
+    Tdeployment_expression_data <- read.csv(deployment_options$expression_data_file_path)
+  } else {
+    Tdeployment_expression_data <- NULL
+  }
+  
   config_file <- list(
     datapath = deployment_options$config_file_path
   )
@@ -76,7 +96,7 @@ shinyServer(function(input, output, session) {
 
     observe_helpers(withMathJax = TRUE, help_dir = "helpfiles")
   
-    if(!DEPLOYMENT_MODE_ENABLED && by_instance_logs_enabled ){
+    if(!DEPLOYMENT_MODE_ENABLED && by_instance_logs_enabled){
       track_usage(storage_mode = store_json(path = "logs/by_instance/"))
     }
     
@@ -89,10 +109,10 @@ shinyServer(function(input, output, session) {
     myvalue <- reactiveVal("")
     initialized <- reactiveVal(TRUE)
     upload_data_ready <- reactiveVal(FALSE)
+    upload_expression_data_ready <- reactiveVal(FALSE)
     upload_metadata_ready <- reactiveVal(FALSE)
     metadata_ready <- reactiveVal(FALSE)
     analyze_group_differences <- reactiveVal(FALSE)
-    
     
     if(DEPLOYMENT_MODE_ENABLED){
       myvalue("deploymentdata")
@@ -198,6 +218,7 @@ shinyServer(function(input, output, session) {
     
     source(file = "src/server_site_heatmaps.R", local=TRUE)
     source(file = "src/server_protein_heatmaps.R", local=TRUE)
+    source(file = "src/server_protexpression_heatmaps.R", local=TRUE)
     source(file = "src/server_kinase_heatmaps.R", local=TRUE)
     
     source(file = "src/server_modalbox_main.R", local=TRUE)
@@ -208,13 +229,17 @@ shinyServer(function(input, output, session) {
     
     output$buttonDownloadSampleData <- downloadCSVFileHandler(
       Tsample_snippet, 'sample_data_snippet.csv');
+    output$buttonDownloadSampleExpressionData <- downloadCSVFileHandler(
+      Tsample_expression_snippet, 'sample_expression_data_snippet.csv');
     output$buttonDownloadSampleMetaData <- downloadCSVFileHandler(
       Tsample_metadata, 'sample_metadata.csv');
     output$buttonDownloadDeploymentData <- downloadCSVFileHandler(
       reactive_dataset, 'data.csv');
+    output$buttonDownloadDeploymentExpressionData <- downloadCSVFileHandler(
+      reactive_expression_dataset, 'expression_data.csv');
     output$buttonDownloadDeploymentMetadata <- downloadCSVFileHandler(
       reactive_metadata, 'metadata.csv');
-
+    
     
     
 })

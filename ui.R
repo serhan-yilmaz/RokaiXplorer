@@ -38,7 +38,7 @@ filter_by_collapsed = T
 if(DEPLOYMENT_MODE_ENABLED){
   application_title = deployment_options$application_title
   if(deployment_options$allow_data_download){
-    dataInputDiv <- deploymentDataDownloadDiv
+    dataInputDiv <- deploymentDataDownloadDiv(deployment_options$use_expression_data)
   } else {
     dataInputDiv <- ""
   }
@@ -73,12 +73,65 @@ shinyUI(fluidPage(
     tags$head(
         tags$link(rel="shortcut icon", href="favicon.png"),
         tags$meta(name="description", content=application_title),
-        tags$link(rel = "stylesheet", type = "text/css", href = "style.css"),
+        # tags$link(rel = "stylesheet", type = "text/css", href = "style.css"),
         tags$script(on_ready),
         script_on_start_hide_contact,
         # tags$script(on_start_collapse)
     ),
     
+    tags$head(
+      includeCSS("www/style.css")
+    ),
+    
+    tags$head(tags$style(type="text/css", "
+             #loadmessage {
+               position: fixed;
+               bottom: 0px;
+               left: 0px;
+               width: 100%;
+               padding: 5px 0px 5px 0px;
+               text-align: center;
+               font-weight: bold;
+               font-size: 100%;
+               color: #666;
+               background-color: #CCFFAABB;
+               # background-color: #DDFFCCBB;
+               z-index: 105;
+               # border: 0.03rem solid #778866BB;
+             }
+          ")),
+#'     tags$head(tags$style(type="text/css", "
+#' .loader {
+#'       width: 48px;
+#'       height: 48px;
+#'       border-radius: 50%;
+#'       position: relative;
+#'       animation: rotate 1s linear infinite
+#'     }
+#' 	
+#' .loader::before {
+#'   content: '';
+#'   box-sizing: border-box;
+#'   position: absolute;
+#'   inset: 0px;
+#'   border-radius: 50%;
+#'   border: 5px solid #FFF;
+#'   animation: prixClipFix 2s linear infinite ;
+#' }
+#' 
+#' @keyframes rotate {
+#'   100%   {transform: rotate(360deg)}
+#' }
+#' 
+#' @keyframes prixClipFix {
+#' 	0%   {clip-path:polygon(50% 50%,0 0,0 0,0 0,0 0,0 0)}
+#' 	25%  {clip-path:polygon(50% 50%,0 0,100% 0,100% 0,100% 0,100% 0)}
+#' 	50%  {clip-path:polygon(50% 50%,0 0,100% 0,100% 100%,100% 100%,100% 100%)}
+#' 	75%  {clip-path:polygon(50% 50%,0 0,100% 0,100% 100%,0 100%,0 100%)}
+#' 	100% {clip-path:polygon(50% 50%,0 0,100% 0,100% 100%,0 100%,0 0)}
+#' }
+#'                          "
+#'                          )),
     # tags$script("")
     
 #     tags$script("$('*').on('plotly_click', function(evt) {
@@ -178,7 +231,7 @@ shinyUI(fluidPage(
                     network_ks_ui("site_kinase_network", defaultSingleKinases = T)
                   ),
               )),
-              tabPanel("Protein", tabsetPanel(id = "proteinTabset", 
+              tabPanel("Phosphoprotein", tabsetPanel(id = "proteinTabset", 
                     tabPanel(
                       "Volcano Plot",
                       volcanoplot_ui("proteinlevel_volcano")
@@ -204,6 +257,32 @@ shinyUI(fluidPage(
                       network_ks_ui("protein_kinase_network")
                     )
               )),
+              tabPanel("Expression", tabsetPanel(id = "protExpressionTabset", 
+                  tabPanel(
+                    "Volcano Plot",
+                    volcanoplot_ui("protexpression_volcano")
+                  ),
+                  tabPanel(
+                    "Bar Plot",
+                    barplot_ui("protexpression_barplot")
+                  ),
+                  tabPanel(
+                    "Heatmap",
+                    heatmap_ui("protexpression_heatmap")
+                  ),
+                  tabPanel("Table", 
+                           tags$div(id = "protexpression_table_div", 
+                                    tags$div(style = "min-height:450px;",
+                                             shinycssloaders::withSpinner(DT::dataTableOutput("protExpressionTable")),
+                                    ),
+                                    "Double click on a row to inspect it in detail.",
+                           )
+                  ),
+                  # tabPanel(
+                  #   "Interactive Network", 
+                  #   network_ks_ui("protexpression_kinase_network", defaultSingleKinases = T)
+                  # ),
+              )),
               tabPanel("Kinase", tabsetPanel(id = "proteinTabset", 
                     tabPanel(
                      "Volcano Plot",
@@ -215,7 +294,7 @@ shinyUI(fluidPage(
                     ),
                     tabPanel(
                       "Heatmap",
-                      heatmap_ui("kinase_heatmap", significant_only = F, showminsubs = T)
+                      heatmap_ui("kinase_heatmap", significant_only = F, showminsubs = T, minsamplewise_magnitude = 0)
                     ),
                     tabPanel("Table", 
                              tags$div(id = "kinase_table_div", 
@@ -239,13 +318,16 @@ shinyUI(fluidPage(
                                 "Double click on a row to inspect it in detail.",
                        )
               ),
-              tabPanel("Diagnostics", tabsetPanel(id = "diagnosticsTabset", 
-                  tabPanel("Histogram",
-                      shinycssloaders::withSpinner(plotOutput("histogram_sitecentering"))
-                  ))
-             ))
+             #  tabPanel("Diagnostics", tabsetPanel(id = "diagnosticsTabset", 
+             #      tabPanel("Histogram",
+             #          shinycssloaders::withSpinner(plotOutput("histogram_sitecentering"))
+             #      ))
+             # )
+             )
                    
             )
-        )
+        ),
+        conditionalPanel(condition="$('html').hasClass('shiny-busy')",
+                         tags$div("Loading ", tags$span(class = "loader"), id="loadmessage")),
     )
 ))
