@@ -41,6 +41,8 @@ library(plotly)
 ##
 #webshot::install_phantomjs()
 
+
+
 options(shiny.sanitize.errors = FALSE)
 
 library(ids)
@@ -71,6 +73,19 @@ Tsample_snippet <- read.csv(paste(folder, "rokaiXplorer_sample_data_snippet.csv"
 Tsample_expression_snippet <- read.csv(paste(folder, "rokaiXplorer_sample_expression_data_snippet.csv", sep=""))
 Tsample_metadata <- read.csv(paste(folder, "rokaiXplorer_sample_metadata.csv", sep=""))
 Tsample_expression <- read.csv(paste(folder, "rokaiXplorer_sample_expression_data.csv", sep=""))
+
+tryCatch({
+  library(rjson)
+  email_credentials = fromJSON(file = "email/credentials.json")
+  options(EMAIL_AVAILABLE = TRUE)
+}, 
+  error = function(e){options(EMAIL_AVAILABLE = FALSE)}
+)
+
+EMAIL_AVAILABLE = getOption("EMAIL_AVAILABLE")
+if(is.null(EMAIL_AVAILABLE)){
+  EMAIL_AVAILABLE = FALSE
+}
 
 if(DEPLOYMENT_MODE_ENABLED){
   Tdeployment_data <- read.csv(deployment_options$data_file_path)

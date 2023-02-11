@@ -61,6 +61,7 @@ install_dependencies <- function(verbose = F){
   	"lifecycle",
   	"lubridate",
   	"magrittr",
+  	"mailR", 
   	"markdown",
   	"Matrix",
   	"memoise",

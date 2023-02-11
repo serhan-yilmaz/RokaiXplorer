@@ -30,7 +30,7 @@ kinase_table <- reactive({
   ST = ds$ST[validSites, ]
   
   validate(
-    need(nrow(ST) > 0, "There are no ptms identified in the selected subgroup. Please make sure there are no conflicts in the subgroup selection.")
+    need(nrow(ST) > 0, "There are no phosphosites identified in the selected subgroup. Please make sure there are no conflicts in the subgroup selection.")
   )
   
   networkDataIndices = ST$NetworkDataIndex
