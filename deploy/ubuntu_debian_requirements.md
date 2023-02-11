@@ -14,5 +14,8 @@ sudo apt-get install libpng-dev
 sudo apt-get install libtiff5-dev
 sudo apt-get install libjpeg-dev
 sudo apt-get install libsodium-dev
+sudo apt-get install openjdk-17-jdk
+sudo apt-get install default-jre
+sudo apt-get install default-jdk
 ```
 Tested on Ubuntu 22.04 LTS. 
