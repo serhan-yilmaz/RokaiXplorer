@@ -17,5 +17,6 @@ sudo apt-get install libsodium-dev
 sudo apt-get install openjdk-17-jdk
 sudo apt-get install default-jre
 sudo apt-get install default-jdk
+sudo apt-get install gfortran
 ```
 Tested on Ubuntu 22.04 LTS. 
