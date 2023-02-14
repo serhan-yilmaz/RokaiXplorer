@@ -29,7 +29,7 @@ referencesTab <- tabPanel(
     paper_txt("Minguez, P. et al.", "2012", "PTMcode: a database of known and predicted functional associations between post-translational modifications in proteins.", "Nucleic acids research", "https://doi.org/10.1093/nar/gks1230", "41(D1), D306-D311"),
     paper_txt("Szklarczyk, D. et al.", "2014", "STRING v10: protein–protein interaction networks, integrated over the tree of life.", "Nucleic acids research", "https://doi.org/10.1093/nar/gku1003", "43(D1), D447-D452"),
     paper_txt("Damle, N. P., & Köhn, M.", "2019", "The human DEPhOsphorylation Database DEPOD: 2019 update.", "Database", "https://doi.org/10.1093/database/baz133", ""),
-    
+    paper_txt("The Gene Ontology resource: enriching a GOld mine", "2021", "", "Nucleic acids research", "https://doi.org/10.1093/nar/gkaa1113", "49.D1: D325-D334"),
     # tags$h3("Acknowledgement", style="font-weight:bold;"),
     # desc_text("This work was supported by National Institute of Health (NIH) grant R01-LM012980 from the National Libraries of Medicine.")
   )

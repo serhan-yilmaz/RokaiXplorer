@@ -139,7 +139,6 @@ current_dataset_mapped <- reactive({
   
   ## Match the expression data if available
   if(!is.nill(current_expression_dataset())){
-    message("expression_dataset_parsing")
     ds2 <- current_expression_dataset()
     
     validate(
@@ -173,7 +172,6 @@ current_dataset_mapped <- reactive({
   ds$ST$Identifier <- str_c(nameX, ds$ST$Position, sep = "-")
   ds$ST$NetworkDataIndex <- match(ds$ST$Identifier, NetworkData$Site$Identifier)
   
-  ## TODO: Check if the samples match the metadata
   
   ### TODO: Change the error check/mapping style from sites to proteins
   validate(

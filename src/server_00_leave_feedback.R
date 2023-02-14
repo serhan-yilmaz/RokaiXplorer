@@ -25,12 +25,6 @@ foSendEmail <- function(category, name, org, email, message, version){
   tryCatch({
     app_name = "RokaiXplorer"
     
-    # category = "Comment"
-    # name = "TestUser"
-    # org = "Case Western Reserve University"
-    # email = "serhanyilmz@gmail.com"
-    # message = "Hello,\n This is a test message\n Sincerely,"
-    
     time_ = format(Sys.time(), "%Y-%m-%d %H:%M", tz="America/New_York", usetz=TRUE)
     
     foWrapMessage = function(message){

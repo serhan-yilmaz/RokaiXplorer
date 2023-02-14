@@ -99,7 +99,7 @@ go_enrichment_table <- reactive({
   # std_err[invalids] = NA
   
   lor_mean = mean(log_risk_ratio, na.rm = T)
-  message(paste0("logRR mean: ", lor_mean))
+  # message(paste0("logRR mean: ", lor_mean))
   
   # log_odds = log_odds - lor_mean
   # browser()

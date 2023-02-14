@@ -41,8 +41,6 @@ library(plotly)
 ##
 #webshot::install_phantomjs()
 
-
-
 options(shiny.sanitize.errors = FALSE)
 
 library(ids)
@@ -102,6 +100,7 @@ if(DEPLOYMENT_MODE_ENABLED){
   switch(deployment_options$reference_proteome, 
          "Uniprot Human" = config_reference_proteome <- "uniprot.human",
          "Uniprot Mouse" = config_reference_proteome <- "uniprot.mouse",
+         "Uniprot Rat" = config_reference_proteome <- "uniprot.rat",
          stop("Invalid reference proteome.")) 
 }
 
@@ -162,7 +161,8 @@ shinyServer(function(input, output, session) {
       }
       switch(input$refproteome, 
              "Uniprot Human" = "uniprot.human",
-             "Uniprot Mouse" = "uniprot.mouse")
+             "Uniprot Mouse" = "uniprot.mouse",
+             "Uniprot Rat" = "uniprot.rat")
     })
     
     # Comment the following to change mapping beyond data upload

@@ -7,7 +7,7 @@ h2 {
   font-family: 'Yusei Magic', sans-serif;
 }
 
-.loader {
+.loadingbar-custom {
 	margin-left:2px;
     width: 11px;
     height: 11px;
@@ -26,4 +26,7 @@ h2 {
     100% {
         transform: rotate(360deg);
     }
-    } 
+    }
+	
+	
+	

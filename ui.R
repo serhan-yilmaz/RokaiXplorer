@@ -328,6 +328,6 @@ shinyUI(fluidPage(
             )
         ),
         conditionalPanel(condition="$('html').hasClass('shiny-busy')",
-                         tags$div("Loading ", tags$span(class = "loader"), id="loadmessage")),
+                         tags$div("Loading ", tags$span(class = "loadingbar-custom"), id="loadmessage")),
     )
 ))

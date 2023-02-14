@@ -3,6 +3,7 @@ reactive_network <- reactive({
   switch (network_value(),
           "uniprot.human" = fname <- "rokai_network_data_uniprotkb_human.rds",
           "uniprot.mouse" = fname <- "rokai_network_data_uniprotkb_mouse.rds",
+          "uniprot.rat" = fname <- "rokai_network_data_uniprotkb_rat.rds",
           validate(
             need(FALSE, "Invalid network state.")
           )
@@ -58,6 +59,7 @@ reactive_network <- reactive({
     switch (network_value(),
             "uniprot.human" = species <- "human",
             "uniprot.mouse" = species <- "mouse",
+            "uniprot.rat" = species <- "rat",
             validate(
               need(FALSE, "Invalid network state.")
             )
@@ -78,7 +80,18 @@ reactive_network <- reactive({
       dims = c(nrow(NetworkData$UniprotGene), nrow(NetworkData$GO))
     )
   }
-  
+  NetworkData$net$version.go = '2023-01-19';
+  foUpdateVersions(NetworkData)
   
   return (NetworkData)
 })
+
+foUpdateVersions <- function(NetworkData){
+  runjs(paste("document.getElementById('Uniprot_txt').innerHTML = '", NetworkData$net$version.uniprot[1], "';", sep = ""))
+  runjs(paste("document.getElementById('PhosphoSitePlus_txt').innerHTML = '", NetworkData$net$version.psp[1], "';", sep = ""))
+  runjs(paste("document.getElementById('Signor_txt').innerHTML = '", NetworkData$net$version.signor[1], "';", sep = ""))
+  runjs(paste("document.getElementById('STRING_txt').innerHTML = '", NetworkData$net$version.string[1], "';", sep = ""))
+  runjs(paste("document.getElementById('PTMcode_txt').innerHTML = '", NetworkData$net$version.ptmcode[1], "';", sep = ""))
+  runjs(paste("document.getElementById('DEPOD_txt').innerHTML = '", NetworkData$net$version.depod[1], "';", sep = ""))
+  runjs(paste("document.getElementById('GO_txt').innerHTML = '", NetworkData$net$version.go[1], "';", sep = ""))
+}
