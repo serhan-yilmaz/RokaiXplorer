@@ -18,5 +18,7 @@ sudo apt-get install openjdk-17-jdk
 sudo apt-get install default-jre
 sudo apt-get install default-jdk
 sudo apt-get install gfortran
+sudo apt-get install libblas-dev liblapack-dev
+sudo apt-get install libbz2-dev
 ```
 Tested on Ubuntu 22.04 LTS. 
