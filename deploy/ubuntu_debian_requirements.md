@@ -1,6 +1,7 @@
 ### Additional Requirements on Ubuntu/Debian Systems
 Installation of the following system level packages are needed to run the required R packages correctly. You can use the following command to install them: 
 ```
+sudo apt-get update
 sudo apt-get install libxml2-dev
 sudo apt-get install libcurl4-openssl-dev
 sudo apt-get install libssl-dev
