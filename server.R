@@ -77,7 +77,8 @@ tryCatch({
   email_credentials = fromJSON(file = "email/credentials.json")
   options(EMAIL_AVAILABLE = TRUE)
 }, 
-  error = function(e){options(EMAIL_AVAILABLE = FALSE)}
+  error = function(e){options(EMAIL_AVAILABLE = FALSE)},
+  warning = function(e){}
 )
 
 EMAIL_AVAILABLE = getOption("EMAIL_AVAILABLE")
