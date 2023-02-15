@@ -156,7 +156,7 @@ options(RokaiXplorer_allow_data_download = TRUE)
 - Run ```runRokaiXplorer()``` command to see if your application works as expected
 - To deploy your application online, set up a [Shinyapps account](https://www.shinyapps.io/admin/#/signup) and [connect it to RStudio](https://docs.posit.co/shinyapps.io/getting-started.html):
 ```
-rsconnect::setAccountInfo(name="<ACCOUNT>", token=, "<TOKEN>", secret="<SECRET>")
+rsconnect::setAccountInfo(name="<ACCOUNT>", token= "<TOKEN>", secret="<SECRET>")
 ```
 - Next, set up the final details and deploy your application. Here is what it look like for the sample application:
 ```
