@@ -68,7 +68,7 @@ In the above code, please make sure to update ```<DATA>``` and ```<METADATA>``` 
 Additionally, if you would like to use a protein expression data, place the data file under the ```/RokaiXplorer/data/``` and run the following:
 ```
 options(RokaiXplorer_use_expression_data = TRUE)
-options(RokaiXplorer_expression_data_file_path =  "data/<EXPRESSION_DATA>.csv")
+options(RokaiXplorer_expression_data_file_path = "data/<EXPRESSION_DATA>.csv")
 ```
 Again, please make sure to replace ```<EXPRESSION_DATA>``` with the name of your data file. 
 
@@ -156,7 +156,7 @@ options(RokaiXplorer_allow_data_download = TRUE)
 - Run ```runRokaiXplorer()``` command to see if your application works as expected
 - To deploy your application online, set up a [Shinyapps account](https://www.shinyapps.io/admin/#/signup) and [connect it to RStudio](https://docs.posit.co/shinyapps.io/getting-started.html):
 ```
-rsconnect::setAccountInfo(name="<ACCOUNT>", token= "<TOKEN>", secret="<SECRET>")
+rsconnect::setAccountInfo(name="<ACCOUNT>", token="<TOKEN>", secret="<SECRET>")
 ```
 - Next, set up the final details and deploy your application. Here is what it look like for the sample application:
 ```
