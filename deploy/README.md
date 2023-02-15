@@ -108,7 +108,7 @@ To deploy your application to Shinyapps similar to the Example Application, firs
 #### Setting up the shinyapps account in RStudio
 After setting up your account, visit the [Shinyapps Dashboard](https://www.shinyapps.io/admin/#/dashboard) and log in. Here, you will need to obtain the security token to connect your account in RStudio. Under ```Account -> Tokens``` tabs, select the "Show Token" option which will display the necessary R code for this purpose. Click ```Copy to clipboard``` button to copy the code and run it in RStudio. The copied code should be in the following form: 
 ```
-rsconnect::setAccountInfo(name="<ACCOUNT>", token= "<TOKEN>", secret="<SECRET>")
+rsconnect::setAccountInfo(name="<ACCOUNT>", token="<TOKEN>", secret="<SECRET>")
 ```
 where the ```"<ACCOUNT>"```, ```"<TOKEN>"```, ```"<SECRET>"``` fields are filled according to your account details.
   
