@@ -21,7 +21,7 @@ library(shiny)
 runGitHub("rokaixplorer", "serhan-yilmaz", ref = "v0.6.0")
 ```
 
-### Share Your Data and Results Online with RokaiXplorer
+## Share Your Data and Results Online with RokaiXplorer
 Starting from v0.5.0, RokaiXplorer now allows you to easily share your datasets and analysis results online through an interactive data browser. Explore some examples below:
 
  - [ExampleApp](https://serhan-yilmaz.shinyapps.io/exampleapp/)
