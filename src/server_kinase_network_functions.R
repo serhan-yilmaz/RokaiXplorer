@@ -20,8 +20,9 @@ foKinaseNetworkDraw <- function(K, KT, Wk2s, Wk2os, minzscore, topk, keepsinglek
     valids = valids & K$isSignificant
   }
   validate(
-    need(nnzero(valids) > 0, thereAreNoItemsError)
+    need(nnzero(valids) > 1, thereAreNoItemsError)
   )
+  
   
   Ks <- K[valids,]
   Wk2s = Wk2s[, valids]

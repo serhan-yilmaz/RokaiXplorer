@@ -19,6 +19,17 @@ fo_restore_if_applicable <- function(groups, var){
   return("")
 }
 
+foGetGoCategoryText <- function(cat){
+  switch(cat, 
+         "molecular_function" = cat <- "Molecular_Function",
+         "biological_process" = cat <- "Biological_Process",
+         "cellular_component" = cat <- "Cellular_Component"
+  )
+  return(cat)
+}
+
+
+
 # foCollapseAtStart <- function(){
 #   # foUncollapseBoxIfNeeeded("optionbox_subgroup_differences", collapse = T, nullval = F)
 #   # foUncollapseBoxIfNeeeded("optionbox_filter_by_subgroup", collapse = T, nullval = F)

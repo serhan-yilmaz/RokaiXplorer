@@ -1,5 +1,5 @@
 
-fo_process_dataset <- function(ds, type = "phosphorylation"){
+fo_process_dataset <- function(ds, Tmeta, type = "phosphorylation"){
   Ts <- ds$Ts
   ST <- ds$ST
   valid_rows = ST$Type == type
@@ -9,18 +9,18 @@ fo_process_dataset <- function(ds, type = "phosphorylation"){
     need(nnzero(valid_rows) > 0, paste0(tools::toTitleCase(type), " data is not available"))
   )
   
-  Tmeta <- filtered_metadata()
   caseSamples <- Tmeta$caseSamples
   
   Tcase <- as.matrix(log2(Ts[, caseSamples]))
   Tcontrol <- as.matrix(log2(Ts[, !caseSamples]))
   
-  Mcase_samples <- apply(Tcase, 2, function(x) mean(x, na.rm=T))
-  Mcontrol_samples <- apply(Tcontrol, 2, function(x) mean(x, na.rm=T))
-  # browser()
-  
-  Tcase = Tcase - Mcase_samples
-  Tcontrol = Tcontrol - Mcontrol_samples
+  if(identical(input$options_var_stabilization, "Centering")){
+    Mcase_samples <- apply(Tcase, 2, function(x) mean(x, na.rm=T))
+    Mcontrol_samples <- apply(Tcontrol, 2, function(x) mean(x, na.rm=T))
+    
+    Tcase = Tcase - Mcase_samples
+    Tcontrol = Tcontrol - Mcontrol_samples
+  }
   
   nCase = ncol(Tcase)
   nControl = ncol(Tcontrol)
@@ -37,7 +37,12 @@ fo_process_dataset <- function(ds, type = "phosphorylation"){
   
   # w_s = 1
   
-  apply_ttest = TRUE
+  # apply_ttest = TRUE
+  apply_ttest = input$options_var_across_samples
+  MIN_NSAMPLES = input$options_minsamples
+  moderated = input$options_moderated_ttest
+  
+  # MIN_NSAMPLES = 3
   
   if(analyze_group_differences()){
     #  gd <- selected_group_differences()
@@ -66,12 +71,12 @@ fo_process_dataset <- function(ds, type = "phosphorylation"){
     nControlA = ncol(TcontrolA)
     nControlB = ncol(TcontrolB)
     
-    if((nCaseA >= 2) & (nControlA >= 2) & (nCaseB >= 2) & (nControlB >= 2) & apply_ttest == TRUE){
+    if((nCaseA >= MIN_NSAMPLES) & (nControlA >= MIN_NSAMPLES) & (nCaseB >= MIN_NSAMPLES) & (nControlB >= MIN_NSAMPLES) & apply_ttest == TRUE){
       ScaseA <- apply(TcaseA, 1, function(x) sd(x, na.rm=T))
       ScontrolA <- apply(TcontrolA, 1, function(x) sd(x, na.rm=T))
       ScaseB <- apply(TcaseB, 1, function(x) sd(x, na.rm=T))
       ScontrolB <- apply(TcontrolB, 1, function(x) sd(x, na.rm=T))
-      valids <- (NcaseA >= 2) & (NcontrolA >= 2) & (NcaseB >= 2) & (NcontrolB >= 2)
+      valids <- (NcaseA >= MIN_NSAMPLES) & (NcontrolA >= MIN_NSAMPLES) & (NcaseB >= MIN_NSAMPLES) & (NcontrolB >= MIN_NSAMPLES)
       
       ## Pooled standard deviations
       S = sqrt((NcaseA - 1) * ScaseA^2 + (NcontrolA - 1) * ScontrolA^2 +
@@ -83,7 +88,7 @@ fo_process_dataset <- function(ds, type = "phosphorylation"){
       S[!valids] = NA
       
       ## Add moderated t-test here
-      moderated = TRUE
+      # moderated = TRUE
       if(moderated){
         fit = limma::squeezeVar(S^2, DF)
         S = sqrt(fit$var.post)
@@ -100,35 +105,6 @@ fo_process_dataset <- function(ds, type = "phosphorylation"){
       useTtest = FALSE
     }
     
-    # if((nCaseA >= 2) & (nControlA >= 2)){
-    #   ScaseA <- apply(TcaseA, 1, function(x) sd(x, na.rm=T))
-    #   SEcaseA <- ScaseA / sqrt(NcaseA - w_s)
-    #   ScontrolA <- apply(TcontrolA, 1, function(x) sd(x, na.rm=T))
-    #   SEcontrolA <- ScontrolA / sqrt(NcontrolA - w_s)
-    #   SE_A <- sqrt(SEcaseA^2 + SEcontrolA^2)
-    #   validsA <- (NcaseA >= 2) & (NcontrolA >= 2)
-    # } else {
-    #   SE_A <- rep(sd(Q_A, na.rm = T), length(Q_A))
-    #   validsA <- (NcaseA >= 1) & (NcontrolA >= 1)
-    # }
-    # 
-    # if((nCaseB >= 2) & (nControlB >= 2)){
-    #   ScaseB <- apply(TcaseB, 1, function(x) sd(x, na.rm=T))
-    #   SEcaseB <- ScaseB / sqrt(NcaseB - w_s)
-    #   ScontrolB <- apply(TcontrolB, 1, function(x) sd(x, na.rm=T))
-    #   SEcontrolB <- ScontrolB / sqrt(NcontrolB - w_s)
-    #   SE_B <- sqrt(SEcaseB^2 + SEcontrolB^2)
-    #   validsB <- (NcaseB >= 2) & (NcontrolB >= 2)
-    # } else {
-    #   SE_B <- rep(sd(Q_B, na.rm = T), length(Q_B))
-    #   validsB <- (NcaseB >= 1) & (NcontrolB >= 1)
-    # }
-    # 
-    # SE <- sqrt(SE_A^2 + SE_B^2)
-    # DF <- rep(Inf, length(Q))
-    # validSites = !is.na(Q) & !is.na(SE) & validsA & validsB
-    # useTtest = FALSE
-    
     validSites = (!is.na(Q)) & !is.na(SE) & !is.infinite(SE) & valids
   } else {
     Mcase <- apply(Tcase, 1, function(x) mean(x, na.rm=T))
@@ -139,7 +115,7 @@ fo_process_dataset <- function(ds, type = "phosphorylation"){
     Ncase <- apply(Tcase, 1, function(x) nnzero(!is.na(x)))
     Ncontrol <- apply(Tcontrol, 1, function(x) nnzero(!is.na(x)))
     
-    if((nCase >= 2) & (nControl >= 2) & apply_ttest == TRUE){
+    if((nCase >= MIN_NSAMPLES) & (nControl >= MIN_NSAMPLES) & apply_ttest == TRUE){
       Scase <- apply(Tcase, 1, function(x) sd(x, na.rm=T))
       # SEcase <- Scase / sqrt(Ncase)
       Scontrol <- apply(Tcontrol, 1, function(x) sd(x, na.rm=T))
@@ -152,7 +128,7 @@ fo_process_dataset <- function(ds, type = "phosphorylation"){
       DF = Ncase + Ncontrol - 2
       
       ## Add moderated t-test here
-      moderated = TRUE
+      # moderated = TRUE
       if(moderated){
         fit = limma::squeezeVar(S^2, DF)
         S = sqrt(fit$var.post)
@@ -162,7 +138,7 @@ fo_process_dataset <- function(ds, type = "phosphorylation"){
       SE = se_factor * S;
       
       # SE <- sqrt(SEcase^2 + SEcontrol^2)
-      valids <- (Ncase >= 2) & (Ncontrol >= 2)
+      valids <- (Ncase >= MIN_NSAMPLES) & (Ncontrol >= MIN_NSAMPLES)
       useTtest = TRUE
     } else {
       SE <- rep(sd(Q, na.rm = T), length(Q))
@@ -187,18 +163,19 @@ processed_dataset <- reactive({
   req(filtered_dataset())
   req(filtered_metadata())
   ds <- filtered_dataset()
-  fo_process_dataset(ds)
+  Tmeta <- filtered_metadata()
+  fo_process_dataset(ds, Tmeta)
 })
 
-preprocessed_dataset <- reactive({
-  req(processed_dataset())
-  ds <- processed_dataset()
-  ds$Xv = ds$Xv - mean(ds$Xv, na.rm = T)
+foPreprocessDataset <- function(ds){
+  if(input$options_center_foldchanges){
+    ds$Xv = ds$Xv - mean(ds$Xv, na.rm = T)
+  }
   
   if(ds$useTtest){
     ## Update zcrit
     out = t2zstatistic(ds$Xv / ds$Sx, ds$DF, zcrit = 4)
-    ds$Sx = ds$Sx * out$sd.inflationfactor
+    ds$Sx_inflated = ds$Sx * out$sd.inflationfactor
     sd.inflationfactor = out$sd.inflationfactor
   } else {
     sd.inflationfactor = rep(1, length(ds$Xv))
@@ -206,27 +183,36 @@ preprocessed_dataset <- reactive({
   
   ds$sd.inflationfactor = sd.inflationfactor
   return (ds)
+}
+
+preprocessed_dataset <- reactive({
+  req(processed_dataset())
+  ds <- processed_dataset()
+  return(foPreprocessDataset(ds))
 })
 
 preprocessed_expression_dataset <- reactive({
   req(filtered_dataset())
   req(filtered_metadata())
   ds <- filtered_dataset()
-  ds <- fo_process_dataset(ds, type = "expression")
-  
-  ds$Xv = ds$Xv - mean(ds$Xv, na.rm = T)
-  
-  if(ds$useTtest){
-    ## Update zcrit
-    out = t2zstatistic(ds$Xv / ds$Sx, ds$DF, zcrit = 4)
-    ds$Sx = ds$Sx * out$sd.inflationfactor
-    sd.inflationfactor = out$sd.inflationfactor
-  } else {
-    sd.inflationfactor = rep(1, length(ds$Xv))
-  }
-  
-  ds$sd.inflationfactor = sd.inflationfactor
-  return (ds)
+  Tmeta <- filtered_metadata()
+  ds <- fo_process_dataset(ds, Tmeta, type = "expression")
+  return(foPreprocessDataset(ds))
+  # if(input$options_center_foldchanges){
+  #   ds$Xv = ds$Xv - mean(ds$Xv, na.rm = T)
+  # }
+  # 
+  # if(ds$useTtest){
+  #   ## Update zcrit
+  #   out = t2zstatistic(ds$Xv / ds$Sx, ds$DF, zcrit = 4)
+  #   ds$Sx_inflated = ds$Sx * out$sd.inflationfactor
+  #   sd.inflationfactor = out$sd.inflationfactor
+  # } else {
+  #   sd.inflationfactor = rep(1, length(ds$Xv))
+  # }
+  # 
+  # ds$sd.inflationfactor = sd.inflationfactor
+  # return (ds)
 })
 
 

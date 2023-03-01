@@ -33,6 +33,18 @@ foAddTooltips <- function(colnames=c(), tooltips = list()){
   JS(paste(part1, part_default, part2, part3, sep = " "));
 }
 
+foHideColumns = function(ST, cols){
+  not_visible_targets = match(cols, colnames(ST))
+  not_visible_targets = not_visible_targets[!is.na(not_visible_targets)]
+  not_visible_targets = not_visible_targets - 1
+  columnDefs = list(
+    list(targets = not_visible_targets, visible = FALSE), 
+    list(targets = '_all', visible = TRUE)
+  )
+}
+
+
+
 createSiteDataTable <- function(ST, maintable = T){
   ST$Phos = round(ST$Phos, digits = 3)
   ST$StdErr = round(ST$StdErr, digits = 3)
@@ -46,7 +58,7 @@ createSiteDataTable <- function(ST, maintable = T){
   si <- order(abs(ST$EffectiveMag), decreasing = TRUE)
   ST <- ST[si,]
   
-  ST = subset(ST, select = -c(Identifier, MagnitudeAdj))
+  ST = subset(ST, select = -c(Identifier, MagnitudeAdj, NetworkDataIndex, ID))
   
   ST <- formatNumericVariables(ST)
   
@@ -99,13 +111,7 @@ createSiteDataTable <- function(ST, maintable = T){
     "dummy" = ""
   )
   
-  not_visible_targets = match(c("DF", "InflationFactor", "StdErrT"), colnames(ST))
-  not_visible_targets = not_visible_targets[!is.na(not_visible_targets)]
-  not_visible_targets = not_visible_targets - 1
-  columnDefs = list(
-    list(targets = not_visible_targets, visible = FALSE), 
-    list(targets = '_all', visible = TRUE)
-  )
+
   #   { targets: [0, 1], visible: true},
   #   { targets: '_all', visible: false }
   # ]
@@ -117,7 +123,7 @@ createSiteDataTable <- function(ST, maintable = T){
                        options = list(scrollX=TRUE, lengthMenu = c(5,10,15),
                                       stateSave = stateSave, 
                                       stateLoadParams = stateLoadParams,
-                                      columnDefs = columnDefs,
+                                      columnDefs = foHideColumns(ST, c("InflationFactor", "StdErrT", "TStat")),
                                       columns = columns,
                                       initComplete = foAddTooltips(colnames(ST), tooltips),
                                       paging = TRUE, searching = TRUE, pageLength = pageLength, dom = dom, buttons = list(list(extend = 'csv', filename = fn), list(extend = 'excel', filename = fn), "colvis"))) %>% 
@@ -194,13 +200,7 @@ createProtExpressionDataTable <- function(ST, maintable = T){
     "dummy" = ""
   )
   
-  not_visible_targets = match(c("DF", "InflationFactor", "StdErrT"), colnames(ST))
-  not_visible_targets = not_visible_targets[!is.na(not_visible_targets)]
-  not_visible_targets = not_visible_targets - 1
-  columnDefs = list(
-    list(targets = not_visible_targets, visible = FALSE), 
-    list(targets = '_all', visible = TRUE)
-  )
+
   #   { targets: [0, 1], visible: true},
   #   { targets: '_all', visible: false }
   # ]
@@ -212,7 +212,7 @@ createProtExpressionDataTable <- function(ST, maintable = T){
                        options = list(scrollX=TRUE, lengthMenu = c(5,10,15),
                                       stateSave = stateSave, 
                                       stateLoadParams = stateLoadParams,
-                                      columnDefs = columnDefs,
+                                      columnDefs = foHideColumns(ST, c("InflationFactor", "StdErrT", "TStat")),
                                       columns = columns,
                                       initComplete = foAddTooltips(colnames(ST), tooltips),
                                       paging = TRUE, searching = TRUE, pageLength = pageLength, dom = dom, buttons = list(list(extend = 'csv', filename = fn), list(extend = 'excel', filename = fn), "colvis"))) %>% 
@@ -247,6 +247,7 @@ foProteinTableTooltips <- function(){
     # "InRef" = "Shows whether the phosphosite exists in the reference proteome",
     "Phos" = "Mean phosphorylation of the sites on the protein as log2 fold change", 
     "StdErr" = "Standard error for log2 fold change",
+    "DF" = "Degrees of freedom",
     "ZScore" = "Standardized log fold changes",
     "PValue" = "P-value",
     "FDR" = "False discovery rate",
@@ -274,6 +275,8 @@ output$proteinTable <- DT::renderDataTable(server = FALSE, {
   
   PT = subset(PT, select = -c(Identifier, MagnitudeAdj, KinaseIndex))
   tooltips <- foProteinTableTooltips()
+  
+  PT <- formatNumericVariables(PT)
   
   callback <- c(
     "table.on('dblclick','tr', function() {",
@@ -327,6 +330,8 @@ output$kinaseTable <- DT::renderDataTable(server = FALSE, {
   colnames(KT)[1] <- "UniprotID"
   colnames(KT)[2] <- "Name"
   
+  KT <- formatNumericVariables(KT, exclude = c("NumSubs"))
+  
   tooltips <- list(
     "UniprotID" = "Uniprot ID of the kinase", 
     "Name" = "Name of the kinase", 
@@ -335,10 +340,17 @@ output$kinaseTable <- DT::renderDataTable(server = FALSE, {
     "NumSubs" = "Number of substrates of the kinase with quantifications",
     "Activity" = "Inferred activity of the kinase", 
     "StdErr" = "Standard error for the inferred activity",
+    "DF" = "Degrees of freedom",
+    "WeightSubs" = "Weight of the known substrates of a kinase in the activity inference",
+    "WeightNeigh" = "Weight of the phosphosites in the functional neighborhood of a kinase in the inference",
+    "PhosSubs" = "Mean phosphorylation of known substrates of a kinase (mean log2 fold change)",
+    "PhosNeigh" = "Mean phosphorylation of the sites in the functional neighborhood of a kinase (mean log2 fold change)",
+    "ZScoreSubs" = "Standardized score for the mean phosphorylation of known substrates of a kinase",
+    "ZScoreNeigh" = "Standardized score for the the sites in the functional neighborhood of a kinase",
     "ZScore" = "Standardized score for activity",
     "PValue" = "P-value",
     "FDR" = "False discovery rate",
-    "EffectiveMag" = "Reliable portion of the activity beyond 3 standard errors",
+    "EffectiveMag" = "Reliable portion of the activity beyond 2 standard errors",
     "isSignificant" = "Is the activity significant", 
     # "EffectiveMag" = "log2FC - 3*StdErr",
     "dummy" = ""
@@ -369,6 +381,7 @@ output$kinaseTable <- DT::renderDataTable(server = FALSE, {
                                #   list(targets = 1, title = "Name")
                                # ),
                                initComplete = foAddTooltips(colnames(KT), tooltips),
+                               columnDefs = foHideColumns(KT, c("WeightSubs", "PhosSubs", "ZScoreSubs", "WeightNeigh", "PhosNeigh", "ZScoreNeigh")),
                                columns = foRestoreStateIfAvailable("kinaseTable"),
                                paging = TRUE, searching = TRUE, pageLength = 8, dom = 'Bfrtip', buttons = list(list(extend = 'csv', filename = fn), list(extend = 'excel', filename = fn), "colvis"))) %>% 
     formatSignif('PValue', 3) %>% formatSignif('FDR', 3) 

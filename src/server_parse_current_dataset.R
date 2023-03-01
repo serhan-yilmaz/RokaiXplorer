@@ -170,7 +170,9 @@ current_dataset_mapped <- reactive({
   nameX = ds$ST$ProteinName
   nameX[is.na(nameX)] = ds$ST$Protein[is.na(nameX)]
   ds$ST$Identifier <- str_c(nameX, ds$ST$Position, sep = "-")
-  ds$ST$NetworkDataIndex <- match(ds$ST$Identifier, NetworkData$Site$Identifier)
+  ids = str_c(ds$ST$Protein, ds$ST$Position, sep = "-")
+  ds$ST$ID = ids
+  ds$ST$NetworkDataIndex <- match(ids, NetworkData$Site$Identifier)
   
   
   ### TODO: Change the error check/mapping style from sites to proteins
@@ -182,12 +184,13 @@ current_dataset_mapped <- reactive({
     main_logging("Uploaded dataset successfully parsed")
   }
   
-  if(identical(foGetCacheValue("cached_mbox_main_datasource"), "")){
-    if(!is.na(match("expression", ds$ST$Type))){
-      cache$cached_mbox_main_datasource("Protein Expression")
-    } else {
-      cache$cached_mbox_main_datasource("Phosphorylation")
-    }
+  if(identical(isolate(foGetCacheValue("cached_mbox_main_datasource")), "")){
+    cache$cached_mbox_main_datasource("Phosphorylation")
+    # if(!is.na(match("expression", ds$ST$Type))){
+    #   cache$cached_mbox_main_datasource("Protein Expression")
+    # } else {
+    #   cache$cached_mbox_main_datasource("Phosphorylation")
+    # }
   }
   
   return(ds)

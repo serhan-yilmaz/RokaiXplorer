@@ -2,7 +2,7 @@ multiChoicePicker <- function(id, label, choices, selected = choices[1],
                               isInline = "T", multiple = F, max_opts = 2, 
                               max_opts_txt = "No more!", width = "fit", 
                               style = NULL, style_label = NULL, style_picker = NULL,
-                              picker_inline = T) {
+                              picker_inline = T, class_names = NULL, tooltip = NULL) {
   picker_ui <- shinyWidgets::pickerInput(id, "", choices, selected = selected, 
                                          width = width, inline = picker_inline, 
                                          multiple = multiple,
@@ -14,22 +14,33 @@ multiChoicePicker <- function(id, label, choices, selected = choices[1],
     picker_ui$attribs$style = paste0(picker_ui$attribs$style, style_picker)
   }
   
+  label_el = tags$b(label, style = style_label)
+  if(!is.null(tooltip)){
+    label_el = tipify(label_el, tooltip)
+  }
+  
   switch(isInline, 
          "T" = R <- tags$div(
            class = "inline-block", id = paste(id, "_div", sep = ""), 
            style = "justify-content: space-between;", 
            style = style,
-           tags$b(label, style = style_label),
+           label_el, 
            picker_ui
          ),
          "F" = R <- tags$div(
+           class = class_names, 
            id = paste(id, "_div", sep = ""), 
            style = style,
-           tags$b(label, style = style_label),
+           label_el, 
            #selectInput(id, label, choices, selected = selected, width = "auto")
            picker_ui
          )
   )
+  
+  # if(!is.null(tooltip)){
+  #   R = tipify(R, tooltip)
+  # }
+  
   return (R)
 }
 
@@ -46,16 +57,44 @@ collapseInput <- function(inputId, boxId) {
   )
 }
 
-optionBox <- function(..., title = "", status = "primary", id = "", collapsed = T){
+optionBox <- function(..., title = "", status = "primary", id = "", collapsed = T, collapsible = T){
   colid = paste0(id, "_collapse")
   tags$div(
     id = paste0(id, "_wrapper"), 
-    box(id = id, status = status, width = NULL, collapsible = T, title = title, solidHeader = T, collapsed = collapsed, 
+    box(id = id, status = status, width = NULL, collapsible = collapsible, title = title, solidHeader = T, collapsed = collapsed, 
         ...
     ),
     collapseInput(colid, boxId = id)
   )
 }
+
+fancyCheckbox <- function(identifier, label, default = F, status = "warning", tooltip = NULL, style = NULL, tooltip_width = NULL){
+  out = tags$div(
+    style = "margin-top: 8px;margin-bottom:8px;", 
+    style = style, 
+    tags$b(label), 
+    shinyWidgets::materialSwitch(inputId = identifier, label = "", status = status, value = default, inline = T)
+  )
+  
+  if(!is.null(tooltip)){
+    out = tipify(out, tooltip)
+    if(!is.null(tooltip_width)){
+      tooltip_div = paste0(identifier, "_tooltipdiv")
+      css = multigsub(c("ELEMENT_NAME", "TOOLTIP_WIDTH"), c(tooltip_div, tooltip_width), 
+        "#ELEMENT_NAME > .tooltip > .tooltip-inner {
+          min-width: TOOLTIP_WIDTH;
+        }"
+      )
+      out = tags$div(
+        id = tooltip_div, 
+        out, 
+        tags$style(HTML(css))
+      )
+    }
+  }
+  return(out)
+}
+
 
 foAddHelper <- function(el, helper_id = "", tooltip = "", helper_file = NA){
   if(is.na(helper_file)){
@@ -97,6 +136,35 @@ foList <- function(...){
     previous = x[[i]]
   }
   return(outList)
+}
+
+asliderInput <- function(identifier, label, min, max, default, step = 1, post = NULL, tooltip = NULL, style_div = NULL, width = NULL){
+  slider <- sliderInput(identifier, label, min, max, default, step = step, post = post, width = width)
+  
+  if(!is.null(tooltip)){
+    out = tipify(slider, tooltip);
+  } else {
+    out = slider;
+  }
+  
+  out = tags$div(style = "margin-top:4px;", style = style_div, out)
+  
+  return(out)
+}
+
+dropdown_options_alt <- function(content, titletxt = "Options", tooltip = "Click to see options.", width = NULL){
+  tags$div(style = "max-width: 70px; margin-left: auto; vertical-align: top; right: 0%; top:0px;", 
+           dropdown(
+             size = "md", 
+             icon = icon("cog"), #status = "info", 
+             right = T, 
+             up = F, 
+             width = width, 
+             tooltip = tooltipOptions(title = tooltip, placement = "top"), 
+             tags$h4(style = "font-weight:bold; margin-bottom: 10px; white-space: nowrap;", titletxt), 
+             content, 
+             tags$p(style = "margin-bottom: 10px;", "")
+           ))
 }
 
 on_ready <- paste(

@@ -53,38 +53,45 @@ deploymentDataDownloadDiv <- function(use_expression_data = FALSE){
   ), helper_file = helper_file)
 }
 
-dataInputDiv <- tags$div(
-  tags$div(
-    class = "inline-block", id = "sample_data_div", 
-    tags$b("Sample Data: ", style = "margin-right: 10px;"),
-    tags$span(
-      style = "margin-top: 2px;", 
-      #  style = "border-style: inset; padding: 2px;", 
-      actionButton("buttonSampleData", "Load Sample Data"),
-      tags$b(style = "margin-left: 2px; margin-right: 2px;"), 
-      # tags$div(style = "margin-top: 4px;", 
-      # tags$b("Download Sample Data: ", style = "margin-right: 10px;"),
-      tags$div(style = "display:inline-block;", 
-               style = "margin-top: 4px;;",
-               style = "border-style: inset; padding: 3px; border-width:1px;", 
-               #   border-width: 3px;
-               downloadButton('buttonDownloadSampleData', 'Data'),
-               downloadButton('buttonDownloadSampleExpressionData', 'Expression Data'),
-               downloadButton('buttonDownloadSampleMetaData', 'Metadata'),
-      )
-      #  )
+sampleDataDiv <- tags$div(
+  class = "inline-block", id = "sample_data_div", 
+  tags$b("Sample Data: ", style = "margin-right: 10px;"),
+  tags$span(
+    style = "margin-top: 2px;", 
+    #  style = "border-style: inset; padding: 2px;", 
+    tags$span(id = "load_sample_data_div", actionButton("buttonSampleData", "Load Sample Data")),
+    tags$b(style = "margin-left: 2px; margin-right: 2px;"), 
+    # tags$div(style = "margin-top: 4px;", 
+    # tags$b("Download Sample Data: ", style = "margin-right: 10px;"),
+    tags$div(style = "display:inline-block;", 
+             style = "margin-top: 4px;;",
+             style = "border-style: inset; padding: 3px; border-width:1px;", 
+             #   border-width: 3px;
+             downloadButton('buttonDownloadSampleData', 'Data'),
+             downloadButton('buttonDownloadSampleExpressionData', 'Expression Data'),
+             downloadButton('buttonDownloadSampleMetaData', 'Metadata'),
     )
-  ), 
-  tags$div(style = "margin: 0px; margin-top: 8px;", id = "upload_data_div", 
-           optionBox(title = "Upload Data", collapsed = F, 
+    #  )
+  )
+)
+
+dataInputDiv <- tags$div(
+
+  tags$div(style = "margin: 0px; margin-top: 8px;", id = "data_input_div", 
+           optionBox(title = "Data Input", collapsed = F, id = "optionbox_data_input", 
+                     sampleDataDiv, 
+                     tags$hr(style = "margin-top:12px; margin-bottom:12px;"), 
+                     tags$div(id = "upload_data_div", 
+                     tags$div(id = "upload_data_div2", 
                      upload_data_helper(
                        tags$div(
-                         fileInput("file1", "Upload Data:", accept = c(".csv")),
+                         id = "phospho_data_div", 
+                         fileInput("file1", "Upload Phosphorylation Data:", accept = c(".csv")),
                          tags$style(".shiny-input-container {margin-bottom: 0px} #file1_progress { margin-bottom: 3px } .checkbox { margin-top: 0px}"),
                          tags$style(".checkbox {margin-bottom: 0px;}"),
                        )
                      ),
-                     upload_data_helper(tags$div(
+                     upload_data_helper(tags$div(id = "expression_data_div", 
                        style = "margin-top: 0px; margin-bottom: -8px;",
                        fileInput("file1_expression", "(Optional) Upload Expression Data:", accept = c(".csv")),
                        tags$style(".shiny-input-container {margin-bottom: 0px} #file1_progress { margin-bottom: 3px } .checkbox { margin-top: 0px}"),
@@ -93,6 +100,7 @@ dataInputDiv <- tags$div(
                      # tippy_this("upload_data_tooltip_icon", "<span style='font-size:14px; margin: 0px;'>Phosphosite quantifications. Click to learn the format.<span>", allowHTML = TRUE), 
                      tags$span(helper(
                        tags$div(
+                         id = "metadata_upload_div", 
                          style = "margin-top: 0px;", 
                          fileInput("file2", "Upload Metadata:", accept = c(".csv")),
                          tags$style(".shiny-input-container {margin-bottom: 0px} #file2_progress { margin-bottom: 3px } .checkbox { margin-top: 0px}"),
@@ -104,6 +112,7 @@ dataInputDiv <- tags$div(
                      tags$div(style = "margin-top: 0px;",
                               multiChoicePicker("refproteome", "Reference Proteome:", c("Uniprot Human", "Uniprot Mouse", "Uniprot Rat"), selected = "Uniprot Mouse"),
                      )
+                     ))
            )
            #tags$hr(style = "margin: 8px 0px 8px 0px;")
   )

@@ -1,6 +1,6 @@
 
 
-version_text <- function(){"v0.6.4"}
+version_text <- function(){"v0.7.0"}
 
 
 

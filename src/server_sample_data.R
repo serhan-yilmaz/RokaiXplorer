@@ -1,4 +1,13 @@
 observeEvent(input$buttonSampleData, {
+  foLoadSampleData()
+  a <- guide$get_next()
+  if(!is.null(a) && guide$get_next()$highlighted == "optionbox_filter_by_subgroup_wrapper"){
+    #message("abcd")
+    delay(100, guide$move_forward())
+  }
+})
+
+foLoadSampleData <- function(){
   shinyWidgets::updatePickerInput(session, "refproteome", selected = "Uniprot Mouse");
   if(input$mainTabset == "About"){
     updateTabsetPanel(session, "mainTabset", "Phosphosite")
@@ -11,5 +20,6 @@ observeEvent(input$buttonSampleData, {
   upload_expression_data_ready(FALSE)
   upload_metadata_ready(FALSE)
   main_logging("Sample Data")
-
-})
+  a = current_dataset()
+  b = current_metadata()
+}

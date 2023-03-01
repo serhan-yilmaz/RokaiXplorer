@@ -28,5 +28,46 @@ h2 {
     }
     }
 	
+ #loadmessage {
+   position: fixed;
+   bottom: 0px;
+   left: 0px;
+   width: 100%;
+   padding: 5px 0px 5px 0px;
+   text-align: center;
+   font-weight: bold;
+   font-size: 100%;
+   color: #666;
+   background-color: #CCFFAABB;
+   # background-color: #DDFFCCBB;
+   z-index: 105;
+   # border: 0.03rem solid #778866BB;
+ }
 	
-	
+.tooltip-inner {
+	min-width: 145px;
+}
+
+.dropdown-header {
+	font-weight: bold;
+	color: #333;
+}
+
+.dropdown.bootstrap-select.form-control {
+	max-width: -webkit-fill-available;
+}
+
+.abc > .form-group.shiny-input-container {
+	display:flex;
+	margin-top:4px;
+}
+
+div#driver-popover-item.analysis_results_tutorial_cicerone1 {
+	min-width: 450px;
+	text-align: center;
+}
+
+div#driver-popover-item.analysis_results_tutorial_cicerone {
+	min-width: 510px;
+	text-align: center;
+}

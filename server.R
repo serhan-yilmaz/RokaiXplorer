@@ -22,10 +22,12 @@ library(withr)
 library(htmlwidgets)
 library(rjson)
 library(clipr)
-library(clipr)
+library(writexl)
+library(pracma)
 library(limma, include.only = 'squeezeVar')
 library(statmod)
 library(plotly)
+library(cicerone)
 
 # timeend = Sys.time() - timestart
 # message(timeend)
@@ -134,11 +136,14 @@ shinyServer(function(input, output, session) {
     }
     
     source(file = "src/server_00_misc_functions.R", local=TRUE)
+    source(file = "src/server_00_matlab_helpers.R", local=TRUE)
     source(file = "src/server_00_optionset.R", local=TRUE)
     source(file = "src/server_00_logging_main.R", local=TRUE)
     source(file = "src/server_00_ui_links.R", local=TRUE)
     source(file = "src/server_00_leave_feedback.R", local=TRUE)
     source(file = "src/server_00_util.R", local=TRUE)
+    source(file = "src/server_00_interactive_tutorial.R", local=TRUE)
+    
     
     observeEvent(input$initialized, {
         if(!dir.exists("logs/")){
@@ -181,28 +186,37 @@ shinyServer(function(input, output, session) {
     source(file = "src/server_select_subgroups.R", local=TRUE)
     source(file = "src/server_select_group_differences.R", local=TRUE)
     
+    foFilterDataset <- function(ds, validSamples){
+      ds$Ts <- ds$Ts[, validSamples]
+      return(ds)
+    }
+    
     filtered_dataset <- reactive({
         req(subgroup_samples())
         req(current_dataset_mapped())
         validSamples <- subgroup_samples()
         ds <- current_dataset_mapped()
-        ds$Ts <- ds$Ts[, validSamples]
+        ds = foFilterDataset(ds, validSamples)
         return(ds)
     })
+    
+    foFilterMetadata <- function(x, validSamples){
+      x$nSample <- nnzero(validSamples)
+      x$caseSamples <- x$caseSamples[validSamples]
+      x$Tsample_metadata <- x$Tsample_metadata[, validSamples]
+      if(analyze_group_differences()){
+        gd <- selected_group_differences()
+        x$samplesA <- gd$samplesA[validSamples]
+        x$samplesB <- gd$samplesB[validSamples]
+      }
+      return(x)
+    }
     
     filtered_metadata <- reactive({
         req(subgroup_samples())
         validSamples <- subgroup_samples()
         x <- current_metadata()
-        x$nSample <- nnzero(validSamples)
-        x$caseSamples <- x$caseSamples[validSamples]
-        x$Tsample_metadata <- x$Tsample_metadata[, validSamples]
-        if(analyze_group_differences()){
-            gd <- selected_group_differences()
-            x$samplesA <- gd$samplesA[validSamples]
-            x$samplesB <- gd$samplesB[validSamples]
-        }
-        
+        x = foFilterMetadata(x, validSamples)
         return(x)
     })
 
@@ -217,6 +231,8 @@ shinyServer(function(input, output, session) {
     source(file = "src/server_process_protein_tables.R", local=TRUE)
     source(file = "src/server_process_kinase_tables.R", local=TRUE)
     source(file = "src/server_process_go_enrichment_tables.R", local=TRUE)
+    source(file = "src/server_process_kinase_targets_table.R", local=TRUE)
+    source(file = "src/server_process_pathway_targets_table.R", local=TRUE)
     
     source(file = "src/server_barplot_main.R", local=TRUE)
     source(file = "src/server_heatmap_main.R", local=TRUE)
@@ -242,6 +258,9 @@ shinyServer(function(input, output, session) {
     source(file = "src/server_modalbox_tables.R", local=TRUE)
     
     source(file = "src/server_table_outputs_enrichment.R", local=TRUE)
+    source(file = "src/server_table_outputs_targets.R", local=TRUE)
+    
+    source(file = "src/server_report_generator.R", local=TRUE)
     
     output$buttonDownloadSampleData <- downloadCSVFileHandler(
       Tsample_snippet, 'sample_data_snippet.csv');
@@ -255,7 +274,5 @@ shinyServer(function(input, output, session) {
       reactive_expression_dataset, 'expression_data.csv');
     output$buttonDownloadDeploymentMetadata <- downloadCSVFileHandler(
       reactive_metadata, 'metadata.csv');
-    
-    
     
 })

@@ -19,14 +19,24 @@ fo_process_goenrichment_bysample <- function(ds){
     dims = c(nrow(NetworkData$UniprotGene), nrow(ST))
   )
   
-  max_fdr = input$sitelevel_volcano_maxfdr
-  min_logfc = input$sitelevel_volcano_minlogfc
+  is_fdr_enabled = input$enrichment_fdrcorrection
+  max_fdr = input$enrichment_maxpvalue
+  min_logfc = input$enrichment_minlogfc
   
   Zx = Xv / Sx
   res = compute_pvalues(as.matrix(Zx))
-  FDR = matrix(res$QValues, nrow = nrow(Xv))
   
-  Ssig = (FDR <= max_fdr) & (abs(Xv) >= min_logfc)
+  ## Fix the following - enrichment thresholds need to be used here
+  if(is_fdr_enabled == TRUE){
+    FDR = matrix(res$QValues, nrow = nrow(Xv))
+    validPval = (FDR <= max_fdr)
+  } else {
+    pvals = matrix(res$PValues, nrow = nrow(Xv))
+    validPval = (pvals <= max_fdr)
+  }
+  
+  direction = input$enrichment_logfcdirection
+  Ssig = validPval & (abs(Xv) >= min_logfc) & foDirectionCutoff(Xv, direction)
   I = !is.na(Ssig)
   Ssig[is.na(Ssig)] = FALSE
   
@@ -38,15 +48,24 @@ fo_process_goenrichment_bysample <- function(ds){
   Pidentified = Pidentified[isProteinIdentified, ]
   
   validGoterms <- colSums(NetworkData$Wuniprotgene2goterm) > 0
-  Wgoterm2uniprotgene = t(NetworkData$Wuniprotgene2goterm[isProteinIdentified, validGoterms])
+  Wgoterm2uniprotgene_all = t(NetworkData$Wuniprotgene2goterm[, validGoterms])
+  Wgoterm2uniprotgene = Wgoterm2uniprotgene_all[, isProteinIdentified]
+  # Wgoterm2uniprotgene = t(NetworkData$Wuniprotgene2goterm[isProteinIdentified, validGoterms])
+  
+  Wgoterm2sample_numprotein = rowSums(Wgoterm2uniprotgene_all)
   Wgoterm2sample_identified = (Wgoterm2uniprotgene %*% Pidentified)
   Wgoterm2sample_significant = (Wgoterm2uniprotgene %*% Psig)
   
+  
   nCol = ncol(Xv)
+  # numProteinAll = as.matrix(rep(Wgoterm2sample_numprotein, nCol), ncol = nCol)
   numIdentified = as.matrix(Wgoterm2sample_identified, ncol = nCol)
   numSignificant = as.matrix(Wgoterm2sample_significant, ncol  = nCol)
   
   validGoterms2 = as.matrix(rowSums(numIdentified), ncol = 1) > 0
+  numProteinAll = as.matrix(Wgoterm2sample_numprotein[validGoterms2], ncol = 1)
+  # numProteinAll = as.matrix(rep(Wgoterm2sample_numprotein[validGoterms2], nCol), ncol = nCol)
+  # numIdentified = as.matrix(numIdentified[validGoterms2, ], ncol = nCol)
   numIdentified = as.matrix(numIdentified[validGoterms2, ], ncol = nCol)
   numSignificant = as.matrix(numSignificant[validGoterms2, ], ncol  = nCol)
   
@@ -57,7 +76,6 @@ fo_process_goenrichment_bysample <- function(ds){
   
   nRow = nrow(numIdentified)
   
-  
   rep.row<-function(x,n){
     matrix(rep(x,each=n),nrow=n)
   }
@@ -65,6 +83,7 @@ fo_process_goenrichment_bysample <- function(ds){
     matrix(rep(x,each=n), ncol=n, byrow=TRUE)
   }
   
+  numProteinAll = rep.col(numProteinAll, nCol)
   nSigIn = numSignificant ## m[1, 1]
   nSigOut = rep.row(n_significant, nRow) - nSigIn ## m[1, 2]
   nNotSigIn = numIdentified-numSignificant ## m[2, 1]
@@ -86,7 +105,7 @@ fo_process_goenrichment_bysample <- function(ds){
   rist_ratio_est = r1_est / r2_est
   log_risk_ratio = log2(rist_ratio_est)
   
-  correction_factor = T
+  correction_factor = F
   if(correction_factor == TRUE){
     lor_means <- apply(log_risk_ratio, 2, function(x) mean(x, na.rm=T))
     # lor_mean = mean(log_risk_ratio, na.rm = T)
@@ -100,6 +119,12 @@ fo_process_goenrichment_bysample <- function(ds){
   P_est = pmin(P_est, 1 - P_est)
   Z_est = sign(log_risk_ratio) * qnorm(P_est/2, lower.tail = FALSE);
   S_est = log_risk_ratio / Z_est
+  
+  mintargets = input$enrichment_mintargets
+  minobservedratio = input$enrichment_minobservedratio
+  ratios = numIdentified / numProteinAll
+  invalids = (numIdentified < mintargets) | (ratios < minobservedratio/100)
+  log_risk_ratio[invalids] = NA
   
   # browser()
   # log_odds = log_odds - lor_means
@@ -122,14 +147,45 @@ fo_process_goenrichment_bysample <- function(ds){
 }
 
 processed_go_enrichment_bysample <- reactive({
-  req(processed_data_bysample())
-  ds <- processed_data_bysample()
+  switch(input$enrichment_datasource, 
+         "Phosphosites" = {
+           req(processed_data_bysample());
+           ds <- processed_data_bysample()
+         },
+         "Phosphoproteins" = {
+           req(processed_protein_data_bysample());
+           ds <- processed_protein_data_bysample()
+           ds$ST <- ds$PT
+         },
+         "Protein Expression" = {
+           req(processed_expression_data_bysample());
+           ds <- processed_expression_data_bysample()
+         }, 
+         stop("Invalid data source for enrichment")
+  )
   return(fo_process_goenrichment_bysample(ds))
 })
 
 processed_go_enrichment_bysample_unfiltered <- reactive({
-  req(processed_data_bysample_unfiltered())
-  ds <- processed_data_bysample_unfiltered()
+  # req(processed_data_bysample_unfiltered())
+  # ds <- processed_data_bysample_unfiltered()
+  switch(input$enrichment_datasource, 
+         "Phosphosites" = {
+           req(processed_data_bysample_unfiltered());
+           ds <- processed_data_bysample_unfiltered()
+         },
+         "Phosphoproteins" = {
+           req(processed_protein_data_bysample_unfiltered());
+           ds <- processed_protein_data_bysample_unfiltered()
+           ds$ST <- ds$PT
+           ds$ST$Protein = ds$ST$ID; 
+         },
+         "Protein Expression" = {
+           req(processed_expression_data_bysample_unfiltered());
+           ds <- processed_expression_data_bysample_unfiltered()
+         }, 
+         stop("Invalid data source for enrichment")
+  )
   return(fo_process_goenrichment_bysample(ds))
 })
 

@@ -22,12 +22,27 @@ reactive_site2protein_mapping <- reactive({
   
   A <- as.numeric((Wprotein2site %*% ST$Phos) / rowSums(Wprotein2site))
   SE = as.numeric(sqrt((Wprotein2site^2)%*%(ST$StdErr^2)) / rowSums(Wprotein2site))
-  Z = as.numeric(A / SE)
+  
+  useTtest = any(!is.infinite(ST$DF) & !is.na(ST$DF), na.rm = T)
+  
+  if(useTtest){
+    ### Welch–Satterthwaite approximation
+    DF = (Wprotein2site %*% (ST$StdErr^2))^2 / (Wprotein2site^2 %*% ((ST$StdErr^4) / ST$DF));
+    Tx = as.numeric(A / SE)
+    Z = tstat2zscore(as.matrix(Tx), as.matrix(DF))
+    # logpvals = pt(q=abs(as.matrix(Tx)), as.matrix(DF), lower.tail=FALSE, log.p = T)
+    # Z = as.numeric(-1 * qnorm(logpvals, log.p = T))
+    # res = compute_pvalues(as.matrix(Tx), as.matrix(DF))
+    # Z = -1 * qnorm(res$PValues/2) ## T-test equivalent Zscores
+  } else {
+    DF = as.numeric(rep(Inf, length(A)))
+    Z = as.numeric(A / SE)
+  }
   valids = !is.na(Z)
   Wprotein2site = Wprotein2site[valids, ]
   
   return(list("Protein" = Protein, "Wprotein2site" = Wprotein2site, 
-              "A" = A, "SE" = SE, "Z" = Z, "valids" = valids))
+              "A" = A, "SE" = SE, "DF" = DF, "Z" = Z, "valids" = valids))
 })
 
 protein_table <- reactive({
@@ -40,6 +55,7 @@ protein_table <- reactive({
   PT$KinaseIndex = Protein$KinaseIndex
   PT$Phos = out$A[valids]
   PT$StdErr = out$SE[valids]
+  PT$DF = out$DF[valids]
   PT$ZScore = out$Z[valids]
   res = compute_pvalues(as.matrix(PT$ZScore))
   PT$PValue = res$PValues
@@ -64,7 +80,12 @@ protein_table_processed <- reactive({
   mapping <- reactive_site2protein_mapping()
   max_fdr = input$proteinlevel_volcano_maxfdr
   min_logfc = input$proteinlevel_volcano_minlogfc
-  PT$isSignificant = (PT$FDR <= max_fdr) & (abs(PT$Phos) >= min_logfc)
+  if(input$proteinlevel_volcano_fdrcorrection == TRUE){
+    pvals = PT$FDR
+  } else {
+    pvals = PT$PValue
+  }
+  PT$isSignificant = (pvals <= max_fdr) & (abs(PT$Phos) >= min_logfc)
   PT$hasSignificantPSite = as.matrix(mapping$Wprotein2site %*% ST$isSignificant) > 0
   
   return(PT)

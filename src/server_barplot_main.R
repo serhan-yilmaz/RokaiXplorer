@@ -8,6 +8,8 @@ barplot <- function(K, minzscore, topk, yaxis, coloring, show_significant_only){
     Ks <- Ks[Ks$isSignificant, ]
   }
   
+  Ks$zmult = qt(0.05/2, Ks$DF)
+  
   #zstar = max(minzscore, 3)
   zstar = 3
   si <- order(abs(Ks$Phos) - zstar*Ks$StdErr, decreasing = TRUE)
@@ -54,7 +56,7 @@ barplot <- function(K, minzscore, topk, yaxis, coloring, show_significant_only){
           legend.key.height = unit(1.25, "cm"))
   
   if(showErrorBars){ # Show errorabars
-    p <- p + geom_errorbar(aes(ymin=Phos-1.96*StdErr, ymax=Phos+1.96*StdErr), width=.5, size = 0.95)
+    p <- p + geom_errorbar(aes(ymin=Phos-zmult*StdErr, ymax=Phos+zmult*StdErr), width=.5, size = 0.95)
   }
   
   #  defaultcolors <- c('#0072BD', '#D95319', '#EDB120', '#77AC30', '#4DBEEE')

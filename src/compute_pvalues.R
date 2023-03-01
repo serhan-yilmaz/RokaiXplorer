@@ -23,3 +23,9 @@ compute_pvalues <- function(zscores, DF = c()) {
   res = list("PValues" = P, "QValues" = Q)
   return (res)
 }
+
+tstat2zscore <- function(tstats, DF){
+  logpvals = pt(q=abs(as.matrix(tstats)), as.matrix(DF), lower.tail=FALSE, log.p = T)
+  Z = as.numeric(-1 * qnorm(logpvals, log.p = T) * sign(tstats))
+}
+

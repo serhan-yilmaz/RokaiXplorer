@@ -11,6 +11,7 @@ option_set = list(
   "select_subgroup_B" = list(type = "selectInput"),
   "sitelevel_volcano_maxfdr" = list(type = "sliderInput"),
   "sitelevel_volcano_minlogfc" = list(type = "sliderInput"),
+  "sitelevel_volcano_showlegend" = list(type = "materialSwitch"),
   "site_barplot_maxitems" = list(type = "sliderInput"),
   "site_barplot_minzscore" = list(type = "sliderInput"),
   "site_barplot_significant_only" = list(type = "materialSwitch"),
@@ -27,6 +28,7 @@ option_set = list(
   "site_kinase_network_single_kinases" = list(type = "materialSwitch"),
   "proteinlevel_volcano_maxfdr" = list(type = "sliderInput"),
   "proteinlevel_volcano_minlogfc" = list(type = "sliderInput"),
+  "proteinlevel_volcano_showlegend" = list(type = "materialSwitch"),
   "protein_barplot_maxitems" = list(type = "sliderInput"),
   "protein_barplot_minzscore" = list(type = "sliderInput"),
   "protein_barplot_significant_only" = list(type = "materialSwitch"),
@@ -41,6 +43,7 @@ option_set = list(
   "protein_kinase_network_minzscore" = list(type = "sliderInput"),
   "protein_kinase_network_significant_only" = list(type = "materialSwitch"),
   "protein_kinase_network_single_kinases" = list(type = "materialSwitch"),
+  "protexpression_volcano_showlegend" = list(type = "materialSwitch"),
   "protexpression_volcano_maxfdr" = list(type = "sliderInput"),
   "protexpression_volcano_minlogfc" = list(type = "sliderInput"),
   "protexpression_barplot_maxitems" = list(type = "sliderInput"),
@@ -53,8 +56,13 @@ option_set = list(
   "protexpression_heatmap_significant_only" = list(type = "materialSwitch"),
   "protexpression_heatmap_intensity_fc_style" = list(type = "pickerInput"),
   "protexpression_heatmap_select_group" = list(type = "pickerInput"),
+  "ksNetwork" = list(type = "pickerInput"),
+  "rokaiNetwork" = list(type = "pickerInput"),
+  "kinaselevel_minsubs" = list(type = "sliderInput"),
+  "rokaiEnabled" = list(type = "checkboxInput"),
+  "kinaselevel_minsubs" = list(type = "sliderInput"),
   "kinaselevel_volcano_maxfdr" = list(type = "sliderInput"),
-  "kinaselevel_volcano_minlogfc" = list(type = "sliderInput"),
+  "kinaselevel_volcano_showlegend" = list(type = "materialSwitch"),
   "kinase_barplot_maxitems" = list(type = "sliderInput"),
   "kinase_barplot_minzscore" = list(type = "sliderInput"),
   "kinase_barplot_significant_only" = list(type = "materialSwitch"),
@@ -67,6 +75,32 @@ option_set = list(
   "kinase_heatmap_intensity_fc_style" = list(type = "pickerInput"),
   "kinase_heatmap_select_group" = list(type = "pickerInput"),
   "kinase_table_minsubs" = list(type = "sliderInput"),
+  "pathwaylevel_volcano_maxfdr" = list(type = "sliderInput"),
+  "pathwaylevel_volcano_showlegend" = list(type = "materialSwitch"),
+  "enrichment_apply_yates_correction" = list(type = "materialSwitch"),
+  "enrichment_categories" = list(type = "pickerInput"),
+  "enrichment_mintargets" = list(type = "sliderInput"),
+  "enrichment_minobservedratio" = list(type = "sliderInput"),
+  "enrichment_filterbyoverlap" = list(type = "materialSwitch"),
+  "enrichment_maxoverlap" = list(type = "sliderInput"),
+  "enrichment_datasource" = list(type = "pickerInput"),
+  "enrichment_fdrcorrection" = list(type = "materialSwitch"),
+  "enrichment_maxpvalue" = list(type = "sliderInput"),
+  "enrichment_minlogfc" = list(type = "sliderInput"),
+  "enrichment_logfcdirection" = list(type = "pickerInput"),
+  "enrichment_table_categories" = list(type = "pickerInput"),
+  "enrichment_table_significantonly" = list(type = "materialSwitch"),
+  "enrichment_minhits" = list(type = "sliderInput"),
+  "enrichment_targets_table_categories" = list(type = "pickerInput"),
+  "enrichment_targets_table_significantonly" = list(type = "materialSwitch"),
+  "enrichment_targets_minhits" = list(type = "sliderInput"),
+  "enrichment_targets_table_hitsonly" = list(type = "materialSwitch"),
+  "options_var_across_samples" = list(type = "materialSwitch"),
+  "options_moderated_ttest" = list(type = "materialSwitch"),
+  "options_var_across_samples" = list(type = "materialSwitch"),
+  "options_center_foldchanges" = list(type = "materialSwitch"),
+  "options_minsamples" = list(type = "sliderInput"),
+  "options_var_stabilization" = list(type = "pickerInput"),
   "cache" = list(type = "cache"),
   "checksum"="320932023409243"
 )
@@ -385,8 +419,10 @@ foCollapseSubgroupBoxes <- function(){
       uncollapse = T
     }
   }
+  
+  filter_by_collapsed = !DEPLOYMENT_MODE_ENABLED
   if(uncollapse){
-    foUncollapseBoxIfNeeeded("optionbox_filter_by_subgroup", collapse = F, nullval = T)
+    foUncollapseBoxIfNeeeded("optionbox_filter_by_subgroup", collapse = F, nullval = filter_by_collapsed)
   }
   if(!identical("None", foGetCacheValue("cached_select_group_differences"))){
     foUncollapseBoxIfNeeeded("optionbox_subgroup_differences", collapse = F, nullval = T)

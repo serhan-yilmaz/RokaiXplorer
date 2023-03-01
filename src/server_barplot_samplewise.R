@@ -63,7 +63,10 @@ barplot_drawer <- function(Ks, mainGroup, opts){
 }
 
 
-barplot_samplewise <- function(ds, ST, mds, groupings, item_txt, case_control_option, showSampleNames = T){
+barplot_samplewise <- function(ds, ST, mds, groupings, item_txt, 
+                               case_control_option, 
+                               showSampleNames = T,
+                               optx = list()){
   Tmeta <- ds$Tmeta
   # ST <- ds$ST
   not_identified_text = paste("This", tolower(item_txt), "is not identified in the experiment.", sep = " ")
@@ -128,7 +131,7 @@ barplot_samplewise <- function(ds, ST, mds, groupings, item_txt, case_control_op
   indices = match(Ks$ID, colnames(Tmeta$Tsample_metadata))
   
   nGrouping = length(groupings)
-  for(iGroup in range(1, nGrouping)){
+  for(iGroup in prange(1, nGrouping)){
     grp_txt = paste("Grouping", iGroup, sep = "")
     Ks[[grp_txt]] = t(Tmeta$Tsample_metadata[groupings[iGroup], indices])
   }
@@ -157,6 +160,9 @@ barplot_samplewise <- function(ds, ST, mds, groupings, item_txt, case_control_op
   
   dyRange = abs(dyMax - dyMin)
   dyRangeMin = 2.5 * dyScaling
+  if(identical(item_txt, "Kinase")){
+    dyRangeMin = 1.5 * dyScaling
+  }
   rangeDif = dyRangeMin - dyRange
   if(dyRange < dyRangeMin){
     if(dyMin == 0){ # All positive 
@@ -190,5 +196,17 @@ barplot_samplewise <- function(ds, ST, mds, groupings, item_txt, case_control_op
     #return(p1 + p2 + plot_layout(nrow = 2))
   #}
   
-  return(p1)
+  for(iGroup in prange(1, nGrouping)){
+    grp_txt = paste("Grouping", iGroup, sep = "")
+    colnames(Ks)[which(names(Ks) == grp_txt)] <- paste0("Grouping", iGroup, " (", groupings[iGroup], ")")
+  }
+  if(!is.null(optx$QColName)){
+    colnames(Ks)[which(names(Ks) == "Phos")] <- optx$QColName
+  }
+  
+  # colnames(Ks)[which(names(Ks) == "GroupingMain")] <- "GroupMain"
+  
+  # browser()
+  
+  return(list(plot = p1, plotdata = Ks, opts = opts))
 }

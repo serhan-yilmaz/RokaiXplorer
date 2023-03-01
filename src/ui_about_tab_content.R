@@ -1,10 +1,11 @@
-style_font_size_main <- "font-size: 18px;"
+style_font_size_question <- "font-size: 17px;"
+style_font_size_main <- "font-size: 17px;"
 # style_font_size_main <- ""
 style_font_size_footnote <- "font-size: 16px;"
 
 about_question <- function(qtxt, atxt, href, actLink = FALSE,  postfix = "", style_font_size = style_font_size_main){
   if(actLink){
-    link <- actionLink(href, atxt)
+    link <- actionLink(href, atxt, style = "margin-right:0px; padding-right:0px;")
   } else {
     link <- tags$a(atxt, href=href)
   }
@@ -76,15 +77,31 @@ txt1 <- "RokaiXplorer is a tool to perform interactive analysis of phospho-prote
 
 # txt1 <- "RokaiXplorer is an interactive tool to perform exploratory analysis on phospho-proteomic data with a particular focus on biomarker discovery."
 txt2 <- "You can use this tool to identify significant changes in phosphorylation and infer kinase activities using RoKAI."
+aboutTabIntroContent <- withMathJax(includeMarkdown("helpfiles/RokaiXplorer_welcome_intro.md"))
+aboutTabIntroFootnote <- withMathJax(includeMarkdown("helpfiles/RokaiXplorer_welcome_footnote.md"))
+
 aboutTabContent <- tags$span(
+  style = style_font_size_main, 
+  style = "text-align:justify;", 
   tags$h3("Welcome!", style="font-weight:bold;"),
-  about_desc_item(paste(txt1, sep = " "), inline = T),
-  about_desc_item(txt2, inline = T),
-  tags$br(),
-  contact_question("If you have any suggestions or comments, feel free to", "give feedback", "leaveCommentLink", "contact us.", "contactLink", actLink = T, postfix = " "),
+  aboutTabIntroContent,
+  # about_desc_item(paste(txt1, sep = " "), inline = T),
+  # about_desc_item(txt2, inline = T),
   # tags$br(),
-  about_question("If you would like to impact future developments, please fill a", "5-question survey", "https://forms.gle/JMZY1WeR3appegFt9", postfix = "to help us prioritize which additional features to implement next!"),
+  tags$div(id = "about_tutorial_main_div",
+  about_question("Need help getting started? Try our ", "Interactive Tutorial!", "interactiveTutorialLink", actLink = T, postfix = "", style_font_size = style_font_size_question),
+  ),
+  tags$div(id = "about_interactive_data_browser_div",
+    about_question("Interested in exploring more? Learn about our ", "Interactive Data Browser", "deploymentLink", actLink = T, postfix = " ", style_font_size = style_font_size_question),
+  ),
+  contact_question("Have questions or comments?", "Contact us", "contactLink", "Leave Feedback", "leaveCommentLink", actLink = T, postfix = " ", style_font_size = style_font_size_question),
+  # contact_question("If you have any suggestions or comments, feel free to", "give feedback", "leaveCommentLink", "contact us.", "contactLink", actLink = T, postfix = " "),
+  tags$p("Thank you for using RokaiXplorer!", style = style_font_size_question),
+  tags$hr(style = "margin-bottom:4px;margin-top:2px;"),
+  tags$span(style = style_font_size_footnote, aboutTabIntroFootnote),
   # tags$br(),
-  about_desc_item("* The application is still in development. New features may be added or there may be changes in the way analysis are conducted as time goes on.", type = "medium", style_font_size = style_font_size_footnote),
+  # about_question("If you would like to impact future developments, please fill a", "5-question survey", "https://forms.gle/JMZY1WeR3appegFt9", postfix = "to help us prioritize which additional features to implement next!"),
+  # tags$br(),
+  # about_desc_item("* The application is still in development. New features may be added or there may be changes in the way analysis are conducted.", type = "medium", style_font_size = style_font_size_footnote),
   # 
 )

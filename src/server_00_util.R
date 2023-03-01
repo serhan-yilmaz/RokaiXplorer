@@ -4,6 +4,7 @@ downloadPlotDLHandler <- function(plot, file_name, file_type, bg_color = 'white'
       if(is.reactive(file_name)){
         file_name = file_name()
       }
+      file_name = gsub(":", "", file_name)
       paste(file_name, file_type, sep='.') 
       },
     content = function(file) {
@@ -26,20 +27,26 @@ downloadCSVFileHandler <- function(data_file, file_name){
   )
 }
 
-formatNumber <- function(X, digits = 3){
-  inner <- paste0("%.", digits, "f");
-  out <- sprintf(inner, X);
+formatNumber <- function(X, digits = 3, tostring = T){
+  if(tostring ==  T){
+    inner <- paste0("%.", digits, "f");
+    out <- sprintf(inner, X);
+  } else {
+    out = round(X, digits = digits)
+  }
+  return(out)
 }
 
-formatNumericVariables <- function(GT, exclude = c("PValue", "FDR")){
+formatNumericVariables <- function(GT, exclude_primary = c("PValue", "FDR", "EffectiveMag"), exclude = c(), tostring = T){
   cols <- colnames(GT)
   nCol = ncol(GT)
+  exclude = c(exclude, exclude_primary)
   
   for(iCol in 1:nCol){
     Q = GT[[iCol]]
     cname <- cols[iCol]
     if(is.numeric(Q) && is.na(match(cname, exclude))){
-      GT[[iCol]] <- formatNumber(Q);
+      GT[[iCol]] <- formatNumber(Q, tostring = tostring);
     }
   }
   # GT$LogOdds = formatNumber(GT$LogOdds);

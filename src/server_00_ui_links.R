@@ -5,3 +5,7 @@ observeEvent(input$contactLink, {
 observeEvent(input$leaveCommentLink, {
   updateTabsetPanel(session, "aboutTabset", "Contact")
 })
+
+observeEvent(input$deploymentLink, {
+  updateTabsetPanel(session, "aboutTabset", "Online Deployment")
+})

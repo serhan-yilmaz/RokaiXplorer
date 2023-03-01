@@ -13,7 +13,8 @@ reactive_network <- reactive({
   indices = match(proteins, NetworkData$Site$Protein)
   names <- NetworkData$Site$Gene[indices]
   NetworkData$Protein <- data.frame(ID = proteins, Name = names)
-  NetworkData$Site$Identifier <- str_c(NetworkData$Site$Gene, NetworkData$Site$Position, sep = "-")
+  NetworkData$Site$Identifier <- str_c(NetworkData$Site$Protein, NetworkData$Site$Position, sep = "-")
+  # NetworkData$Site$Identifier <- str_c(NetworkData$Site$Gene, NetworkData$Site$Position, sep = "-")
   
   indices = match(NetworkData$Site$Protein, proteins)
   NetworkData$Wsite2protein <- sparseMatrix(

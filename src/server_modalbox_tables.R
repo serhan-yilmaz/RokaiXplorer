@@ -4,11 +4,13 @@ output$modal_kinase_sites_table <- DT::renderDataTable(server = FALSE, {
   ds <- modal_box_selection_mapped()
   validate(need(ds$isKinase & ds$isMapped, ""))
   
+  # browser()
+  
   ST <- site_table_processed();
   net <- reactive_network()
   site_indices <- net$Wkin2site[ds$index, ]
   site_identifiers = as.character(net$Site$Identifier[site_indices])
-  valid_sites = match(site_identifiers, ST$Identifier)
+  valid_sites = match(site_identifiers, ST$ID)
   valid_sites = valid_sites[!is.na(valid_sites)]
   ST = ST[valid_sites, ]
   

@@ -10,7 +10,7 @@ aboutContactTab <- tabPanel(
     tags$div(
       class = "inline", 
       style = "font-size: medium; margin-bottom: 6px; margin-top; 6px;", 
-      "RoKAI is designed by ", 
+      "RokaiXplorer is designed by ", 
       tags$a("Serhan Yilmaz", href = "http://www.serhanyilmaz.com/", target="_blank"), " and ", tags$a("Mehmet Koyuturk", href = "http://compbio.case.edu/koyuturk/", target="_blank"), " at Case Western Reserve University.",
     ),
     desc_text("If you have any questions, please contact <serhan.yilmaz@case.edu>"),

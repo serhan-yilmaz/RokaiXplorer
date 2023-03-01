@@ -31,13 +31,19 @@ heatmapMain <- function(ST, STx, ds, minzscore, topk, show_significant_only, int
   colnames(Ts) <- colnames(ds$Ts)
   rownames(Ts) <- ST$ID
   
-  avgZ = apply(Z, 1, function(x) mean(x, na.rm=T))
-  avgAbsZ = apply(Z, 1, function(x) mean(abs(x), na.rm=T))
+  # avgZ = apply(Z, 1, function(x) mean(x, na.rm=T))
+  # avgAbsZ = apply(Z, 1, function(x) mean(abs(x), na.rm=T))
   sumAbsZ = apply(Z, 1, function(x) sum(abs(x), na.rm=T)) / ncol(Z)
   #valids = (abs(sumAbsZ) >= (2 * ncol(Z))) & (abs(avgZ) >= 1)
   # valids = STv$isSignificant
   #valids = rep(T, nrow(STv), 1) & (abs(STv$ZScore) >= minzscore)
-  valids = !is.na(sumAbsZ) & (abs(sumAbsZ) >= minzscore)
+  
+  if(!identical(items_txt, "kinases")){
+    valids = !is.na(sumAbsZ) & (abs(sumAbsZ) >= minzscore)
+  } else {
+    valids = !is.na(sumAbsZ) & (abs(STv$ZScore) >= minzscore)
+  }
+  
   # valids[is.na(sumAbsZ)] = FALSE
   #valids = !is.na(avgAbsZ) & (abs(avgAbsZ) >= minzscore)
   if(show_significant_only){

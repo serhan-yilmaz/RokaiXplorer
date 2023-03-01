@@ -1,5 +1,7 @@
 fo_process_kinase_data_bysample <- function(ds){
   
+  ds$Xv = ds$Xv - mean(ds$Xv, na.rm = T)
+  
   validSites = !is.na(ds$ST$NetworkDataIndex)
   Tmeta = ds$Tmeta
   Xv = ds$Xv[validSites, ]

@@ -66,15 +66,6 @@ modal_box_selection_mapped <- reactive({
   return(ds)
 })
 
-foGetGoCategoryText <- function(cat){
-  switch(cat, 
-         "molecular_function" = cat <- "Molecular_Function",
-         "biological_process" = cat <- "Biological_Process",
-         "cellular_component" = cat <- "Cellular_Component"
-  )
-  return(cat)
-}
-
 output$abcd_title <- renderUI({
   ds <- modal_box_selection()
   title = ds$main_identifier
@@ -289,9 +280,11 @@ modal_box_site_plot_controls_reactive <- reactive({
     column(width = 3, 
       style = "padding: 8px; padding-top: 12px;", 
       tags$div(
-        downloadButton(paste("modalbox_barplot", "downloadPlotPNG", sep = "_"), 'Download PNG'),
+        downloadButton(paste("modalbox_barplot", "downloadPlotPNG", sep = "_"), 'Download PNG', style = "margin-top:4px;"),
         tags$br(), 
-        downloadButton(paste("modalbox_barplot", "downloadPlotPDF", sep = "_"), 'Download PDF')
+        downloadButton(paste("modalbox_barplot", "downloadPlotPDF", sep = "_"), 'Download PDF', style = "margin-top:4px;"),
+        tags$br(), 
+        downloadButton(paste("modalbox_barplot", "downloadPlotDataExcel", sep = "_"), 'Plot Data (Excel)', style = "margin-top:4px;")
       )
     )
     
@@ -379,6 +372,23 @@ output$modal_box_plot_showing_text <- renderUI({
   if(ds$isSite){
     showing_text = "phosphorylation"
   }
+  
+  if(ds$isGOTerm){
+    showing_text = "enrichment of "
+    switch(input$enrichment_datasource, 
+           "Phosphosites" = {
+             showing_text = paste0(showing_text, "phosphosites")
+           },
+           "Phosphoproteins" = {
+             showing_text = paste0(showing_text, "phosphoproteins")
+           },
+           "Protein Expression" = {
+             showing_text = paste0(showing_text, "protein expression")
+           }, 
+           stop("Invalid data source for enrichment")
+    )
+  }
+  
   tags$div(
     style = "margin-bottom:4px; margin-top:4px; color: #444;", 
     sprintf("Showing the %s:", showing_text),
@@ -410,7 +420,7 @@ output$abcd_ui <- renderUI({
                   ), 
                   tabPanel("Plot", 
                            tags$div(
-                             # uiOutput("modal_box_plot_showing_text"), 
+                             uiOutput("modal_box_plot_showing_text"),
                              shinycssloaders::withSpinner(plotOutput("modal_goenrichment_samplewise_barplot", height = plot_height)), 
                              uiOutput("modal_box_site_plot_controls")
                            )

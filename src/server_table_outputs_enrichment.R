@@ -1,4 +1,25 @@
 
+# reactive_enrichment_table_categories <- reactive({
+#   return(foEnrichmentCategories(input$enrichment_table_categories))
+# })
+
+output$enrichment_display_numpathways <- renderUI({
+  req(go_enrichment_table_processed())
+  GT <- go_enrichment_table_processed();
+  nValid = nnzero(GT$numIdentified >= 1)
+  
+  return(paste0(nValid, ' included in the analysis'))
+})
+
+output$enrichment_display_numproteins <- renderUI({
+  req(enrichment_background_protein_set())
+  out <- enrichment_background_protein_set();
+  nSig = nnzero(out$proteinIsSignificant)
+  nTotal = nnzero(out$proteinIsIdentified)
+  
+  return(paste0(nSig, '/', nTotal, ' passed the cutoffs'))
+})
+
 output$siteEnrichmentTable <- DT::renderDataTable(server = FALSE, {
   req(go_enrichment_table_processed())
   GT <- go_enrichment_table_processed();
@@ -8,13 +29,13 @@ output$siteEnrichmentTable <- DT::renderDataTable(server = FALSE, {
   GT$ChiSqr = round(GT$ChiSqr, digits = 3)
   GT$MagnitudeAdj = round(GT$MagnitudeAdj, digits = 3)
   GT$EffectiveMag = pmax(GT$MagnitudeAdj, 0)
-  GT$SigRatio <- paste0(GT$numSignificant, " / ", GT$numIdentified)
+  GT$HitRatio <- paste0(GT$numSignificant, " / ", GT$numIdentified)
   GT$ObsRatio <- paste0(GT$numIdentified, " / ", GT$numProtein)
   
   # GT <- GT[!is.na(GT$ZScore),]
   # GT <- GT[!is.na(GT$LogOdds), ]
   GT <- GT[GT$numIdentified >= 1, ]
-  GT <- GT[GT$numSignificant >= 1, ]
+  GT <- GT[GT$numSignificant >= input$enrichment_minhits, ]
   
   # minsubs = input$kinase_table_minsubs
   # if(is.null(minsubs)){
@@ -31,11 +52,20 @@ output$siteEnrichmentTable <- DT::renderDataTable(server = FALSE, {
   si <- order(GT$isSignificant, decreasing = TRUE)
   GT <- GT[si,]
   
-  GT = subset(GT, select = -c(MagnitudeAdj, numSignificant, numIdentified, numProtein))
+  GT = subset(GT, select = -c(MagnitudeAdj, numSignificant, numIdentified, numProtein, Index))
   colnames(GT)[3] <- "Category"
   
-  GT <- GT %>% relocate(SigRatio, .after = Category)
-  GT <- GT %>% relocate(ObsRatio, .after = SigRatio)
+  cats <- foEnrichmentCategories(input$enrichment_table_categories)
+  # cats <- reactive_enrichment_table_categories()
+  valids = !is.na(match(GT$Category, cats))
+  GT <- GT[valids, ]
+  
+  if(input$enrichment_table_significantonly == TRUE){
+    GT = GT[GT$isSignificant, ]
+  }
+  
+  GT <- GT %>% relocate(HitRatio, .after = Category)
+  GT <- GT %>% relocate(ObsRatio, .after = HitRatio)
   
   GT <- formatNumericVariables(GT)
   # browser()
@@ -49,7 +79,7 @@ output$siteEnrichmentTable <- DT::renderDataTable(server = FALSE, {
     "ID" = "ID of the GO term", 
     "Name" = "Name of the GO term", 
     "Category" = "Category of the GO term", 
-    "SigRatio" = "Number of significant / Number of identified proteins in the gene set", 
+    "HitRatio" = "Number of hits / Number of identified proteins in the gene set", 
     "ObsRatio" = "Number of identified / Number of total proteins in the gene set", 
     "LogOdds" = "Log2 of odds ratio", 
     "LogRiskRatio" = "Log2 of risk ratio obtained by Bayesian estimation", 

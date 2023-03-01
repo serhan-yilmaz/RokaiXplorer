@@ -3,6 +3,24 @@ is.empty <- function(x){
   return(length(x) == 0)
 }
 
+prange <- function(start, end){
+  if(end >= start){
+    return(range(start, end))
+  } else {
+    return(c())
+  }
+}
+
+multigsub = function(replacements = c(), patterns = c(), txt){
+  out = txt
+  if(length(replacements) > 0){
+    for(i in 1:length(replacements)){
+      out = gsub(replacements[i], patterns[i], out)
+    }
+  }
+  return(out)
+}
+
 #readDeploymentOptions <- function(){
 #  source(file = "deploy/deploy_options.R", local=TRUE)
 #  return(deployment_options)
