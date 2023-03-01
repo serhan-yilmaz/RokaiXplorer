@@ -2,9 +2,9 @@
 RokaiXplorer is an interactive tool to analyze proteomics and phospho-proteomics data. 
 
 You can use this tool to:
-- Identify significant changes in phosphorylation and protein expression
+- Identify significant changes in phosphorylation and protein expression,
+- Perform enrichment of gene ontology (GO) terms,
 - Infer kinase activities using RoKAI
-- Perform enrichment of gene ontology (GO) terms. 
 
 To access the application through a user-friendly interface, please visit: [RokaiXplorer application](http://explorer.rokai.io). 
 
