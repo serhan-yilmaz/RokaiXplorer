@@ -266,6 +266,7 @@ guide <- Cicerone$
   # )
 
 observeEvent(input$interactiveTutorialLink, {
+  main_logging("Interactive Tutorial")
   guide$init()$start()
 })
 
