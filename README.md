@@ -27,4 +27,4 @@ Starting from v0.5.0, RokaiXplorer now allows you to easily share your datasets 
  - [ExampleApp](https://serhan-yilmaz.shinyapps.io/exampleapp/)
  - [ADXplorer](https://yilmazs.shinyapps.io/ADXplorer/) (an application on Alzheimer's disease data)
  
-  For a detailed tutorial on deployment, please visit <a href = 'https://github.com/serhan-yilmaz/RokaiXplorer/blob/main/deploy/README.md' target = "_">our Github page</a>.
+  For a detailed tutorial, please visit <a href = 'https://github.com/serhan-yilmaz/RokaiXplorer/blob/main/deploy/README.md' target = "_">the deployment page</a>.
