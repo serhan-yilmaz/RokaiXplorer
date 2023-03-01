@@ -1,5 +1,6 @@
 observeEvent(input$buttonSampleData, {
   foLoadSampleData()
+  main_logging("Sample Data")
   a <- guide$get_next()
   if(!is.null(a) && guide$get_next()$highlighted == "optionbox_filter_by_subgroup_wrapper"){
     #message("abcd")
@@ -19,7 +20,6 @@ foLoadSampleData <- function(){
   upload_data_ready(FALSE)
   upload_expression_data_ready(FALSE)
   upload_metadata_ready(FALSE)
-  main_logging("Sample Data")
   a = current_dataset()
   b = current_metadata()
 }
