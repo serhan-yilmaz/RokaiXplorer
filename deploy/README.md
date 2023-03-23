@@ -54,7 +54,7 @@ devtools::source_url("https://github.com/serhan-yilmaz/RokaiXplorer/blob/main/sr
 options(RokaiXplorer_deployment_mode = TRUE)
 runRokaiXplorer()
 ```
-Note that, after running the ```runRokaiXplorer()``` command, the application will stay open until it is closed. **So, please make sure to close the application before moving on the next steps and running the next code snippets** (this applies to other steps that include ```runRokaiXplorer()``` command as well). 
+Note that, after running the ```runRokaiXplorer()``` command, the application **will stay open until it is closed**. So, please make sure to **close the application before moving on the next steps and running the next code snippets** (this applies to other steps that include ```runRokaiXplorer()``` command as well). 
 
 ### Step 6: Customizing the application for user data & configuration
 To customize the application to load your data instead of the sample dataset, first place your data under the ```/RokaiXplorer/data/``` folder in the current directory and run the following code after setting the file paths appropriately:
