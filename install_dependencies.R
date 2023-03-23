@@ -70,6 +70,7 @@ install_dependencies <- function(verbose = F){
   	"munsell",
   	"nanotime",
   	"openssl",
+	"openxlsx", 
   	"pillar",
   	"pkgconfig",
   	"plotly",
