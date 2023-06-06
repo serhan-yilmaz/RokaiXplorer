@@ -66,7 +66,9 @@ fo_process_data_bysample <- function(ds, Tmeta, norm_by = c(), type = "phosphory
   ST = ST[validSites, ]
   Ts = Ts[validSites, ]
   Ts <- log2(Ts)
-  
+  if(identical(input$options_var_stabilization, "Centering")){
+    Ts = Ts - apply(Ts, 1, function(x) mean(x, na.rm=T))
+  }
   return (list("Xv" = Xv, "Sx" = Sx, "ST"= ST, "Ts" = Ts, "validSites" = validSites, "Tmeta" = Tmeta))
 }
 

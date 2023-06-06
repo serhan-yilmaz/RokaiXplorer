@@ -8,7 +8,8 @@ siteBarPlot <- reactive({
   minzscore = input$site_barplot_minzscore
   topk = input$site_barplot_maxitems
   yaxis = input$site_barplot_yaxis
-  coloring = input$site_barplot_coloring
+  coloring = "Z-Score";
+  # coloring = input$site_barplot_coloring
   #  yaxistxt_main = "Site Phosphorylation"
   show_significant_only = input$site_barplot_significant_only
   barplot(ST, minzscore, topk, yaxis, coloring, show_significant_only)
@@ -35,7 +36,8 @@ protExpressionBarPlot <- reactive({
   minzscore = input$protexpression_barplot_minzscore
   topk = input$protexpression_barplot_maxitems
   yaxis = input$protexpression_barplot_yaxis
-  coloring = input$protexpression_barplot_coloring
+  coloring = "Z-Score";
+  # coloring = input$protexpression_barplot_coloring
   #  yaxistxt_main = "Site Phosphorylation"
   show_significant_only = input$protexpression_barplot_significant_only
   barplot(ST, minzscore, topk, yaxis, coloring, show_significant_only)

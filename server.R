@@ -28,6 +28,9 @@ library(limma, include.only = 'squeezeVar')
 library(statmod)
 library(plotly)
 library(cicerone)
+# library(hrbrthemes)
+library(viridis)
+library(ggthemes)
 
 # timeend = Sys.time() - timestart
 # message(timeend)

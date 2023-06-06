@@ -183,6 +183,7 @@ cache_locked = reactiveVal(FALSE)
 
 cache$cached_mbox_main_select_group = reactiveVal("")
 cache$cached_mbox_main_casecontrol = reactiveVal("")
+cache$cached_mbox_main_plotstyle = reactiveVal("")
 cache$cached_mbox_main_datasource = reactiveVal("")
 cache$cached_mbox_main_normgroup = reactiveVal(TRUE)
 cache$cached_mbox_main_showsamples = reactiveVal(TRUE)
@@ -205,9 +206,11 @@ modal_box_site_plot_controls_reactive <- reactive({
   x <- current_metadata()
   groups <- rownames(x$Tsample_metadata)
   casecontrol_opts <- c("Case samples", "Control samples","Both case and control")
+  plotstyle_opts <- c("Bar plot", "Box plot")
   #casecontrol_opts <- c("Case samples", "Control samples","Both case and control")
   selected_grouping = fo_restore_if_applicable(groups, isolate(cache$cached_mbox_main_select_group()))
   selected_casecontrol = fo_restore_if_applicable(casecontrol_opts, isolate(cache$cached_mbox_main_casecontrol()))
+  selected_plotstyle = fo_restore_if_applicable(plotstyle_opts, isolate(cache$cached_mbox_main_plotstyle()))
   selected_normgroup = fo_restore_if_applicable(c(F, T), isolate(cache$cached_mbox_main_normgroup()))
   selected_showsamples = fo_restore_if_applicable(c(F, T), isolate(cache$cached_mbox_main_showsamples()))
   
@@ -228,7 +231,7 @@ modal_box_site_plot_controls_reactive <- reactive({
   selection <- modal_box_selection()
   
   if(selection$isProtein){
-    datasource_opts = c("Protein Expression", "Phosphorylation")
+    datasource_opts = c("Phosphorylation", "Protein Expression")
     selected_datasource = fo_restore_if_applicable(datasource_opts, isolate(cache$cached_mbox_main_datasource()))
     data_source_div <- 
       multiChoicePicker("mbox_site_plot_datasource", "Data Source:", datasource_opts, 
@@ -250,10 +253,18 @@ modal_box_site_plot_controls_reactive <- reactive({
     casecontrol_div <- tags$div()
   }
   
+   plotstyle_div <- multiChoicePicker("mbox_site_plotstyle", "Plot Style:", plotstyle_opts, 
+                                       selected = selected_plotstyle,
+                                       isInline = "F", width = 175, 
+                                       style_picker = "display:inline-flex; margin-top:4px;", 
+                                       picker_inline = F)
+  
   tags$div(
     fluidRow(
     column(width = 4, 
            tags$div(style = "width: 180px; margin: 4px;", 
+                    
+                    data_source_div, 
     multiChoicePicker("mbox_site_plot_select_group", "Grouping:", groups, 
                       selected = selected_grouping, 
                       isInline = "F", multiple = T, max_opts = 2, width = 170, 
@@ -268,11 +279,11 @@ modal_box_site_plot_controls_reactive <- reactive({
     ),
     column(width = 4,
            tags$div(style = "width: 180px; margin: 4px;", 
-                    data_source_div, 
+                    plotstyle_div,
                     casecontrol_div, 
     tags$div(
       style = "margin-top: 8px;", 
-      tags$b("Sample names:"), 
+      tags$b("X-axis labels:"), 
       shinyWidgets::materialSwitch(inputId = "mbox_site_plot_show_samples", label = "", status = "primary", value = selected_showsamples, inline = T)
     )
            )
@@ -301,6 +312,11 @@ observeEvent(input$mbox_site_plot_select_group, {
 observeEvent(input$mbox_site_plot_samples_case_control, {
   if(cache_locked()){return()}
   cache$cached_mbox_main_casecontrol(input$mbox_site_plot_samples_case_control)
+})
+
+observeEvent(input$mbox_site_plotstyle, {
+  if(cache_locked()){return()}
+  cache$cached_mbox_main_plotstyle(input$mbox_site_plotstyle)
 })
 
 observeEvent(input$mbox_site_plot_norm_by_group, {

@@ -6,10 +6,12 @@ site_kinase_network <- reactive({
   ST <- site_table_processed()
   ST$NameX = ST$ProteinName
   ST$NameX[is.na(ST$NameX)] = ST$Protein[is.na(ST$NameX)]
-  ST$ID <- str_c(ST$Protein, ST$Position, sep = "-")
+  ST$ID <- str_c(ST$NameX, ST$Position, sep = "-")
+  pos = gsub("[^0-9]", "", ST$Position)
+  ST$ID2 <- str_c(ST$Protein, pos, sep = "_")
   NetworkData <- reactive_network()
   ST = ST[!is.na(ST$Phos), ]
-  indices = match(ST$ID, NetworkData$Site$Identifier)
+  indices = match(ST$ID2, NetworkData$Site$Identifier)
   
   # indices = match(ST$ID, NetworkData$Site$Identifier)
   return(foKinaseNetworkSubset(ST, NetworkData, indices, 

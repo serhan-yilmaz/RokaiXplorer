@@ -20,8 +20,8 @@ heatmapMain <- function(ST, STx, ds, minzscore, topk, show_significant_only, int
   
   STv = STx[indices, ]
   
-  Ts = Ts - apply(Ts, 2, function(x) mean(x, na.rm=T))
-  Ts = Ts - apply(Ts, 1, function(x) mean(x, na.rm=T))
+  # Ts = Ts - apply(Ts, 2, function(x) mean(x, na.rm=T))
+  # Ts = Ts - apply(Ts, 1, function(x) mean(x, na.rm=T))
   
   #Ts <- as.data.frame(normalize.quantiles(as.matrix(Ts)))
   #Z[is.na(Z)] = 0
@@ -100,7 +100,6 @@ heatmapMain <- function(ST, STx, ds, minzscore, topk, show_significant_only, int
       data_melt[[grp_txt]] = t(Tmeta$Tsample_metadata[groupings[iGroup], indices])
     }
   }
-  
   
   # data_melt[data_melt < -4] = -4
   # data_melt[data_melt > 4] = 4

@@ -44,7 +44,7 @@ deploymentDataDownloadDiv <- function(use_expression_data = FALSE){
                style = "margin-top: 3px;;",
                style = "border-style: inset; padding: 3px; border-width:1px;", 
                #   border-width: 3px;
-               downloadButton('buttonDownloadDeploymentData', 'Data'),
+               downloadButton('buttonDownloadDeploymentData', 'Phosphorylation Data'),
                expression_download, 
                downloadButton('buttonDownloadDeploymentMetadata', 'Metadata'),
       )
@@ -67,7 +67,7 @@ sampleDataDiv <- tags$div(
              style = "margin-top: 4px;;",
              style = "border-style: inset; padding: 3px; border-width:1px;", 
              #   border-width: 3px;
-             downloadButton('buttonDownloadSampleData', 'Data'),
+             downloadButton('buttonDownloadSampleData', 'Phosphorylation Data'),
              downloadButton('buttonDownloadSampleExpressionData', 'Expression Data'),
              downloadButton('buttonDownloadSampleMetaData', 'Metadata'),
     )

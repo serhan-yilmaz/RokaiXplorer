@@ -9,30 +9,8 @@ foDirectionCutoff <- function(phos, direction){
   return(out)
 }
 
-protein_with_phosphorylated_site_table <- reactive({
-  # req(site_table_processed())
-  req(reactive_network())
+foEnrichmentBackgroundSet <- function(ST){
   NetworkData <- reactive_network()
-  
-  switch(input$enrichment_datasource, 
-         "Phosphosites" = {
-           req(site_table_processed()); 
-           ST <- site_table_processed()
-           },
-         "Phosphoproteins" = {
-           req(protein_table_processed()); 
-           ST <- protein_table_processed(); 
-           ST$Protein = ST$ID; 
-           },
-         "Protein Expression" = {
-           req(protexpression_table_processed());
-           ST <- protexpression_table_processed();
-         }, 
-         stop("Invalid data source for enrichment")
-  )
-  
-  # browser()
-  
   indices = match(ST$Protein, NetworkData$UniprotGene$ID)
   row_indices = 1:nrow(ST)
   valids = !is.na(indices)
@@ -49,7 +27,7 @@ protein_with_phosphorylated_site_table <- reactive({
   }
   direction = input$enrichment_logfcdirection
   ST$isSignificant = (Pvals <= max_pvalue) & (abs(ST$Phos) >= min_logfc) & 
-                      foDirectionCutoff(ST$Phos, direction)
+    foDirectionCutoff(ST$Phos, direction)
   
   Wsite2protein <- sparseMatrix(
     i = row_indices,
@@ -62,18 +40,35 @@ protein_with_phosphorylated_site_table <- reactive({
   
   return(list("proteinIsIdentified" = proteinIsIdentified, 
               "proteinIsSignificant" = proteinIsSignificant))
-})
+}
 
 enrichment_background_protein_set <- reactive({
-  return(protein_with_phosphorylated_site_table())
+  req(reactive_network())
+  switch(input$enrichment_datasource, 
+         "Phosphosites" = {
+           req(site_table_processed()); 
+           ST <- site_table_processed()
+           },
+         "Phosphoproteins" = {
+           req(protein_table_processed()); 
+           ST <- protein_table_processed(); 
+           ST$Protein = ST$ID; 
+           },
+         "Protein Expression" = {
+           req(protexpression_table_processed());
+           ST <- protexpression_table_processed();
+         }, 
+         stop("Invalid data source for enrichment")
+  )
+  return(foEnrichmentBackgroundSet(ST))
 })
 
-go_enrichment_table <- reactive({
-  req(enrichment_background_protein_set())
-  
-  # startTime <- Sys.time()
-  
-  out <- enrichment_background_protein_set()
+# 
+# enrichment_background_protein_set <- reactive({
+#   return(protein_with_phosphorylated_site_table())
+# })
+
+foPrepareEnrichmentTable <- function(out){
   NetworkData <- reactive_network()
   proteinIsSignificant = out$proteinIsSignificant[out$proteinIsIdentified]
   validGoterms <- colSums(NetworkData$Wuniprotgene2goterm) > 0
@@ -144,7 +139,6 @@ go_enrichment_table <- reactive({
   # log_odds[invalids] = NA
   # std_err[invalids] = NA
   
-  
   ### Option for centering
   lor_mean = mean(log_risk_ratio, na.rm = T)
   # message(paste0("logRR mean: ", lor_mean))
@@ -168,7 +162,7 @@ go_enrichment_table <- reactive({
   expectedSigOut = n_identified * rSig * (1 - rIn)
   expectedNotSigIn = n_identified * (1 - rSig) * rIn
   expectedNotSigOut = n_identified * (1 - rSig) * (1 - rIn)
-
+  
   if(input$enrichment_apply_yates_correction == TRUE){
     foChiSqr <- function(n, exp){
       (abs(n - exp) -  0.5)^2/exp ## With Yates's Correction
@@ -182,17 +176,19 @@ go_enrichment_table <- reactive({
   # message(sprintf("nSignificant: %d", n_significant))
   # message(sprintf("nIdentified: %d", n_identified))
   chi_squared = foChiSqr(nSigIn, expectedSigIn) + 
-                foChiSqr(nSigOut, expectedSigOut) + 
-                foChiSqr(nNotSigIn, expectedNotSigIn) + 
-                foChiSqr(nNotSigOut, expectedNotSigOut)
+    foChiSqr(nSigOut, expectedSigOut) + 
+    foChiSqr(nNotSigIn, expectedNotSigIn) + 
+    foChiSqr(nNotSigOut, expectedNotSigOut)
   valids = (expectedSigIn > 0) & (expectedSigOut > 0) & 
-          (expectedNotSigIn > 0) & (expectedNotSigOut > 0)
+    (expectedNotSigIn > 0) & (expectedNotSigOut > 0)
   chi_squared[!valids] = NaN
   logpvalues = pchisq(chi_squared, df=1, lower.tail=FALSE, log.p = T)
   pvalues = pchisq(chi_squared, df=1, lower.tail=FALSE)
   qvalues <- p.adjust(pvalues, method = "BH")
   
-  Zeq = 1 - qnorm(logpvalues, log.p = T)
+  Zeq = as.numeric(-1 * qnorm(logpvalues-log(2), log.p = T) * sign(log_risk_ratio))
+  # Zeq = -qnorm(logpvalues, log.p = T)
+  # Zeq = 1 - qnorm(logpvalues, log.p = T)
   
   # chi_squared <- suppressWarnings(apply(allnums,1, function(x) chisq.test(matrix(x,nr=2), correct = TRUE)$statistic))
   # allpvals <- suppressWarnings(apply(allnums,1, function(x) chisq.test(matrix(x,nr=2), correct = TRUE)$p.value))
@@ -207,12 +203,14 @@ go_enrichment_table <- reactive({
   GO$numProtein = numProteinAll
   GO$numIdentified = numIdentified
   GO$numSignificant = numSignificant
+  GO$HitRatio <- paste0(GO$numSignificant, " / ", GO$numIdentified)
+  GO$ObsRatio <- paste0(GO$numIdentified, " / ", GO$numProtein)
   # GO$LogOdds = as.matrix(log_odds)
   GO$LogRiskRatio = log_risk_ratio
   GO$StdErr = S_est
-  # GO$ZScore = as.matrix(Zeq)
+  GO$ZScore = as.matrix(Zeq)
   # GO$P_est = as.matrix(P_est)
-  GO$ZScore = as.matrix(Z_est)
+  # GO$ZScore = as.matrix(Z_est)
   # GO$StdErr = as.matrix(std_err)
   # GO$ZScore = as.matrix(Z)
   # GO$ChiSquared = allchi2
@@ -235,6 +233,13 @@ go_enrichment_table <- reactive({
   # browser()
   
   return(list(GO = GO, Wuniprotgene2goterm = Wuniprotgene2goterm, Wuniprotgene2goterm_significant = Wuniprotgene2goterm_significant, UniprotGene = UniprotGene))
+  
+}
+
+go_enrichment_table <- reactive({
+  req(enrichment_background_protein_set())
+  out <- enrichment_background_protein_set()
+  return(foPrepareEnrichmentTable(out))
 })
 
 foEnrichmentCategories <- function(cats){
@@ -253,9 +258,7 @@ foEnrichmentCategories <- function(cats){
   return(out)
 }
 
-go_enrichment_table_processed <- reactive({
-  req(go_enrichment_table())
-  GT <- go_enrichment_table()$GO
+foProcessEnrichmentTable <- function(GT){
   # max_fdr = input$kinaselevel_volcano_maxfdr
   # min_logfc = input$kinaselevel_volcano_minlogfc
   categories = foEnrichmentCategories(input$enrichment_categories)
@@ -404,9 +407,90 @@ go_enrichment_table_processed <- reactive({
   }
   GT$isSignificant = (pvals <= max_fdr) & (GT$LogRiskRatio >= min_logfc)
   return(GT)
+}
+
+go_enrichment_table_processed <- reactive({
+  req(go_enrichment_table())
+  GT <- go_enrichment_table()$GO
+  return(foProcessEnrichmentTable(GT))
 })
 
+foPathwayTargetsTable <- function(ds, GT){
+  UniprotGene = ds$UniprotGene
+  Wuniprotgene2goterm = ds$Wuniprotgene2goterm[, GT$Index]
+  Wuniprotgene2goterm_significant = ds$Wuniprotgene2goterm_significant[, GT$Index]
+  
+  indices = which(Wuniprotgene2goterm, arr.ind = T)
+  i1 = indices[, 2]
+  i2 = indices[, 1]
+  
+  KS = data.frame(
+    ID = GT$ID[i1],
+    Name = GT$Name[i1],
+    Category = GT$Category[i1],
+    numProtein = GT$numProtein[i1],
+    numIdentified = GT$numIdentified[i1],
+    numSignificant = GT$numSignificant[i1],
+    LogRiskRatio = GT$LogRiskRatio[i1], 
+    EffectiveMag = GT$EffectiveMag[i1], 
+    ZScore = GT$ZScore[i1], 
+    FDR = GT$FDR[i1], 
+    isSignificant = GT$isSignificant[i1], 
+    TargetID = UniprotGene$ID[i2],
+    TargetProtein = UniprotGene$Gene[i2],
+    IsHit = UniprotGene$isSignificant[i2]
+  )
+  
+  return(KS)
+}
 
+foPrepareEnrichmentWithtargets <- function(KS, GT){
+  KSv = KS[KS$IsHit, ]
+  
+  concatenated <- aggregate(TargetProtein ~ ID, KSv, function(x) paste(x, collapse = "; "));
+  indices = match(concatenated$ID, GT$ID)
+  values = rep(NA, nrow(GT))
+  values[indices[!is.na(indices)]] = concatenated$TargetProtein[!is.na(indices)]
+  GT$Hits = values;
+  
+  concatenated <- aggregate(TargetProtein ~ ID, KS, function(x) paste(x, collapse = "; "));
+  indices = match(concatenated$ID, GT$ID)
+  values = rep(NA, nrow(GT))
+  values[indices[!is.na(indices)]] = concatenated$TargetProtein[!is.na(indices)]
+  GT$AllTargets = values;
+  
+  return(GT)
+}
+
+pathway_targets_table <- reactive({
+  req(go_enrichment_table())
+  req(go_enrichment_table_processed())
+  
+  ds <- go_enrichment_table()
+  GT <- go_enrichment_table_processed()
+  KS = foPathwayTargetsTable(ds, GT)
+  # GT = foPrepareEnrichmentWithtargets(KS, GT)
+  # browser()
+  
+  return (KS)
+})
+
+go_enrichment_table_processed_withtargets <- reactive({
+  req(pathway_targets_table())
+  KS = pathway_targets_table()
+  GT = go_enrichment_table_processed()
+  GT = foPrepareEnrichmentWithtargets(KS, GT)
+  return(GT)
+})
+
+foComputeEnrichmentTable <- function(ST){
+  set = foEnrichmentBackgroundSet(ST)
+  out = foPrepareEnrichmentTable(set)
+  GT = foProcessEnrichmentTable(out$GO)
+  KS = foPathwayTargetsTable(out, GT)
+  GT = foPrepareEnrichmentWithtargets(KS, GT)
+  return(GT)
+}
 
 
 

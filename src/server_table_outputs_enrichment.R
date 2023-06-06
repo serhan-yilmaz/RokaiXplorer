@@ -21,16 +21,14 @@ output$enrichment_display_numproteins <- renderUI({
 })
 
 output$siteEnrichmentTable <- DT::renderDataTable(server = FALSE, {
-  req(go_enrichment_table_processed())
-  GT <- go_enrichment_table_processed();
+  req(go_enrichment_table_processed_withtargets())
+  GT <- go_enrichment_table_processed_withtargets();
   # GT$LogOdds = formatNumber(GT$LogOdds);
   # GT$StdErr = formatNumber(GT$StdErr)
   GT$ZScore = round(GT$ZScore, digits = 3)
   GT$ChiSqr = round(GT$ChiSqr, digits = 3)
   GT$MagnitudeAdj = round(GT$MagnitudeAdj, digits = 3)
   GT$EffectiveMag = pmax(GT$MagnitudeAdj, 0)
-  GT$HitRatio <- paste0(GT$numSignificant, " / ", GT$numIdentified)
-  GT$ObsRatio <- paste0(GT$numIdentified, " / ", GT$numProtein)
   
   # GT <- GT[!is.na(GT$ZScore),]
   # GT <- GT[!is.na(GT$LogOdds), ]
@@ -109,6 +107,9 @@ output$siteEnrichmentTable <- DT::renderDataTable(server = FALSE, {
   
   # js_adjust_after_initialize <- JS('function() {this.api().columns().adjust().draw();}');
   
+  hitsIndex = match('Hits', colnames(GT)) - 1
+  allTargetsIndex = match('AllTargets', colnames(GT)) - 1
+  
   fn = 'enrichment_table'
   DT::datatable(GT, rownames= FALSE, extensions = 'Buttons', 
                 callback = JS(callback), 
@@ -118,8 +119,9 @@ output$siteEnrichmentTable <- DT::renderDataTable(server = FALSE, {
                                stateSave = TRUE,
                                stateLoadParams = JS('function (settings, data) {return false;}'),
                                columnDefs = list(
-                                 list(targets = 1, title = "Name", width = '150px')
-                                 # list(targets = 1, title = "Name")
+                                 list(targets = 1, title = "Name", width = '150px'),
+                                 list(targets = hitsIndex, width = '300px'),
+                                 list(targets = allTargetsIndex, visible = FALSE, width = '450px')
                                ),
                                # initComplete = js_adjust_after_initialize, 
                                initComplete = foAddTooltips(colnames(GT), tooltips),

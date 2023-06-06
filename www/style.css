@@ -71,3 +71,7 @@ div#driver-popover-item.analysis_results_tutorial_cicerone {
 	min-width: 510px;
 	text-align: center;
 }
+
+.multiChoicePicker-centeredchoices > .form-group.shiny-input-container > .dropdown > .btn.dropdown-toggle > .filter-option {
+	text-align:center;
+}

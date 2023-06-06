@@ -1,4 +1,12 @@
-foPrepareSiteTable <- function(ds){
+foPrepareSiteTable <- function(ds, sitetable = TRUE){
+  if(sitetable == TRUE){
+    item_txt = "ptms"
+    col_names = c("Protein", "ProteinName", "Position", "Identifier", "ID")
+  } else {
+    item_txt = "proteins"
+    col_names = c("Protein", "ProteinName", "Position", "Identifier")
+  }
+  
   validSites = ds$validSites
   Xv = ds$Xv
   Sx = ds$Sx
@@ -15,7 +23,10 @@ foPrepareSiteTable <- function(ds){
   }
   
   NetworkData <- reactive_network()
-  ST = ds$ST[, c("Protein", "ProteinName", "Position", "Identifier", "ID")]
+  ST = ds$ST[, col_names]
+  if(sitetable == FALSE){
+    ST$Identifier = ST$ProteinName
+  }
   ST$InRef = !is.na(ds$ST$NetworkDataIndex)
   ST$Phos = Xv
   ST$StdErr = Sx
@@ -31,7 +42,7 @@ foPrepareSiteTable <- function(ds){
   ST$NetworkDataIndex = ds$ST$NetworkDataIndex
   
   validate(
-    need(nrow(ST) > 0, "There are no ptms identified in the selected subgroup. Please make sure there are no conflicts in the subgroup selection.")
+    need(nrow(ST) > 0, paste0("There are no ", item_txt, " identified in the selected subgroup. Please make sure there are no conflicts in the subgroup selection."))
   )
   
   return (ST)
@@ -67,48 +78,46 @@ protexpression_table <- reactive({
   #    req(processed_protein_data_bysample())
   #    req(processed_data_bysample())
   ds <- preprocessed_expression_dataset();
-  
-  validSites = ds$validSites
-  Xv = ds$Xv
-  Sx = ds$Sx
-  Zx = Xv / Sx
-  
-  if(ds$useTtest){
-    Tx = Xv / (Sx)
-    # Tx = Xv / (Sx / ds$sd.inflationfactor)
-    res = compute_pvalues(as.matrix(Tx), as.matrix(ds$DF))
-    Zx = tstat2zscore(as.matrix(Tx), as.matrix(ds$DF))
-    # Zx = qnorm(1 - res$PValues/2) ## T-test equivalent Zscores
-  } else {
-    res = compute_pvalues(as.matrix(Zx))
-  }
-  
-  NetworkData <- reactive_network()
-  ST = ds$ST[, c("Protein", "ProteinName", "Position", "Identifier")]
-  ST$Identifier = ST$ProteinName
-  # ST$InRef = !is.na(ds$ST$NetworkDataIndex)
-  ST$Phos = Xv
-  ST$StdErr = Sx
-  # ST$StdErrT  = Sx / ds$sd.inflationfactor
-  ST$DF = ds$DF
-  ST$TStat = ST$Phos / ST$StdErr
-  ST$ZScore = Zx
-  ST$InflationFactor = ds$sd.inflationfactor
-  ST$PValue = res$PValues
-  ST$FDR = res$QValues
-  ST$MagnitudeAdj <- abs(Xv) - 3 * Sx;
-  ST$EffectiveMag = pmax(ST$MagnitudeAdj, 0)
-  
-  validate(
-    need(nrow(ST) > 0, "There are no proteins identified in the selected subgroup. Please make sure there are no conflicts in the subgroup selection.")
-  )
-  
-  return (ST)
+  return(foPrepareSiteTable(ds, sitetable = FALSE))
+  # 
+  # validSites = ds$validSites
+  # Xv = ds$Xv
+  # Sx = ds$Sx
+  # Zx = Xv / Sx
+  # 
+  # if(ds$useTtest){
+  #   Tx = Xv / (Sx)
+  #   # Tx = Xv / (Sx / ds$sd.inflationfactor)
+  #   res = compute_pvalues(as.matrix(Tx), as.matrix(ds$DF))
+  #   Zx = tstat2zscore(as.matrix(Tx), as.matrix(ds$DF))
+  #   # Zx = qnorm(1 - res$PValues/2) ## T-test equivalent Zscores
+  # } else {
+  #   res = compute_pvalues(as.matrix(Zx))
+  # }
+  # 
+  # NetworkData <- reactive_network()
+  # ST = ds$ST[, c("Protein", "ProteinName", "Position", "Identifier")]
+  # ST$Identifier = ST$ProteinName
+  # # ST$InRef = !is.na(ds$ST$NetworkDataIndex)
+  # ST$Phos = Xv
+  # ST$StdErr = Sx
+  # # ST$StdErrT  = Sx / ds$sd.inflationfactor
+  # ST$DF = ds$DF
+  # ST$TStat = ST$Phos / ST$StdErr
+  # ST$ZScore = Zx
+  # ST$InflationFactor = ds$sd.inflationfactor
+  # ST$PValue = res$PValues
+  # ST$FDR = res$QValues
+  # ST$MagnitudeAdj <- abs(Xv) - 3 * Sx;
+  # ST$EffectiveMag = pmax(ST$MagnitudeAdj, 0)
+  # 
+  # validate(
+  #   need(nrow(ST) > 0, "There are no proteins identified in the selected subgroup. Please make sure there are no conflicts in the subgroup selection.")
+  # )
+  # return (ST)
 })
 
-protexpression_table_processed <- reactive({
-  req(protexpression_table())
-  ST <- protexpression_table()
+foProcessProtExpressionTable <- function(ST){
   max_fdr = input$protexpression_volcano_maxfdr
   min_logfc = input$protexpression_volcano_minlogfc
   if(input$protexpression_volcano_fdrcorrection == TRUE){
@@ -117,9 +126,23 @@ protexpression_table_processed <- reactive({
     pvals = ST$PValue
   }
   ST$isSignificant = (pvals <= max_fdr) & (abs(ST$Phos) >= min_logfc)
+  return(ST)
+}
+
+protexpression_table_processed <- reactive({
+  req(protexpression_table())
+  ST <- protexpression_table()
+  # max_fdr = input$protexpression_volcano_maxfdr
+  # min_logfc = input$protexpression_volcano_minlogfc
+  # if(input$protexpression_volcano_fdrcorrection == TRUE){
+  #   pvals = ST$FDR
+  # } else {
+  #   pvals = ST$PValue
+  # }
+  # ST$isSignificant = (pvals <= max_fdr) & (abs(ST$Phos) >= min_logfc)
   
   # ST$isSignificant[is.na(ST$isSignificant)] = FALSE
-  return(ST)
+  return(foProcessProtExpressionTable(ST))
 })
 
 

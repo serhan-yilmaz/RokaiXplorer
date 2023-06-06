@@ -5,7 +5,7 @@ rokai_inference <- function(X, S, Fkin2site, DF = c()) {
   S = S[indA]
   
   if(is.empty(DF)){
-    usettest = FALSE
+    useTtest = FALSE
   } else {
     useTtest = any(!is.infinite(DF) & !is.na(DF), na.rm = T)
   }

@@ -8,7 +8,8 @@ kinaseBarPlot <- reactive({
   minzscore = input$kinase_barplot_minzscore
   topk = input$kinase_barplot_maxitems
   yaxis = input$kinase_barplot_yaxis
-  coloring = input$kinase_barplot_coloring
+  coloring = "Z-Score";
+  # coloring = input$kinase_barplot_coloring
   show_significant_only = input$kinase_barplot_significant_only
   minsubs = input$kinase_barplot_minsubs
   KT = KT[KT$NumSubs >= minsubs, ]

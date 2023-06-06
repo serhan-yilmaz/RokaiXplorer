@@ -28,6 +28,9 @@ downloadCSVFileHandler <- function(data_file, file_name){
 }
 
 formatNumber <- function(X, digits = 3, tostring = T){
+  if(identical(X, NULL)){
+    return(NULL)
+  }
   if(tostring ==  T){
     inner <- paste0("%.", digits, "f");
     out <- sprintf(inner, X);

@@ -1,10 +1,5 @@
-reactive_site2protein_mapping <- reactive({
-  req(site_table())
-  req(reactive_network())
+foSite2ProteinMapping <- function(ST){
   NetworkData <- reactive_network()
-  #Wprotein2site <- t(NetworkData$Wsite2protein)
-  
-  ST <- site_table();
   proteins = unique(ST$Protein)
   indices = match(proteins, ST$Protein)
   names <- ST$ProteinName[indices]
@@ -43,11 +38,19 @@ reactive_site2protein_mapping <- reactive({
   
   return(list("Protein" = Protein, "Wprotein2site" = Wprotein2site, 
               "A" = A, "SE" = SE, "DF" = DF, "Z" = Z, "valids" = valids))
+}
+
+reactive_site2protein_mapping <- reactive({
+  req(site_table())
+  req(reactive_network())
+  #Wprotein2site <- t(NetworkData$Wsite2protein)
+  
+  ST <- site_table();
+  return(foSite2ProteinMapping(ST))
 })
 
-protein_table <- reactive({
-  req(reactive_site2protein_mapping())
-  out <- reactive_site2protein_mapping()
+foPrepareProteinTable <- function(site2protein_mapping){
+  out = site2protein_mapping
   Protein = out$Protein
   valids = out$valids
   
@@ -69,15 +72,16 @@ protein_table <- reactive({
   
   #PT$isSignificant = (PT$FDR <= 0.1) & (abs(PT$Phos) >= log2(1.25))
   return (PT)
+}
+
+protein_table <- reactive({
+  req(reactive_site2protein_mapping())
+  mapping <- reactive_site2protein_mapping()
+  return(foPrepareProteinTable(mapping))
 })
 
-protein_table_processed <- reactive({
-  req(protein_table())
-  req(site_table_processed())
-  req(reactive_site2protein_mapping())
-  PT <- protein_table()
-  ST <- site_table_processed()
-  mapping <- reactive_site2protein_mapping()
+
+foProcessProteinTable <- function(ST, PT, mapping){
   max_fdr = input$proteinlevel_volcano_maxfdr
   min_logfc = input$proteinlevel_volcano_minlogfc
   if(input$proteinlevel_volcano_fdrcorrection == TRUE){
@@ -87,6 +91,21 @@ protein_table_processed <- reactive({
   }
   PT$isSignificant = (pvals <= max_fdr) & (abs(PT$Phos) >= min_logfc)
   PT$hasSignificantPSite = as.matrix(mapping$Wprotein2site %*% ST$isSignificant) > 0
-  
   return(PT)
+}
+
+foComputeProteinTable <- function(ST){
+  mapping = foSite2ProteinMapping(ST)
+  PT = foPrepareProteinTable(mapping)
+  return(foProcessProteinTable(ST, PT, mapping))
+}
+
+protein_table_processed <- reactive({
+  req(protein_table())
+  req(site_table_processed())
+  req(reactive_site2protein_mapping())
+  PT <- protein_table()
+  ST <- site_table_processed()
+  mapping <- reactive_site2protein_mapping()
+  return(foProcessProteinTable(ST, PT, mapping))
 })

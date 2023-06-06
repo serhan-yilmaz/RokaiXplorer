@@ -4,6 +4,8 @@ barplot_ui <- function(identifier, minzscore = 2, minzscore_max = 4, showminsubs
     el_minsubs = ""
   }
   
+  # multiChoicePicker(paste(identifier, "coloring", sep = "_"), "Coloring:", c("Z-Score", "Significance"), isInline = "F")
+  
   item_txt = strsplit(identifier, "_",)[[1]][1]
   tags$div(
     id = paste0(identifier, "_", "wrapper_div"),
@@ -29,11 +31,11 @@ barplot_ui <- function(identifier, minzscore = 2, minzscore_max = 4, showminsubs
              )),
       column(width = 3, style = "padding: 8px; padding-left: 16px;", 
              multiChoicePicker(paste(identifier, "yaxis", sep = "_"), "Plot Y-Axis:", c(yaxis_option, "Z-Score"), isInline = "F"),
-             tags$div(
-               style = "margin-top: 4px;", 
-               #uiOutput("site_heatmap_select_group_ui"), 
-               multiChoicePicker(paste(identifier, "coloring", sep = "_"), "Coloring:", c("Z-Score", "Significance"), isInline = "F")
-             )
+             # tags$div(
+             #   style = "margin-top: 4px;", 
+             #   #uiOutput("site_heatmap_select_group_ui"), 
+             #   multiChoicePicker(paste(identifier, "coloring", sep = "_"), "Coloring:", c("Z-Score", "Significance"), isInline = "F")
+             # )
       ),
       column(width = 3, style = "padding: 8px;", tags$div(downloadButton(paste(identifier, "downloadPlotPNG", sep = "_"), 'Download PNG'),
                                                           tags$br(), 

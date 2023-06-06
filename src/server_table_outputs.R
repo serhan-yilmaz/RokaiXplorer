@@ -144,7 +144,7 @@ createProtExpressionDataTable <- function(ST, maintable = T){
   si <- order(abs(ST$EffectiveMag), decreasing = TRUE)
   ST <- ST[si,]
   
-  ST = subset(ST, select = -c(Identifier, MagnitudeAdj, Position))
+  ST = subset(ST, select = -c(Identifier, MagnitudeAdj, Position, NetworkDataIndex, InRef))
   colnames(ST)[which(names(ST) == "Protein")] <- "ID"
   colnames(ST)[which(names(ST) == "ProteinName")] <- "Name"
   colnames(ST)[which(names(ST) == "Phos")] <- "Log2FC"
@@ -305,8 +305,8 @@ output$proteinTable <- DT::renderDataTable(server = FALSE, {
 })
 
 output$kinaseTable <- DT::renderDataTable(server = FALSE, {
-  req(kinase_table_processed())
-  KT <- kinase_table_processed();
+  req(kinase_table_processed_withtargets())
+  KT <- kinase_table_processed_withtargets();
   KT$Activity = round(KT$Activity, digits = 3)
   KT$StdErr = round(KT$StdErr, digits = 3)
   KT$ZScore = round(KT$ZScore, digits = 3)
@@ -338,6 +338,7 @@ output$kinaseTable <- DT::renderDataTable(server = FALSE, {
     "Gene" = "Gene symbol", 
     # "InRef" = "Shows whether the phosphosite exists in the reference proteome",
     "NumSubs" = "Number of substrates of the kinase with quantifications",
+    "NumSubsRokai" = "Effective number of substrates of the kinase for the activity inference in RoKAI, including the phosphosites in functional neighborhood", 
     "Activity" = "Inferred activity of the kinase", 
     "StdErr" = "Standard error for the inferred activity",
     "DF" = "Degrees of freedom",
@@ -369,11 +370,19 @@ output$kinaseTable <- DT::renderDataTable(server = FALSE, {
     "})"
   )
   
+  targetsIndex = match('Targets', colnames(KT)) - 1
+  
+  columnDefs = foHideColumns(KT, c("NumSubsRokai", "WeightSubs", "PhosSubs", "ZScoreSubs", "WeightNeigh", "PhosNeigh", "ZScoreNeigh"))
+  # browser()
+  columnDefs = c(list(list(targets = targetsIndex, width = '450px')), columnDefs)
+  # browser()
+  
   fn = 'kinase_table'
   DT::datatable(KT, rownames= FALSE, extensions = 'Buttons', 
                 callback = JS(callback), 
                 selection = "single",
                 options = list(scrollX=TRUE, lengthMenu = c(5,10,15),
+                               autoWidth = TRUE, 
                                stateSave = TRUE, 
                                stateLoadParams = JS('function (settings, data) {return false;}'),
                                # columnDefs = list(
@@ -381,7 +390,7 @@ output$kinaseTable <- DT::renderDataTable(server = FALSE, {
                                #   list(targets = 1, title = "Name")
                                # ),
                                initComplete = foAddTooltips(colnames(KT), tooltips),
-                               columnDefs = foHideColumns(KT, c("WeightSubs", "PhosSubs", "ZScoreSubs", "WeightNeigh", "PhosNeigh", "ZScoreNeigh")),
+                               columnDefs = columnDefs,
                                columns = foRestoreStateIfAvailable("kinaseTable"),
                                paging = TRUE, searching = TRUE, pageLength = 8, dom = 'Bfrtip', buttons = list(list(extend = 'csv', filename = fn), list(extend = 'excel', filename = fn), "colvis"))) %>% 
     formatSignif('PValue', 3) %>% formatSignif('FDR', 3) 

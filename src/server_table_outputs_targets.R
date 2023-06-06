@@ -37,6 +37,7 @@ output$kinaseTargetsTable <- DT::renderDataTable(server = FALSE, {
     "PValue" = "P-value",
     "FDR" = "False discovery rate",
     "EffectiveMag" = "Reliable portion of the log2 fold changes beyond 3 standard errors",
+    "isSignificant" = "Is the phosphorylation of substrate identified as significant", 
     "dummy" = ""
   )
   

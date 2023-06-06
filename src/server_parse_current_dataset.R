@@ -170,7 +170,8 @@ current_dataset_mapped <- reactive({
   nameX = ds$ST$ProteinName
   nameX[is.na(nameX)] = ds$ST$Protein[is.na(nameX)]
   ds$ST$Identifier <- str_c(nameX, ds$ST$Position, sep = "-")
-  ids = str_c(ds$ST$Protein, ds$ST$Position, sep = "-")
+  pos = gsub('\\D+','', ds$ST$Position)
+  ids = str_c(ds$ST$Protein, pos, sep = "_")
   ds$ST$ID = ids
   ds$ST$NetworkDataIndex <- match(ids, NetworkData$Site$Identifier)
   

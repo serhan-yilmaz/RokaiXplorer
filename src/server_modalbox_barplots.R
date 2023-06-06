@@ -1,5 +1,16 @@
 ## Depends barplot_samplewise
 
+foPlotStyleOption <- function(plotstyle){
+  if(is.null(plotstyle)){
+    return("barplot");
+  }
+  switch(plotstyle, 
+         "Bar plot" = "barplot",
+         "Box plot" = "boxplot",
+         stop("Invalid plot style option")
+  )
+}
+
 ## Site samplewise barplot
 modal_site_samplewise_barplot <- reactive({
   req(modal_box_selection_mapped())
@@ -12,10 +23,11 @@ modal_site_samplewise_barplot <- reactive({
   groupings = input$mbox_site_plot_select_group
   case_control_option = input$mbox_site_plot_samples_case_control
   showSampleNames = input$mbox_site_plot_show_samples
+  plot_option = foPlotStyleOption(input$mbox_site_plotstyle)
   optx = list()
   optx$QColName = "Phos"
   barplot_samplewise(ds, ds$ST, mds, groupings, "Site", case_control_option, 
-                     showSampleNames = showSampleNames, optx)
+                     showSampleNames = showSampleNames, optx, plot_option)
 })
 
 output$modal_site_samplewise_barplot <- renderPlot({
@@ -34,10 +46,11 @@ modal_phosphoprotein_samplewise_barplot <- reactive({
   groupings = input$mbox_site_plot_select_group
   case_control_option = input$mbox_site_plot_samples_case_control
   showSampleNames = input$mbox_site_plot_show_samples
+  plot_option = foPlotStyleOption(input$mbox_site_plotstyle)
   optx = list()
   optx$QColName = "Phos"
   barplot_samplewise(ds, ds$PT, mds, groupings, "Protein", case_control_option, 
-                     showSampleNames = showSampleNames, optx)
+                     showSampleNames = showSampleNames, optx, plot_option)
 })
 
 
@@ -58,10 +71,11 @@ modal_protexpression_samplewise_barplot <- reactive({
   groupings = input$mbox_site_plot_select_group
   case_control_option = input$mbox_site_plot_samples_case_control
   showSampleNames = input$mbox_site_plot_show_samples
+  plot_option = foPlotStyleOption(input$mbox_site_plotstyle)
   optx = list()
   optx$QColName = "Expression"
   barplot_samplewise(ds, ds$ST, mds, groupings, "Protein", case_control_option, 
-                     showSampleNames = showSampleNames, optx)
+                     showSampleNames = showSampleNames, optx, plot_option)
 })
 
 modal_protein_samplewise_barplot <- reactive({
@@ -88,10 +102,11 @@ modal_kinase_samplewise_barplot <- reactive({
   groupings = input$mbox_site_plot_select_group
   case_control_option = input$mbox_site_plot_samples_case_control
   showSampleNames = input$mbox_site_plot_show_samples
+  plot_option = foPlotStyleOption(input$mbox_site_plotstyle)
   optx = list()
   optx$QColName = "Activity"
   barplot_samplewise(ds, ds$KT, mds, groupings, "Kinase", case_control_option, 
-                     showSampleNames = showSampleNames, optx)
+                     showSampleNames = showSampleNames, optx, plot_option)
 })
 
 output$modal_kinase_samplewise_barplot <- renderPlot({
@@ -110,10 +125,11 @@ modal_goenrichment_samplewise_barplot <- reactive({
   groupings = input$mbox_site_plot_select_group
   case_control_option = "Case samples"
   showSampleNames = input$mbox_site_plot_show_samples
+  plot_option = foPlotStyleOption(input$mbox_site_plotstyle)
   optx = list()
   optx$QColName = "Enrichment"
   barplot_samplewise(ds, ds$GO, mds, groupings, "GOTerm", case_control_option, 
-                     showSampleNames = showSampleNames, optx)
+                     showSampleNames = showSampleNames, optx, plot_option)
 })
 
 output$modal_goenrichment_samplewise_barplot <- renderPlot({

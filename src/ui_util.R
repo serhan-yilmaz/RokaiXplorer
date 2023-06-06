@@ -1,11 +1,41 @@
+tipify_customwidth <- function(el, tooltip = NULL, tooltip_width = NULL, identifier = NULL){
+  out = el
+  if(!is.null(tooltip)){
+    out = tipify(out, tooltip)
+    if(!is.null(tooltip_width) && !is.null(identifier)){
+      tooltip_div = paste0(identifier, "_tooltipdiv")
+      css = multigsub(c("ELEMENT_NAME", "TOOLTIP_WIDTH"), c(tooltip_div, tooltip_width), 
+                      "#ELEMENT_NAME > .tooltip > .tooltip-inner {
+          min-width: TOOLTIP_WIDTH;
+        }"
+      )
+      out = tags$div(
+        id = tooltip_div, 
+        out, 
+        tags$style(HTML(css))
+      )
+    }
+  }
+  return(out)
+}
+
 multiChoicePicker <- function(id, label, choices, selected = choices[1], 
                               isInline = "T", multiple = F, max_opts = 2, 
                               max_opts_txt = "No more!", width = "fit", 
                               style = NULL, style_label = NULL, style_picker = NULL,
+                              style_choices = NULL, tooltip_width = NULL, 
                               picker_inline = T, class_names = NULL, tooltip = NULL) {
+  
+  if(!is.null(style_choices)){
+    choicesOpt = list(style=c(rep(style_choices, length(choices)))) 
+  } else {
+    choicesOpt = NULL 
+  }
+  
   picker_ui <- shinyWidgets::pickerInput(id, "", choices, selected = selected, 
                                          width = width, inline = picker_inline, 
                                          multiple = multiple,
+                                         choicesOpt = choicesOpt, 
                                          options = pickerOptions(
                                            maxOptions = max_opts,
                                            maxOptionsText = max_opts_txt
@@ -15,13 +45,16 @@ multiChoicePicker <- function(id, label, choices, selected = choices[1],
   }
   
   label_el = tags$b(label, style = style_label)
-  if(!is.null(tooltip)){
-    label_el = tipify(label_el, tooltip)
-  }
+  label_el = tipify_customwidth(label_el, tooltip, tooltip_width, id)
+  # if(!is.null(tooltip)){
+  #   label_el = tipify(label_el, tooltip)
+  # }
   
   switch(isInline, 
          "T" = R <- tags$div(
-           class = "inline-block", id = paste(id, "_div", sep = ""), 
+           class = "inline-block", 
+           class = class_names,
+           id = paste(id, "_div", sep = ""), 
            style = "justify-content: space-between;", 
            style = style,
            label_el, 
@@ -43,6 +76,8 @@ multiChoicePicker <- function(id, label, choices, selected = choices[1],
   
   return (R)
 }
+
+
 
 collapseInput <- function(inputId, boxId) {
   tags$script(
@@ -221,3 +256,29 @@ RokaiXplorer_banner <- tags$div(
     # tags$a("http://explorer.rokai.io", href="http://explorer.rokai.io"),
   )
 )
+
+generate_scenario_area <- function(boxes, nRow = 3){
+  outer = tags$div();
+  
+  iRow = 1;
+  iCol = 0;
+  cur_row = fluidRow();
+  for(i in 1:length(boxes)){
+    iCol = iCol + 1;
+    box = boxes[[i]]
+    
+    cur_row$children[[iCol]] = column(12/nRow, box);
+    # cur_row$children[[iCol]] = tags$div(class = "col", box);
+    # column(12/nRow, box);
+    if(iCol == nRow){
+      iCol = 0;
+      outer$children[[iRow]] = cur_row
+      cur_row = fluidRow();
+      iRow = iRow + 1;
+    }
+  }
+  if(iCol != 0){
+    outer$children[[iRow]] = cur_row
+  }
+  return(outer);
+}

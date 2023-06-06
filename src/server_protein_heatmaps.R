@@ -16,9 +16,13 @@ output$protein_heatmap_select_group_ui <- renderUI({
   )
 })
 
+# stop("ajjd")
+
 proteinHeatmap <- reactive({
   req(processed_protein_data_bysample())
   ds <- processed_protein_data_bysample()
+  
+  # stop("xfjjkfd")
   
   PTx <- protein_table_processed()
   PTx$NameX = PTx$Name

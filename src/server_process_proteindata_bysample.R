@@ -12,7 +12,6 @@ fo_process_protein_data_bysample <- function(ds){
   nameX[is.na(nameX)] = Protein$ID[is.na(nameX)]
   Protein$Identifier = nameX
   
-  
   indices = match(ST$Protein, Protein$ID)
   Wprotein2site <- sparseMatrix(
     i = indices,

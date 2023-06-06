@@ -245,6 +245,25 @@ guide <- Cicerone$
     "Enrichment Settings - Background Set",
     "The options in this panel determines the background set of proteins deemed as significant based on various cutoffs. When an enrichment term includes a significant protein in its set, it is considered a <em>Hit</em>, otherwise it is considered a <em>Miss</em>.",
     class = "analysis_results_tutorial_cicerone1", 
+  )$step(
+    "[data-value='Report Generator']",
+    "Report Generator Tab",
+    "Select this tab to display the report generator.",
+    on_highlighted = "function(element){Shiny.setInputValue('foo2', 'step_reportgenerator', {priority: 'event'});}", 
+    is_id = FALSE,
+  )$step(
+    "report_generator_div",
+    "Report Generator",
+    "The Report Generator in RokaiXplorer simplifies the process of analyzing data for multiple subgroups and exporting the results as formatted excel tables. Whether you want to investigate the impact of variables like gender or tissue of the sample, this feature enables you to perform separate analyses for each subgroup effortlessly.",
+    class = "analysis_results_tutorial_cicerone1", 
+  )$step(
+    "report_generator_options",
+    "Report Generator Options",
+    "Use this area to choose analysis type (Phosphorylation, Expression, Kinase Inference, Enrichment) and define grouping variables for subgroup analysis.",
+  )$step(
+    "report_generator_buttons",
+    "Exporting the results",
+    "Once you set the desired options for report generator, click 'Run' and download the generated Excel report.",
   )$
   step(
     "[data-value='About']",
@@ -326,6 +345,9 @@ observeEvent(input$foo2, {
          "step_enrichment" = {
            updateTabsetPanel(session, "mainTabset", "Enrichment");
            updateTabsetPanel(session, "kinaseTabset", "Settings")},
+         "step_reportgenerator" = {
+           updateTabsetPanel(session, "mainTabset", "Report Generator");
+         },
          "step_about_end" = {
            updateTabsetPanel(session, "mainTabset", "About");
            updateTabsetPanel(session, "aboutTabset", "Welcome")}

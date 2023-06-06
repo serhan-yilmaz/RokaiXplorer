@@ -26,9 +26,9 @@ source("current_version.R")
 
 source("src/common_util.R")
 source("src/ui_util.R")
-source("src/ui_styling.R", local = TRUE)
-source("src/ui_plots_main.R", local = TRUE)
-source("src/ui_datainput.R", local = TRUE)
+source("src/ui_styling.R")
+source("src/ui_plots_main.R")
+source("src/ui_datainput.R")
 
 application_title = "RokaiXplorer"
 
@@ -87,7 +87,7 @@ enrichment_datasource = c("Phosphosites", "Phosphoproteins", "Protein Expression
 # )
 
 enrichment_analysis_additional <- tags$div(
-  multiChoicePicker("enrichment_statisticaltest", "Statistical Test:", c("Chi-squared Test"), selected = "Phosphosites", isInline = "F", multiple = F, max_opts = 99, width = "auto", style = "display:flex;flex-direction: column; margin-bottom:6px;", picker_inline = F, class_names = "abc", tooltip = "The statistical test to apply to determine the p-values."),
+  multiChoicePicker("enrichment_statisticaltest", "Statistical Test:", c("Chi-squared Test"), isInline = "F", multiple = F, max_opts = 99, width = "auto", style = "display:flex;flex-direction: column; margin-bottom:6px;", picker_inline = F, class_names = "abc", tooltip = "The statistical test to apply to determine the p-values."),
   fancyCheckbox("enrichment_apply_yates_correction", "Apply Yates's correction", default = T, tooltip = "If enabled, Yates`s correction for continuity will be applied on the chi-squared test."),
   multiChoicePicker("enrichment_enrichmentscore", "Enrichment Score:", c("Log2 Risk Ratio (Bayes Estimate)"), selected = "Log2 Risk Ratio (Bayes Estimate)", isInline = "F", multiple = F, max_opts = 99, width = "auto", style = "display:flex;flex-direction: column; margin-bottom:6px;", picker_inline = F, class_names = "abc", tooltip = "Statistic to quantify the magnitude of the enrichment."),
 )
@@ -397,17 +397,22 @@ shinyUI(fluidPage(
                          )
                 )
               )),
-              #  tabPanel("Report Generator",
-              #   actionButton('test_xyz', "Run"),
-              #   shinyjs::disabled(downloadButton('test_report_generator', 'Generate Report')),
-              # )
+               tabPanel("Report Generator", tags$div(id = "report_generator_div", style = "padding:4px;", 
+                tags$span(id = "report_generator_options", generate_scenario_area(list(
+                multiChoicePicker("report_data_source", "Data Source:", c("Phosphosites", "Phosphoproteins", "Protein Expression", "Kinases", "Enrichment"), isInline = "F", multiple = F, width = "auto", style = "display:flex;flex-direction: column; margin-bottom:6px;", picker_inline = F, class_names = "abc", tooltip = "Select the type of the analysis to be performed."),
+                uiOutput("report_group_options")
+                ), nRow = 3)), 
+                tags$span(id = "report_generator_buttons", 
+                actionButton('prepare_report', "Run"),
+                shinyjs::disabled(downloadButton('test_report_generator', 'Report (Excel)')),
+                ),
+              ))
              #  tabPanel("Diagnostics", tabsetPanel(id = "diagnosticsTabset", 
              #      tabPanel("Histogram",
              #          shinycssloaders::withSpinner(plotOutput("histogram_sitecentering"))
              #      ))
              # )
              )
-                   
             ))
         ),
         conditionalPanel(condition="$('html').hasClass('shiny-busy')",
