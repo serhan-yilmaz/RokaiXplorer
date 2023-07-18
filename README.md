@@ -1,5 +1,5 @@
 # RokaiXplorer
-<img href="images/rokaixplorer_7_wonders.png" style = "max-width:600px;"></img>
+<img href="images/rokaixplorer_7_wonders.png"></img>
 
 RokaiXplorer is an interactive tool to analyze proteomics and phospho-proteomics data.
 
