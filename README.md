@@ -24,7 +24,7 @@ runGitHub("rokaixplorer", "serhan-yilmaz", ref = "v0.6.0")
 ```
 
 ## Share Your Discoveries with RokaiXplorer!
-Starting from v0.5.0, RokaiXplorer now allows you to easily share your datasets and analysis results online through an interactive data browser. Explore some examples below:
+RokaiXplorer allows you to easily share your datasets and analysis results online through an interactive data browser! Explore some examples below:
 
  - [ExampleApp](https://serhan-yilmaz.shinyapps.io/exampleapp/)
  - [ADXplorer](https://yilmazs.shinyapps.io/ADXplorer/) (an application on Alzheimer's disease data)
