@@ -80,6 +80,11 @@ txt2 <- "You can use this tool to identify significant changes in phosphorylatio
 aboutTabIntroContent <- withMathJax(includeMarkdown("helpfiles/RokaiXplorer_welcome_intro.md"))
 aboutTabIntroFootnote <- withMathJax(includeMarkdown("helpfiles/RokaiXplorer_welcome_footnote.md"))
 
+main_features_image <- tags$div(
+  style = "text-align: center; margin-bottom:8px; margin-top:4px; padding-bottom:4px; padding-top:4px; background-color:#fff;border:solid 0.75px #777;", 
+  tags$img(src = "rokaixplorer_7_wonders.png", width = "750", style = "max-width:100%"), 
+)
+
 aboutTabContent <- tags$span(
   style = style_font_size_main, 
   style = "text-align:justify;", 
@@ -96,6 +101,8 @@ aboutTabContent <- tags$span(
   ),
   contact_question("Have questions or comments?", "Contact us", "contactLink", "Leave Feedback", "leaveCommentLink", actLink = T, postfix = " ", style_font_size = style_font_size_question),
   # contact_question("If you have any suggestions or comments, feel free to", "give feedback", "leaveCommentLink", "contact us.", "contactLink", actLink = T, postfix = " "),
+  
+  main_features_image, 
   tags$p("Thank you for using RokaiXplorer!", style = style_font_size_question),
   tags$hr(style = "margin-bottom:4px;margin-top:2px;"),
   tags$span(style = style_font_size_footnote, aboutTabIntroFootnote),

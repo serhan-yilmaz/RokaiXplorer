@@ -90,7 +90,6 @@ foPrepareKinaseTable <- function(ds){
   # ST$DF = ds$DF[validSites]
   # write_xlsx(ST, "abcd.xlsx")
   
-  
   Fk_main = Fk * wk2s
   Fk_neigh = Fk - Fk_main
   wMain = rowSums(Fk_main) / rowSums(Fk)

@@ -17,6 +17,10 @@ if(DEPLOYMENT_MODE_ENABLED){
   # For more information, please visit the FAQ page.
 } else {
   aboutTabExtraContent = ""
+  # aboutTabExtraContent = tags$div(
+  #   style = "text-align: center; margin-bottom:4px; background-color:#fff;border:1px;", 
+  #   tags$img(id = "imgx", src = "rokaixplorer_7_wonders.png", width = "750", style = "max-width:100%"), 
+  # )
 }
 
 tabPanel("About", 

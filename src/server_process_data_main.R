@@ -9,10 +9,15 @@ fo_process_dataset <- function(ds, Tmeta, type = "phosphorylation"){
     need(nnzero(valid_rows) > 0, paste0(tools::toTitleCase(type), " data is not available"))
   )
   
+  # browser()
+  
   caseSamples <- Tmeta$caseSamples
   
   Tcase <- as.matrix(log2(Ts[, caseSamples]))
   Tcontrol <- as.matrix(log2(Ts[, !caseSamples]))
+  
+  Tcase[is.infinite(Tcase)] = NA
+  Tcontrol[is.infinite(Tcontrol)] = NA
   
   if(identical(input$options_var_stabilization, "Centering")){
     Mcase_samples <- apply(Tcase, 2, function(x) mean(x, na.rm=T))

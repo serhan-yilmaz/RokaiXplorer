@@ -1,7 +1,8 @@
 
 
 deploymentTab <- tabPanel(
-  "Online Deployment",
+  # "Online Deployment",
+  "Share your discoveries!",
   tags$div(
     class = "panel-body",
     style = "padding-bottom:5px; padding-top:2px; margin:0px;", #  height: 78px;
