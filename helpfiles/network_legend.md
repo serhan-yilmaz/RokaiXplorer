@@ -1,4 +1,4 @@
-### Metwork Plot Legend
+### Network Plot Legend
 ***
 <b>Nodes:</b> Kinases are represented by yellow circles, and phosphosites or proteins are depicted as squares. Colors of squares signify differential phosphorylation with red indicating higher phosphorylation in case samples and blue indicating higher phosphorylation in control samples.
 
