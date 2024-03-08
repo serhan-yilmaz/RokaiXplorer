@@ -2,7 +2,7 @@ guide <- Cicerone$
   new()$ 
   step("about_tutorial_main_div", 
        "Welcome",
-       "This is a quick tutorial to help you get started. Click next to continue."
+       "This is a quick tutorial to help you get started. Click next to continue, or browse <a href= 'https://github.com/serhan-yilmaz/RokaiXplorer/blob/main/tutorial.md' target='_'>the static version</a>. "
   )$
   step("main_control_div", 
        "Input & Options",
@@ -242,8 +242,8 @@ guide <- Cicerone$
   )$
   step(
     "optionbox_enrichment_background_set_proteins",
-    "Enrichment Settings - Background Set",
-    "The options in this panel determines the background set of proteins deemed as significant based on various cutoffs. When an enrichment term includes a significant protein in its set, it is considered a <em>Hit</em>, otherwise it is considered a <em>Miss</em>.",
+    "Enrichment Settings - Gene List for Enrichment",
+    "The options in this panel determines the list of proteins deemed as significant based on various cutoffs. When an enrichment term includes a significant protein in its set, it is considered a <em>Hit</em>, otherwise it is considered a <em>Miss</em>.",
     class = "analysis_results_tutorial_cicerone1", 
   )$step(
     "[data-value='Report Generator']",

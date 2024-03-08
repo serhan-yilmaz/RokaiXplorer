@@ -345,7 +345,7 @@ shinyUI(fluidPage(
                          ),
                          ),
                          column(6, 
-                                optionBox(id = "optionbox_enrichment_background_set_proteins", title = "Background Set (Proteins)", collapsed = F, status = "primary", collapsible = F, 
+                                optionBox(id = "optionbox_enrichment_background_set_proteins", title = "Gene List for Enrichment", collapsed = F, status = "primary", collapsible = F, 
                                           multiChoicePicker("enrichment_datasource", "Datasource:", enrichment_datasource, selected = "Phosphosites", isInline = "F", multiple = F, max_opts = 99, width = "auto", style = "display:flex;flex-direction: column; margin-bottom:6px;", picker_inline = F, class_names = "abc", tooltip = "Select a datasource to determine the background set to perform the enrichment analysis on"),
                                           fancyCheckbox("enrichment_fdrcorrection", "Apply FDR correction", default = F, tooltip = "If enabled, the P-value cutoff is applied after accounting for FDR with BH procedure"),
                                           asliderInput(paste("enrichment", "maxpvalue", sep = "_"), "Max. P-value Cutoff", 0.01, 0.25, 0.1, step = 0.01, tooltip = "Cutoff on the P-values or FDR"),

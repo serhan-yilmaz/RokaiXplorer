@@ -2,8 +2,8 @@
 ***
 The phosphosite quantification data is a csv file having the following columns:
 - <b>Protein (first column):</b> The Uniprot protein identifier. 
-- <b>Position (second column):</b> The position of the modified site on the protein.
-- <b>Samples (multiple columns):</b>, The phosphorylation of the site for the corresponding sample. The intensities are not  log-transformed (this step is performed within the app).
+- <b>Position (second column):</b> The position of the modified site on the protein, accepting representation with or without the amino acid (e.g., S236 or 236). 
+- <b>Samples (multiple columns):</b>, The phosphorylation of the site for the corresponding sample. Note that, the intensities <b>should not be log-transformed</b>, as this step is already performed within the application.
 
 In addition, the metadata file specifies which samples are in case or control groups. This is a csv file having the following rows and columns:
 - <b>RowName (first column):</b> The name of the group specifier.

@@ -111,7 +111,8 @@ network_ks_ui <- function(identifier, defaultSingleKinases = F){
              tags$div(
                style = "margin-bottom:8px;",
                shinycssloaders::withSpinner(visNetworkOutput(identifier, height = "480px")),
-               tags$p(style = "text-align:justify; font-size:14px;", footer_txt)
+               helper(tags$p(style = "text-align:justify; font-size:14px;", footer_txt)
+                      , type = "markdown", id = paste0(identifier, "_", "networklegend_tooltip_icon"), content = "network_legend"),
                )
              ), 
       column(width = 3, 

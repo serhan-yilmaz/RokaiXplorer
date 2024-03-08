@@ -70,6 +70,11 @@ enrichment_background_protein_set <- reactive({
 
 foPrepareEnrichmentTable <- function(out){
   NetworkData <- reactive_network()
+  nSig = nnzero(out$proteinIsSignificant)
+  validate(
+    need(nSig > 0, "Gene list for enrichment is empty!")
+  )
+  
   proteinIsSignificant = out$proteinIsSignificant[out$proteinIsIdentified]
   validGoterms <- colSums(NetworkData$Wuniprotgene2goterm) > 0
   Wuniprotgene2goterm_all = NetworkData$Wuniprotgene2goterm[, validGoterms]
