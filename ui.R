@@ -3,6 +3,7 @@ library(magrittr)
 library(DT)
 library(cicerone)
 library(visNetwork)
+library(htmltools)
 library(shinydashboard)
 library(shinyWidgets)
 library(shinycssloaders)
@@ -29,6 +30,7 @@ source("src/ui_util.R")
 source("src/ui_styling.R")
 source("src/ui_plots_main.R")
 source("src/ui_datainput.R")
+source("src/useShinydashboard.R")
 
 application_title = "RokaiXplorer"
 

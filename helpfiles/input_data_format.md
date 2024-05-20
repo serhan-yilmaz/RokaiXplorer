@@ -5,6 +5,6 @@ The phosphosite quantification data should be a csv file having the following co
 - <b>Position (second column):</b> The position of the modified phosphosite on the protein, accepting representation with or without the amino acid (e.g., S236 or 236). 
 - <b>Samples (multiple columns):</b> The phosphorylation of the site for the corresponding sample. Note that, the intensities <b>should not be log-transformed</b>, as this step is already performed within the application.
 
-Please see the provided sample data file to see an example.
+Please see the provided sample data file to see an example. Files up to 5 MB are allowed on the web server. For larger files, please consider [running them locally](https://github.com/serhan-yilmaz/RokaiXplorer). 
 
 Note that, in addition, you will also need to upload a metadata file to specify which samples are in case or control groups.
