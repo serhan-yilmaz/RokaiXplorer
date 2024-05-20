@@ -22,6 +22,12 @@ If desired, you can also run an earlier version of the application. For this pur
 library(shiny)
 runGitHub("rokaixplorer", "serhan-yilmaz", ref = "v0.6.0")
 ```
+### Running large data files locally
+Use the following command to increase the allowed data size to 1 GB before running RokaiXplorer:
+```
+options(shiny.maxRequestSize = 1000 * 1024^2)
+runGitHub("rokaixplorer", "serhan-yilmaz")
+```
 
 ## Share Your Discoveries with RokaiXplorer!
 RokaiXplorer allows you to easily share your datasets and analysis results online through an interactive data browser! Explore some examples below:
