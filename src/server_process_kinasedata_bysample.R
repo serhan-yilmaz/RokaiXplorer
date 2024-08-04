@@ -17,7 +17,6 @@ fo_process_kinase_data_bysample <- function(ds){
   
   wk2s = Wk2s[, networkDataIndices];
   
-  # browser()
   nSubs = (wk2s %*% matrix(1, nrow(Xv), 1))
   
   #input$rokaiNetwork

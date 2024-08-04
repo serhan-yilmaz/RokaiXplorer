@@ -17,6 +17,11 @@ rokai_weights <- function(I, W, R) {
   Rb = Rin[indices, !indices]
   Rc = Rin[!indices, indices]
   Rd = Rin[!indices, !indices]
+  if(sum(indices) == 1){
+    Ra = Matrix(Ra, nrow = 1, ncol = 1, sparse = T) 
+    Rb = Matrix(Rb, nrow = 1, sparse = T) 
+    Rc = Matrix(Rc, ncol = 1, sparse = T) 
+  }
   Ainv = solve(Ra)
   
   MA = Rd - Rc%*%Ainv%*%Rb 

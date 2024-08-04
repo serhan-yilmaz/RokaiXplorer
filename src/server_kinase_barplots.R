@@ -13,6 +13,11 @@ kinaseBarPlot <- reactive({
   show_significant_only = input$kinase_barplot_significant_only
   minsubs = input$kinase_barplot_minsubs
   KT = KT[KT$NumSubs >= minsubs, ]
+  
+  validate(
+    need(nrow(KT) >= 1, "There are no kinases that can pass the specified filters.")
+  )
+  
   barplot(KT, minzscore, topk, yaxis, coloring, show_significant_only)
 })
 

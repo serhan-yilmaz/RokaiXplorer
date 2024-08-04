@@ -4,6 +4,10 @@ rokai_kinase_weights <- function(Xv, Wkin2site, F) {
   
   Wk2s = Wkin2site[,indB]
   Fq = F[indB, indA]
+  if(sum(indB) == 1){
+    Wk2s = Matrix(Wk2s, ncol = 1, sparse = T)
+    Fq = Matrix(Fq, nrow = 1, sparse = T)
+  }
   
   Fk = (Wk2s %*% Fq) / rowSums(Wk2s)
   nodeIndices = which(indA)

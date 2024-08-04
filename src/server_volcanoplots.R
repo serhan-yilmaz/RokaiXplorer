@@ -165,6 +165,10 @@ output$kinaselevel_volcano <- renderPlotly({
   KT$Identifier = KT$KinaseName
   KT <- KT[!is.na(KT$Activity),]
   
+  validate(
+    need(nrow(KT) >= 1, "There are no kinases that can pass the specified filters.")
+  )
+  
   identifier = "kinaselevel_volcano_"
   
   # minlogfc = input$kinaselevel_volcano_minlogfc
