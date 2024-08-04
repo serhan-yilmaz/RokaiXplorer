@@ -105,7 +105,7 @@ aboutTabContent <- tags$span(
   main_features_image, 
   tags$p("Thank you for using RokaiXplorer!", style = style_font_size_question),
   tags$hr(style = "margin-bottom:4px;margin-top:2px;"),
-  tags$span(style = style_font_size_footnote, aboutTabIntroFootnote),
+  # tags$span(style = style_font_size_footnote, aboutTabIntroFootnote),
   # tags$br(),
   # about_question("If you would like to impact future developments, please fill a", "5-question survey", "https://forms.gle/JMZY1WeR3appegFt9", postfix = "to help us prioritize which additional features to implement next!"),
   # tags$br(),
