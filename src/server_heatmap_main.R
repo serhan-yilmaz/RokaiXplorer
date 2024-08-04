@@ -100,14 +100,17 @@ heatmapMain <- function(ST, STx, ds, minzscore, topk, show_significant_only, int
       data_melt[[grp_txt]] = t(Tmeta$Tsample_metadata[groupings[iGroup], indices])
     }
   }
+  colnames(data_melt)[which(names(data_melt) == "X1")] <- "X"
+  colnames(data_melt)[which(names(data_melt) == "X2")] <- "Y"
+  colnames(data_melt)[which(names(data_melt) == "value")] <- "Value"
   
   # data_melt[data_melt < -4] = -4
   # data_melt[data_melt > 4] = 4
   
   # defaultcolors <- c('#0072BD', '#D95319', '#EDB120', '#77AC30', '#4DBEEE')
-  
-  ggp <- ggplot(data_melt, aes(X1, X2)) +                           # Create heatmap with ggplot2
-    geom_tile(aes(fill = value))
+  # browser()
+  ggp <- ggplot(data_melt, aes(X, Y)) +                           # Create heatmap with ggplot2
+    geom_tile(aes(fill = Value))
   if(show_intensity){
     #ggp = ggp + facet_grid(caseSamples+Grouping~., scales='free', switch = "y")
     # ggp = ggp + facet_grid(caseSamples~., scales='free', switch = "y")
@@ -142,5 +145,10 @@ heatmapMain <- function(ST, STx, ds, minzscore, topk, show_significant_only, int
   ggp = ggp + theme(legend.title = element_text(size = 16), legend.text = element_text(size = 14))
   ggp = ggp + labs(x = "", y = "")
   
-  return(ggp)
+  return(
+    list(
+      plotdata = data_melt, 
+      plot = ggp
+    )
+  )
 }

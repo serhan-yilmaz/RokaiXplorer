@@ -168,6 +168,11 @@ barplot_samplewise <- function(ds, ST, mds, groupings, item_txt,
   
   controlSamplesOnly = FALSE
   bothCaseControl = FALSE
+  if(is.null(nrow(ds$Xv))){
+    ds$Xv = matrix(ds$Xv, ncol = 1)
+    ds$Sx = matrix(ds$Sx, ncol = 1)
+  }
+  # browser()
   if(case_control_option == "Case samples"){
     Xv = as.numeric(ds$Xv[index, ])
     Sx = as.numeric(ds$Sx[index, ])

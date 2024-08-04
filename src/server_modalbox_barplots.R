@@ -136,8 +136,6 @@ output$modal_goenrichment_samplewise_barplot <- renderPlot({
   modal_goenrichment_samplewise_barplot()$plot
 })
 
-
-
 # modal_current_samplewise_barplot <- reactive({
 #   req(modal_box_selection())
 #   selection <- modal_box_selection()
@@ -210,29 +208,6 @@ modalBoxDownloadPlotDLHandler <- function(file_type){
     file_type = file_type, 
     w_mult = 1.5,
     h_mult = 1
-  )
-}
-
-downloadExcelFileHandler <- function(data_file, file_name, sheet_name = "Sheet1"){
-  downloadHandler(
-    filename = function() { 
-      if(is.reactive(file_name)){
-        file_name = file_name()
-      }
-      file_name = gsub(":", "", file_name)
-      paste0(file_name, '.xlsx'); 
-      },
-    content = function(file) {
-      if(is.reactive(data_file)){
-        data_file = data_file()
-      }
-      if(is.reactive(sheet_name)){
-        sheet_name = sheet_name()
-      }
-      xl = list()
-      xl[[sheet_name]] = data_file
-      write_xlsx(xl, file)
-    }
   )
 }
 

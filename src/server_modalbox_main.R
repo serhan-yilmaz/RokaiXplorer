@@ -204,6 +204,10 @@ modal_box_site_plot_controls_reactive <- reactive({
   )
   req(modal_box_selection())
   x <- current_metadata()
+  max_num_chars = max(sapply(colnames(x$Tsample_metadata), nchar))
+  if(is.na(max_num_chars)){
+    max_num_chars = 0; 
+  }
   groups <- rownames(x$Tsample_metadata)
   casecontrol_opts <- c("Case samples", "Control samples","Both case and control")
   plotstyle_opts <- c("Bar plot", "Box plot")
@@ -213,6 +217,9 @@ modal_box_site_plot_controls_reactive <- reactive({
   selected_plotstyle = fo_restore_if_applicable(plotstyle_opts, isolate(cache$cached_mbox_main_plotstyle()))
   selected_normgroup = fo_restore_if_applicable(c(F, T), isolate(cache$cached_mbox_main_normgroup()))
   selected_showsamples = fo_restore_if_applicable(c(F, T), isolate(cache$cached_mbox_main_showsamples()))
+  if(max_num_chars >= 25){
+    selected_showsamples = FALSE
+  }
   
   # select_subgroup_opts = list()
   # 

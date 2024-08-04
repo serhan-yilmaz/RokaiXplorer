@@ -8,7 +8,17 @@ reactive_network <- reactive({
             need(FALSE, "Invalid network state.")
           )
   )
-  NetworkData <- readRDS(paste("data/", fname, sep =""));
+  switch(input$dataset_version_selection, 
+         "Latest" = networkdata_version_folder <- "latest", 
+         "2022" = networkdata_version_folder <- "2022", 
+         validate(
+           need(FALSE, "Invalid network data version")
+         )
+  )
+  
+  dataFolder = paste0("data/", networkdata_version_folder, "/")
+  
+  NetworkData <- readRDS(paste(dataFolder, fname, sep =""));
   proteins = unique(NetworkData$Site$Protein)
   indices = match(proteins, NetworkData$Site$Protein)
   names <- NetworkData$Site$Gene[indices]
@@ -66,7 +76,7 @@ reactive_network <- reactive({
               need(FALSE, "Invalid network state.")
             )
     )
-    GOData <- readRDS("data/go_data.rds");
+    GOData <- readRDS(paste0(dataFolder, "go_data.rds"));
     NetworkData$GO = GOData$go_ontology
     a_name <- paste("go_annotations", species, sep = "_")
     NetworkData$Gene2GO = GOData[[a_name]]
@@ -82,10 +92,37 @@ reactive_network <- reactive({
       dims = c(nrow(NetworkData$UniprotGene), nrow(NetworkData$GO))
     )
   }
-  NetworkData$net$version.go = '2023-01-19';
+  NetworkData$net$version.go = GOData$date
+  if(is.null(NetworkData$net$version.go)){
+    NetworkData$net$version.go = '2023-01-19';
+  }
   foUpdateVersions(NetworkData)
   
   return (NetworkData)
+})
+
+dataset_version_text <- function(dataset, date, link){
+  id = paste(dataset, "txt", sep = "_");
+  dataset <- paste(dataset, ":", sep = "")
+  tags$tr(
+    tags$td(tags$li(tags$a(dataset, href = link))), 
+    tags$td(tags$text(date, id = id))
+  )
+}
+
+output$dataset_versions_section <- renderUI({
+  req(reactive_network())
+  NetworkData <- reactive_network()
+  tags$table(
+    style="font-size: 16px; width: 100%; margin-left: 22px;",
+    dataset_version_text("Uniprot", NetworkData$net$version.uniprot[1], "https://www.uniprot.org/"),
+    dataset_version_text("PhosphoSitePlus", NetworkData$net$version.psp[1], "https://www.phosphosite.org/"),
+    dataset_version_text("Signor", NetworkData$net$version.signor[1], "https://signor.uniroma2.it/"),
+    dataset_version_text("STRING", NetworkData$net$version.string[1], "https://string-db.org/"),
+    dataset_version_text("PTMcode", NetworkData$net$version.ptmcode[1], "https://ptmcode.embl.de/"),
+    dataset_version_text("DEPOD", NetworkData$net$version.depod[1], "http://www.depod.org/"),
+    dataset_version_text("GO", NetworkData$net$version.go[1], "http://geneontology.org/"),
+  )
 })
 
 foUpdateVersions <- function(NetworkData){

@@ -52,8 +52,27 @@ output$kinase_heatmap <- renderPlot({
   kinaseHeatmap()
 })
 
+kinase_heatmap_plot <- reactive({
+  return(kinaseHeatmap()$plot)
+})
+
+kinase_heatmap_plot_data <- reactive({
+  return(kinaseHeatmap()$plotdata)
+})
+
+output$kinase_heatmap <- renderPlot({
+  kinase_heatmap_plot()
+})
+
+
 output$kinase_heatmap_downloadPlotPNG <- downloadPlotDLHandler(
-  kinaseHeatmap, file_name = "kinase-heatmap", file_type = "png")
+  kinase_heatmap_plot, file_name = "kinase-heatmap", file_type = "png")
 
 output$kinase_heatmap_downloadPlotPDF <- downloadPlotDLHandler(
-  kinaseHeatmap, file_name = "kinase-heatmap", file_type = "pdf")
+  kinase_heatmap_plot, file_name = "kinase-heatmap", file_type = "pdf")
+
+output$kinase_heatmap_downloadPlotDataExcel <- downloadExcelFileHandler(
+  kinase_heatmap_plot_data, 
+  file_name = "heatmap_data", 
+  sheet_name = "Plot Data"
+)

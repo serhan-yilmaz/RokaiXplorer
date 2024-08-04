@@ -92,7 +92,9 @@ heatmap_ui <- function(identifier, significant_only = F, showminsubs = F, minsam
       ),
       column(width = 3, style = "padding: 8px; padding-top: 12px;", tags$div(downloadButton(paste(identifier, "downloadPlotPNG", sep = "_"), 'Download PNG'),
                                                                              tags$br(), 
-                                                                             downloadButton(paste(identifier, "downloadPlotPDF", sep = "_"), 'Download PDF')
+                                                                             downloadButton(paste(identifier, "downloadPlotPDF", sep = "_"), 'Download PDF'), 
+                                                                             tags$br(), 
+                                                                             downloadButton(paste(identifier, "downloadPlotDataExcel", sep = "_"), 'Plot Data (Excel)')
       )
       )
     )

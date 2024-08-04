@@ -39,12 +39,30 @@ protExpressionHeatmap <- reactive({
               groupings = groupings)
 })
 
+# output$protexpression_heatmap <- renderPlot({
+#   protExpressionHeatmap()
+# })
+
+protexpression_heatmap_plot <- reactive({
+  return(protExpressionHeatmap()$plot)
+})
+
+protexpression_heatmap_plot_data <- reactive({
+  return(protExpressionHeatmap()$plotdata)
+})
+
 output$protexpression_heatmap <- renderPlot({
-  protExpressionHeatmap()
+  protexpression_heatmap_plot()
 })
 
 output$protexpression_heatmap_downloadPlotPNG <- downloadPlotDLHandler(
-  protExpressionHeatmap, file_name = "expression-heatmap", file_type = "png")
+  protexpression_heatmap_plot, file_name = "expression-heatmap", file_type = "png")
 
 output$protexpression_heatmap_downloadPlotPDF <- downloadPlotDLHandler(
-  protExpressionHeatmap, file_name = "expression-heatmap", file_type = "pdf")
+  protexpression_heatmap_plot, file_name = "expression-heatmap", file_type = "pdf")
+
+output$protexpression_heatmap_downloadPlotDataExcel <- downloadExcelFileHandler(
+  protexpression_heatmap_plot_data, 
+  file_name = "heatmap_data", 
+  sheet_name = "Plot Data"
+)

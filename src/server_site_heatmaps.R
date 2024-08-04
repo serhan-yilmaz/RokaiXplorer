@@ -38,12 +38,27 @@ siteHeatmap <- reactive({
               groupings = groupings)
 })
 
+site_heatmap_plot <- reactive({
+  return(siteHeatmap()$plot)
+})
+
+site_heatmap_plot_data <- reactive({
+  return(siteHeatmap()$plotdata)
+})
+
 output$site_heatmap <- renderPlot({
-  siteHeatmap()
+  site_heatmap_plot()
 })
 
 output$site_heatmap_downloadPlotPNG <- downloadPlotDLHandler(
-  siteHeatmap, file_name = "phosphosite-heatmap", file_type = "png")
+  site_heatmap_plot, file_name = "phosphosite-heatmap", file_type = "png")
 
 output$site_heatmap_downloadPlotPDF <- downloadPlotDLHandler(
-  siteHeatmap, file_name = "phosphosite-heatmap", file_type = "pdf")
+  site_heatmap_plot, file_name = "phosphosite-heatmap", file_type = "pdf")
+
+output$site_heatmap_downloadPlotDataExcel <- downloadExcelFileHandler(
+  site_heatmap_plot_data, 
+  file_name = "heatmap_data", 
+  sheet_name = "Plot Data"
+)
+

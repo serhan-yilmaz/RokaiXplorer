@@ -44,13 +44,30 @@ proteinHeatmap <- reactive({
               groupings = groupings)
 })
 
-output$protein_heatmap <- renderPlot({
-  proteinHeatmap()
+# output$protein_heatmap <- renderPlot({
+#   proteinHeatmap()
+# })
+
+protein_heatmap_plot <- reactive({
+  return(proteinHeatmap()$plot)
 })
 
+protein_heatmap_plot_data <- reactive({
+  return(proteinHeatmap()$plotdata)
+})
+
+output$protein_heatmap <- renderPlot({
+  protein_heatmap_plot()
+})
 
 output$protein_heatmap_downloadPlotPNG <- downloadPlotDLHandler(
-  proteinHeatmap, file_name = "protein-heatmap", file_type = "png")
+  protein_heatmap_plot, file_name = "protein-heatmap", file_type = "png")
 
 output$protein_heatmap_downloadPlotPDF <- downloadPlotDLHandler(
-  proteinHeatmap, file_name = "protein-heatmap", file_type = "pdf")
+  protein_heatmap_plot, file_name = "protein-heatmap", file_type = "pdf")
+
+output$protein_heatmap_downloadPlotDataExcel <- downloadExcelFileHandler(
+  protein_heatmap_plot_data, 
+  file_name = "heatmap_data", 
+  sheet_name = "Plot Data"
+)

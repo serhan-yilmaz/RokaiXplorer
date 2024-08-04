@@ -15,6 +15,29 @@ downloadPlotDLHandler <- function(plot, file_name, file_type, bg_color = 'white'
   )
 }
 
+downloadExcelFileHandler <- function(data_file, file_name, sheet_name = "Sheet1"){
+  downloadHandler(
+    filename = function() { 
+      if(is.reactive(file_name)){
+        file_name = file_name()
+      }
+      file_name = gsub(":", "", file_name)
+      paste0(file_name, '.xlsx'); 
+    },
+    content = function(file) {
+      if(is.reactive(data_file)){
+        data_file = data_file()
+      }
+      if(is.reactive(sheet_name)){
+        sheet_name = sheet_name()
+      }
+      xl = list()
+      xl[[sheet_name]] = data_file
+      write_xlsx(xl, file)
+    }
+  )
+}
+
 downloadCSVFileHandler <- function(data_file, file_name){
   downloadHandler(
     filename = function() { paste(file_name, sep='') },
